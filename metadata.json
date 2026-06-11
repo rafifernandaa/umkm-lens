@@ -1,0 +1,6 @@
+{
+  "name": "UMKM Lens",
+  "description": "Sebuah solusi digital dan agen kesiapan kredit berbasis AI (UMKM Lens) untuk membantu digitalisasi laporan keuangan usaha mikro di Indonesia secara instan.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

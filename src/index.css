@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
+
+  --color-ink: #111827;
+  --color-paper: #fbfbf9;
+  --color-studio-dark: #12141c;
+  --color-blueprint: #2563eb;
+  --color-marker-yellow: #fef08a;
+  --color-marker-orange: #fed7aa;
+  --color-marker-teal: #99f6e4;
+  --color-marker-green: #bbf7d0;
+}
+
+/* Custom styles for Marker Highlight and Tectonic components */
+.marker-highlight {
+  position: relative;
+  display: inline-block;
+  padding: 0 4px;
+}
+.marker-highlight::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  height: 45%;
+  background-color: var(--color-marker-yellow);
+  opacity: 0.85;
+  z-index: -1;
+  transform: skewX(-12deg) rotate(-0.5deg);
+  border-radius: 2px;
+}
+
+.marker-highlight-orange::after {
+  background-color: var(--color-marker-orange);
+}
+
+.marker-highlight-teal::after {
+  background-color: var(--color-marker-teal);
+}
+
+.marker-highlight-green::after {
+  background-color: var(--color-marker-green);
+}
+
+/* Hard Tectonic Architectural Grid Elements */
+.tectonic-border {
+  border: 2px solid var(--color-ink);
+  box-shadow: 4px 4px 0px 0px var(--color-ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.tectonic-border:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--color-ink);
+}
+
+.tectonic-border-sm {
+  border: 1px solid var(--color-ink);
+  box-shadow: 2px 2px 0px 0px var(--color-ink);
+}
+
+.tectonic-card {
+  background-color: #ffffff;
+  border: 2px solid var(--color-ink);
+  box-shadow: 5px 5px 0px 0px var(--color-ink);
+  position: relative;
+}
+
+.tectonic-blue-card {
+  background-color: #ffffff;
+  border: 2px solid var(--color-blueprint);
+  box-shadow: 5px 5px 0px 0px var(--color-blueprint);
+  position: relative;
+}
+
+.tectonic-grid {
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, rgba(17, 24, 39, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 24, 39, 0.05) 1px, transparent 1px);
+}
+
+.dark-tectonic-grid {
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
