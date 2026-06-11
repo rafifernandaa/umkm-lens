@@ -1392,6 +1392,106 @@ export default function App() {
               </div>
             </div>
 
+            {/* Financial Glossary Section */}
+            <div className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] space-y-6">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blueprint" />
+                <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
+                  {t("KAMUS ISTILAH KEUANGAN UMKM", "SMART FINANCIAL GLOSSARY FOR MSME")}
+                </span>
+              </div>
+              <h3 className="text-2xl font-display font-bold text-ink mt-1">
+                {t("Memahami Istilah Perbankan dengan Mudah", "Demystifying Banking Jargons for Everyone")}
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed font-sans">
+                {t("Jangan biarkan istilah perbankan yang rumit menghalangi langkah Anda memohon Kredit Usaha Rakyat (KUR). Berikut penjelasan sederhana mengenai konsep finansial utama:",
+                  "Don't let complex banking terminology discourage you from applying for loans. Here are simple explanations of core financial concepts:")}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 font-sans text-xs">
+                {/* Term 1 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    🪙 {t("Plafon", "Plafon (Limit)")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Batas jumlah total uang pinjaman maksimal yang disetujui bank untuk dapat Anda gunakan.",
+                      "The maximum total loan principal amount approved by the bank for your business use.")}
+                  </p>
+                </div>
+                {/* Term 2 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    📅 {t("Tenor", "Tenor (Duration)")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Jangka waktu atau lamanya periode mencicil yang diberikan bank untuk melunasi hutang Anda (dalam bulan).",
+                      "The total duration or length of the repayment period allocated to pay off the loan in full (in months).")}
+                  </p>
+                </div>
+                {/* Term 3 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    📊 {t("DSCR (Rasio Cicilan)", "DSCR (Repayment Capacity)")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Kapasitas bayar. Menilai apakah laba bersih usaha bulanan Anda cukup untuk membayar cicilan bank bulanan secara aman. Bank menyukai rasio di atas 1.25x.",
+                      "Repayment capacity ratio. Measures if your business net profit is sufficient to cover monthly loan installments. Banks look for a safe threshold of > 1.25x.")}
+                  </p>
+                </div>
+                {/* Term 4 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    🟢 {t("KOL-1 (Kolektibilitas 1)", "KOL-1 (Collectibility 1)")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Peringkat skor kredit terbaik dari OJK. Menandakan Anda selalu membayar cicilan hutang tepat waktu tanpa terlambat satu hari pun.",
+                      "The highest credit rating from OJK indicating the borrower pays all installments on time with zero days in arrears.")}
+                  </p>
+                </div>
+                {/* Term 5 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    🛡️ {t("SLIK OJK / BI Checking", "SLIK OJK / BI Checking")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Sistem database nasional yang melacak riwayat kelancaran pinjaman atau riwayat kredit macet Anda di masa lalu.",
+                      "The national database that tracks your loan history, payment schedules, and any historical bad debt incidents across banks.")}
+                  </p>
+                </div>
+                {/* Term 6 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    📲 {t("Data Alternatif (ACS)", "Alternative Data (ACS)")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Penilaian kelayakan kredit alternatif menggunakan data non-fisik seperti tagihan listrik PLN, pulsa, dan e-wallet sebagai pengganti jaminan fisik.",
+                      "An alternative credit assessment utilizing non-physical data (utility logs, airtime history, e-wallet transactions) in place of physical assets.")}
+                  </p>
+                </div>
+                {/* Term 7 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    💧 {t("Cash Leakage (Bocor Kas)", "Cash Leakage")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Terbuangnya uang usaha karena tercampurnya uang dapur pribadi dengan uang kas toko, sehingga mengaburkan profit bersih riil.",
+                      "Hidden financial leakage caused by mixing personal expenses with business funds, resulting in inaccurate or artificially low net profit reports.")}
+                  </p>
+                </div>
+                {/* Term 8 */}
+                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
+                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
+                    📈 {t("Laba Bersih (Net Profit)", "Net Profit")}
+                  </h4>
+                  <p className="text-[10px] text-gray-600 leading-relaxed">
+                    {t("Uang bersih yang tersisa setelah seluruh pemasukan omset dikurangi total biaya operasional dan belanja bahan baku.",
+                      "The actual profit left over after subtracting all operational costs, raw materials, and salaries from total sales revenue.")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
