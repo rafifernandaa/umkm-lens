@@ -978,56 +978,54 @@ export default function App() {
 
       pg2Y += 12;
 
-      // Section: Banker Decision Underwriting Status
+      // Section: AI Feasibility & Recommendations
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(9.5);
-      doc.text(lang === "id" ? "KEPUTUSAN & REKOMENDASI UNDERWRITER BANK" : "BANK UNDERWRITER DECISION & RECOMMENDATIONS", marginX, pg2Y);
+      doc.text(lang === "id" ? "ANALISIS & REKOMENDASI KELAYAKAN KREDIT AI" : "AI CREDIT FEASIBILITY ASSESSMENT & RECOMMENDATION", marginX, pg2Y);
 
       pg2Y += 6;
       doc.setFillColor(249, 250, 251);
       doc.rect(marginX, pg2Y, 180, 18, "F");
       
-      const stampBorderColor = underwriteStatus === "approved" ? [16, 185, 129] : (underwriteStatus === "rejected" ? [239, 68, 68] : [107, 114, 128]);
-      doc.setDrawColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      const stampColor = dscr >= 1.25 ? [16, 185, 129] : (dscr >= 1.0 ? [245, 158, 11] : [239, 68, 68]);
+      doc.setDrawColor(stampColor[0], stampColor[1], stampColor[2]);
       doc.setLineWidth(0.3);
       doc.rect(marginX, pg2Y, 180, 18, "S");
 
       // Draw stamp border
-      doc.setDrawColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      doc.setDrawColor(stampColor[0], stampColor[1], stampColor[2]);
       doc.setLineWidth(0.4);
       doc.rect(marginX + 4, pg2Y + 3, 26, 12, "S");
-      doc.setTextColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      doc.setTextColor(stampColor[0], stampColor[1], stampColor[2]);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text(lang === "id" ? underwriteStatus.toUpperCase() : (underwriteStatus === "approved" ? "APPROVED" : (underwriteStatus === "rejected" ? "REJECTED" : "PENDING")), marginX + 7, pg2Y + 11.5);
+      
+      const statusText = dscr >= 1.25 ? (lang === "id" ? "KOL-1 AMAN" : "KOL-1 READY") : (dscr >= 1.0 ? (lang === "id" ? "WASWADA" : "ALERT ZONE") : (lang === "id" ? "RISIKO" : "RISK ZONE"));
+      doc.text(statusText, marginX + 6, pg2Y + 10.5);
 
-      // Decision details
+      // Feasibility details
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(8.5);
-      const decisionTitle = underwriteStatus === "approved" 
-        ? (lang === "id" ? `DISETUJUI PLAFON Rp ${approvedLoanAmount.toLocaleString("id-ID")}` : `APPROVED LIMIT Rp ${approvedLoanAmount.toLocaleString("id-ID")}`)
-        : (underwriteStatus === "rejected" 
-            ? (lang === "id" ? "PERMOHONAN DITOLAK" : "APPLICATION REJECTED") 
-            : (lang === "id" ? "MENUNGGU UNDERWRITING" : "PENDING UNDERWRITING"));
+      const decisionTitle = dscr >= 1.25
+        ? (lang === "id" ? `PLAFON REKOMENDASI AMAN: Rp ${desiredLoan.toLocaleString("id-ID")}` : `RECOMMENDED SAFE LIMIT: Rp ${desiredLoan.toLocaleString("id-ID")}`)
+        : (lang === "id" ? `PERINGATAN KAPASITAS BAYAR: Rp ${desiredLoan.toLocaleString("id-ID")}` : `REPAYMENT CAPACITY WARNING: Rp ${desiredLoan.toLocaleString("id-ID")}`);
       doc.text(decisionTitle, marginX + 35, pg2Y + 6);
 
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7.5);
       doc.setTextColor(75, 85, 99);
-      const notesText = underwriterNotes || (underwriteStatus === "approved" 
-        ? (lang === "id" 
-            ? "Berdasarkan penilaian analitis, usaha dinilai layak dengan kapasitas bayar lancar." 
-            : "Based on analytical assessment, the business is deemed eligible with current repayment capacity.")
-        : (underwriteStatus === "rejected" 
-            ? (lang === "id" 
-                ? "Kredit ditolak karena rasio margin pengembalian berada di bawah batas toleransi minimum." 
-                : "Credit rejected because repayment margin ratio is below the minimum tolerance limit.") 
-            : (lang === "id" 
-                ? "Dokumen pre-assessment belum ditinjau oleh pejabat analis kredit perbankan." 
-                : "Pre-assessment document has not been reviewed by a bank credit analyst officer.")));
-      const splitNotes = doc.splitTextToSize(`${lang === "id" ? "Catatan Analis" : "Analyst Notes"}: ${notesText}`, 140);
+      
+      const recommendationText = dscr >= 1.25
+        ? (lang === "id"
+            ? `Usaha memiliki arus kas sehat dengan rasio DSCR sebesar ${dscr.toFixed(2)}x (di atas standar bank 1.25x). Sangat direkomendasikan untuk pengajuan pinjaman.`
+            : `Business has a healthy cash flow with a DSCR ratio of ${dscr.toFixed(2)}x (exceeding bank standard of 1.25x). Highly recommended for loan application.`)
+        : (lang === "id"
+            ? `Rasio DSCR sebesar ${dscr.toFixed(2)}x berada di bawah standar aman 1.25x. Harap memperpanjang tenor cicilan atau menurunkan plafon pengajuan untuk menghindari penolakan.`
+            : `DSCR ratio of ${dscr.toFixed(2)}x is below the safe threshold of 1.25x. Consider extending loan tenor or reducing loan amount to avoid bank rejection.`);
+      
+      const splitNotes = doc.splitTextToSize(`${lang === "id" ? "Catatan AI" : "AI Notes"}: ${recommendationText}`, 140);
       doc.text(splitNotes, marginX + 35, pg2Y + 11);
 
       pg2Y += 25;
@@ -2418,7 +2416,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Mode Toggle Selector (Merchant vs Banker) */}
+                    {/* Mode Toggle Selector (P&L vs Loan Optimizer) */}
                     {!isViewingScan && (
                       <div className="flex bg-slate-100 p-0.5 border border-ink rounded-sm">
                         <button
@@ -2427,7 +2425,7 @@ export default function App() {
                             userRole === "merchant" ? "bg-ink text-paper" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          {t("👤 Mode Sobat UMKM", "👤 UMKM Merchant Mode")}
+                          {t("👤 Buku Kas & Laba Rugi", "👤 P&L & Cash Flow Mode")}
                         </button>
                         <button
                           onClick={() => setUserRole("banker")}
@@ -2435,7 +2433,7 @@ export default function App() {
                             userRole === "banker" ? "bg-blueprint text-white" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          {t("🏦 Mode Analis Kredit Bank (SLIK & Underwriting)", "🏦 Banker Credit Analyst Mode")}
+                          {t("💡 Optimasi & Panduan Kredit", "💡 Loan Optimizer & AI Advisor")}
                         </button>
                       </div>
                     )}
@@ -2721,105 +2719,114 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Banker Decision Workflow Card */}
+                        {/* AI Loan Feasibility & Interview Cheat Sheet Card */}
                         <div className="border-2 border-ink bg-white p-4 space-y-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                           <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5 flex items-center justify-between">
-                            <span>{t("✍️ WORKFLOW KEPUTUSAN KREDIT ANALIS", "✍️ CREDIT ANALYST DECISION WORKFLOW")}</span>
-                            <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">{t("BANKER CONTROL PANEL", "BANKER CONTROL PANEL")}</span>
+                            <span>{t("💡 TARGET OPTIMALISASI PLAFON KREDIT", "💡 TARGET LOAN LIMIT OPTIMIZER")}</span>
+                            <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">{t("ASISTEN KELAYAKAN AI", "AI FEASIBILITY ASSISTANT")}</span>
                           </h5>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-xs font-mono text-gray-700 font-bold mb-1">{t("Status Rekomendasi Underwriting:", "Underwriting Recommendation Status:")}</label>
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setUnderwriteStatus("approved")}
-                                    className={`flex-1 py-2 font-mono font-bold text-xs border border-ink uppercase transition-all cursor-pointer ${
-                                      underwriteStatus === "approved" ? "bg-emerald-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
-                                    }`}
-                                  >
-                                    {t("🟢 Setujui (Approve)", "🟢 Approve")}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setUnderwriteStatus("rejected")}
-                                    className={`flex-1 py-2 font-mono font-bold text-xs border border-ink uppercase transition-all cursor-pointer ${
-                                      underwriteStatus === "rejected" ? "bg-red-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
-                                    }`}
-                                  >
-                                    {t("🔴 Tolak (Reject)", "🔴 Reject")}
-                                  </button>
-                                </div>
-                              </div>
-                              
+                            <div className="space-y-4">
                               <div>
                                 <div className="flex justify-between text-xs font-mono text-gray-700 font-bold mb-1">
-                                  <span>{t("Plafon yang Disetujui (IDR):", "Approved Loan Limit (IDR):")}</span>
-                                  <strong className="text-blueprint">Rp {approvedLoanAmount.toLocaleString("id-ID")}</strong>
+                                  <span>{t("Simulasi Target Plafon Pinjaman (IDR):", "Simulated Target Loan Amount (IDR):")}</span>
+                                  <strong className="text-blueprint">Rp {desiredLoan.toLocaleString("id-ID")}</strong>
                                 </div>
                                 <input
                                   type="range"
                                   min="5000000"
-                                  max={desiredLoan}
+                                  max="100000000"
                                   step="1000000"
-                                  value={approvedLoanAmount}
-                                  onChange={(e) => setApprovedLoanAmount(Number(e.target.value))}
-                                  disabled={underwriteStatus === "rejected"}
-                                  className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink disabled:opacity-50"
-                                  id="banker-approved-slider"
+                                  value={desiredLoan}
+                                  onChange={(e) => {
+                                    setDesiredLoan(Number(e.target.value));
+                                  }}
+                                  className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink"
+                                  id="advisor-desired-slider"
                                 />
-                                <span className="text-[9px] text-gray-400 font-mono block mt-1">{t(`Maksimum disetujui dibatasi sebesar plafon permohonan Rp ${desiredLoan.toLocaleString("id-ID")}.`, `Maximum approved amount is capped at the requested limit of Rp ${desiredLoan.toLocaleString("id-ID")}.`)}</span>
+                                <span className="text-[9px] text-gray-400 font-mono block mt-1">
+                                  {t(`Sesuaikan plafon untuk melihat dampak rasio kapasitas bayar (DSCR).`, `Adjust the loan amount to see the impact on your repayment capacity (DSCR).`)}
+                                </span>
+                              </div>
+
+                              <div className="bg-slate-50 p-3 border border-ink space-y-2">
+                                <span className="text-[9px] font-mono text-gray-400 block uppercase font-bold">{t("PROBABILITAS PERSETUJUAN BANK (ESTIMATED)", "BANK APPROVAL PROBABILITY (ESTIMATED)")}</span>
+                                <div className="flex items-center gap-2">
+                                  {dscr >= 1.25 ? (
+                                    <>
+                                      <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                                      <strong className="text-sm font-bold text-emerald-700 font-mono">{t("TINGGI (~85% s/d 95%)", "HIGH (~85% to 95%)")}</strong>
+                                    </>
+                                  ) : dscr >= 1.0 ? (
+                                    <>
+                                      <span className="w-3 h-3 rounded-full bg-amber-500 animate-pulse" />
+                                      <strong className="text-sm font-bold text-amber-700 font-mono">{t("SEDANG (~55% s/d 75%)", "MEDIUM (~55% to 75%)")}</strong>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                                      <strong className="text-sm font-bold text-red-700 font-mono">{t("RENDAH (<50% - BERESIKO)", "LOW (<50% - RISK ZONE)")}</strong>
+                                    </>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-gray-500 font-sans leading-tight">
+                                  {t("Dihitung secara algoritmik memadukan rasio DSCR saat ini dan skor data alternatif UU P2SK.", "Calculated algorithmically combining your current DSCR ratio and alternative data score under UU P2SK.")}
+                                </p>
                               </div>
                             </div>
 
-                            <div className="space-y-2">
-                              <label className="block text-xs font-mono text-gray-700 font-bold">{t("Catatan Keputusan / Memo Underwriter:", "Decision Notes / Underwriter Memo:")}</label>
-                              <textarea
-                                value={underwriterNotes}
-                                onChange={(e) => setUnderwriterNotes(e.target.value)}
-                                placeholder={t("Masukkan catatan pertimbangan kredit (contoh: Arus kas stabil, didukung data PLN, agunan berupa prospek usaha nastar Lebaran dinilai aman).", "Enter credit consideration notes (e.g., Stable cash flow, supported by utility bills, micro-business prospect is rated safe).")}
-                                className="w-full h-[95px] text-xs font-sans p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white resize-none"
-                              />
+                            <div className="bg-[#F6FFF6] border border-emerald-300 p-3 rounded-sm space-y-2.5">
+                              <span className="text-[10px] font-mono text-emerald-800 uppercase tracking-widest font-bold block">
+                                {t("📝 Checklist Kesiapan & Rekomendasi AI", "📝 AI Feasibility Checklist & Advice")}
+                              </span>
+                              <ul className="text-[10.5px] text-gray-700 font-sans space-y-1.5 list-disc pl-4 leading-relaxed">
+                                {dscr < 1.25 && (
+                                  <li className="text-amber-800 font-medium">
+                                    {t("⚠️ Naikkan Tenor Pinjaman atau kurangi nominal plafon untuk menurunkan cicilan bulanan dan meningkatkan DSCR ke batas aman > 1.25x.", "⚠️ Consider increasing the loan tenor or reducing the principal amount to lower monthly payments and raise DSCR to the safe > 1.25x threshold.")}
+                                  </li>
+                                )}
+                                {!completedChecklist.rekeningTerpisah && (
+                                  <li>
+                                    {t("Pecahkan rekening tabungan bisnis dan pribadi agar bank yakin kas Anda tidak bocor.", "Separate business and personal bank accounts to prove your business cash flow is leakage-free.")}
+                                  </li>
+                                )}
+                                {!completedChecklist.nibTerdaftar && (
+                                  <li>
+                                    {t("Daftarkan NIB (Nomor Induk Berusaha) gratis via OSS online untuk status hukum usaha formal.", "Register an NIB (Business ID) for free online via OSS to obtain official legal micro-business status.")}
+                                  </li>
+                                )}
+                                {!useAltData && (
+                                  <li>
+                                    {t("Aktifkan fitur 'Alternative Data' di dashboard sebelah untuk melampirkan bill PLN/Telco sebagai pendukung skor.", "Enable 'Alternative Data' in the side dashboard to attach utility bills as alternative credit scorers.")}
+                                  </li>
+                                )}
+                                <li className="text-emerald-800 font-medium">
+                                  {t("💡 Cetak berkas pre-assessment ini dan bawa halaman kedua sebagai Cheat Sheet panduan interview wawancara analis kredit bank.", "💡 Export this pre-assessment report and use the second page as a Cheat Sheet guide for the banker interview.")}
+                                </li>
+                              </ul>
                             </div>
                           </div>
 
-                          {underwriteStatus !== "pending" && (
-                            <div className={`p-4 border-2 border-dashed flex flex-col sm:flex-row items-center justify-between gap-4 ${
-                              underwriteStatus === "approved" ? "bg-emerald-50 border-emerald-500 text-emerald-950" : "bg-red-50 border-red-500 text-red-950"
-                            }`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`w-14 h-14 flex items-center justify-center font-bold font-display border-2 uppercase rotate-[-6deg] text-[10px] tracking-tight ${
-                                  underwriteStatus === "approved" ? "border-emerald-600 text-emerald-600 bg-white" : "border-red-600 text-red-600 bg-white"
-                                }`}>
-                                  {underwriteStatus === "approved" ? t("DISETUJUI", "APPROVED") : t("DITOLAK", "REJECTED")}
-                                </div>
-                                <div>
-                                  <h6 className="text-xs font-bold uppercase font-mono">
-                                    {underwriteStatus === "approved" ? t("Kredit Lolos Underwriting Otorisasi", "Credit Request Approved") : t("Permohonan Kredit Tidak Disetujui", "Credit Request Rejected")}
-                                  </h6>
-                                  <p className="text-[10px] font-sans mt-0.5 leading-snug">
-                                    {underwriteStatus === "approved" 
-                                      ? t(`Plafon Rp ${approvedLoanAmount.toLocaleString("id-ID")} disetujui dengan tenor ${loanTenor} bulan. Memo underwriting tersimpan.`, `Approved limit of Rp ${approvedLoanAmount.toLocaleString("id-ID")} with a ${loanTenor}-month tenor. Underwriter memo saved.`)
-                                      : t("Arus kas dinilai terlalu berisiko atau DSCR berada di bawah batas aman (1.0x). Memerlukan perbaikan omset.", "Cash flow is too risky or DSCR is below safety threshold (1.0x). Revenue improvement is required.")
-                                    }
-                                  </p>
-                                </div>
-                              </div>
+                          <div className="p-3 bg-blue-50 border border-blue-200 text-[10.5px] text-blue-900 rounded-sm font-sans space-y-1.5">
+                            <span className="font-bold text-[11px] block">{t("💡 PANDUAN INTERVIEW BANKER (CHEAT SHEET WAWANCARA ANALIS):", "💡 BANKER INTERVIEW CHEAT SHEET (TIPS FOR MICRO MERCHANTS):")}</span>
+                            <p className="leading-relaxed">
+                              {t("Saat ditanya oleh analis kredit bank mengenai pembukuan, sampaikan hal berikut: ", "When asked by the bank's credit analyst about your bookkeeping, present the following points: ")}
+                              <strong>{t(`"Usaha saya memiliki pencatatan digital teratur dengan rata-rata omset bulanan Rp ${avgMonthlyOmset.toLocaleString("id-ID")} dan laba bersih riil Rp ${avgMonthlyLaba.toLocaleString("id-ID")}. Berdasarkan kalkulasi DSCR, sisa keuntungan saya adalah ${dscr.toFixed(1)}x lipat dari cicilan bulanan, sehingga sangat aman. Saya juga melampirkan data alternatif tagihan utilitas tepat waktu sebagai bukti komitmen pembayaran."`
+                              , `"My business maintains systematic digital records with an average monthly turnover of Rp ${avgMonthlyOmset.toLocaleString("id-ID")} and a real net profit of Rp ${avgMonthlyLaba.toLocaleString("id-ID")}. Based on our DSCR analysis, our net profit covers the simulated monthly installment by ${dscr.toFixed(1)}x. I have also attached alternative utility bill history to show payment consistency."`)}</strong>
+                            </p>
+                          </div>
 
-                              <button
-                                onClick={handleExportPDF}
-                                className={`px-4 py-2 font-mono font-bold text-xs uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] active:translate-y-px transition-all hover:bg-slate-100 cursor-pointer ${
-                                  underwriteStatus === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {t("🖨️ Cetak Rekomendasi Resmi", "🖨️ Print Official Recommendation")}
-                              </button>
-                            </div>
-                          )}
+                          <div className="flex justify-between items-center pt-2 border-t border-ink/10">
+                            <span className="text-[9px] text-gray-400 font-mono">GEMINI AUTOMATED ADVISOR V1.2</span>
+                            <button
+                              onClick={handleExportPDF}
+                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer active:translate-y-px transition-all"
+                            >
+                              {t("📄 Unduh Laporan Kesiapan Kredit & Cheat Sheet", "📄 Download Credit Feasibility Report & Cheat Sheet")}
+                            </button>
+                          </div>
                         </div>
-
                       </div>
                     )}
 
