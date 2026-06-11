@@ -44,7 +44,7 @@ import { jsPDF } from "jspdf";
 export default function App() {
   // Current view management: "about" | "blog" | "trial" | "citations"
   const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("about");
-  const [lang, setLang] = useState<"id" | "en">("id");
+  const [lang, setLang] = useState<"id" | "en">("en");
   const t = (idText: string, enText: string) => lang === "id" ? idText : enText;
   
   // Blog detailed post state (null means list view)
