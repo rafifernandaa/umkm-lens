@@ -1271,46 +1271,125 @@ export default function App() {
                   </p>
                 </div>
                 <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">⚙️ {t("Development & Prompts", "Development & Prompts")}</h4>
+                  <h4 className="font-bold text-blueprint uppercase">📊 {t("Analisis & Laporan", "Analysis & Reporting")}</h4>
                   <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
-                    {t("Prototipe dan penyempurnaan instruksi prompt dikembangkan di Google AI Studio. Memungkinkan tuning batasan klasifikasi (pemasukan/pengeluaran) dan optimalisasi token secara taktis.",
-                      "Prompt prototyping and validation were developed in Google AI Studio, enabling tactical tuning of classification rules (inflow/outflow) and token footprint optimization.")}
+                    {t("Hasil pemindaian dipetakan secara dinamis menggunakan Recharts untuk grafik tren harian, serta jsPDF untuk menghasilkan laporan kesiapan kredit terstandarisasi perbankan.",
+                      "Scan results are dynamically rendered using Recharts for daily trends, and jsPDF to generate bank-standardized credit readiness reports.")}
                   </p>
                 </div>
               </div>
 
-              {/* Text-based architecture diagram */}
-              <div className="border border-ink bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] rounded-sm space-y-2 leading-relaxed shadow-inner">
-                <p className="font-bold text-white uppercase text-center border-b border-emerald-800 pb-1.5">{t("ALIRAN ARSITEKTUR DATA APLIKASI (DATA FLOW ARCHITECTURE)", "APPLICATION DATA FLOW ARCHITECTURE")}</p>
-                <div className="space-y-1 font-mono text-[10px]">
-                  <p className="flex justify-between">
-                    <span>[Step 1] Merchant Uploads Ledger Photo</span>
-                    <span className="text-white">→ Frontend (React + Vite)</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 2] Convert image to Base64 & Send Payload</span>
-                    <span className="text-white">→ Express API Server (/api/analyze-record)</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 3] Fetch via @google/genai SDK with responseSchema</span>
-                    <span className="text-white">→ Google Gemini API</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 4] Process Image with Multimodal Vision</span>
-                    <span className="text-white">→ Gemini 3.5 Flash Model</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 5] Return Validated Structured JSON</span>
-                    <span className="text-white">→ Express API Server</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 6] Render Interactive Dashboard & Recharts</span>
-                    <span className="text-white">→ Frontend Client</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 7] Download Official Pre-Assessment Report</span>
-                    <span className="text-white">→ jsPDF Client Engine</span>
-                  </p>
+              {/* Card-based architecture diagram */}
+              <div className="space-y-4 pt-2">
+                <span className="text-[11px] font-mono text-ink font-bold uppercase tracking-wider block">
+                  {t("ALIRAN ARSITEKTUR DATA APLIKASI (DATA FLOW ARCHITECTURE)", "APPLICATION DATA FLOW ARCHITECTURE")}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                  {/* Step 1 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">01</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Input", "Input")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Pelaku UMKM mengunggah foto lembar buku kas atau catatan keuangan harian.", "Merchant uploads ledger photo or daily financial records.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-amber-100 text-amber-800 px-1 border border-amber-300 font-semibold uppercase">Client UI</span>
+                    </div>
+                  </div>
+                  {/* Step 2 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">02</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Kirim", "Send")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Mengonversi gambar ke Base64 dan mengirim payload data ke API internal.", "Converts image to Base64 and sends payload request to backend API.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-blue-100 text-blue-800 px-1 border border-blue-300 font-semibold uppercase">API Client</span>
+                    </div>
+                  </div>
+                  {/* Step 3 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">03</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Disposisi", "Dispatch")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Express API menerima payload lalu menginisiasi pemanggilan SDK Google Gen AI.", "Express API receives payload and dispatches request via @google/genai SDK.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-indigo-100 text-indigo-800 px-1 border border-indigo-300 font-semibold uppercase">Server</span>
+                    </div>
+                  </div>
+                  {/* Step 4 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">04</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Analisis", "Analyze")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Model Gemini 3.5 Flash menganalisis gambar untuk mengekstrak teks pembukuan.", "Gemini 3.5 Flash model performs multimodal OCR to extract ledger content.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-purple-100 text-purple-800 px-1 border border-purple-300 font-semibold uppercase">Gemini AI</span>
+                    </div>
+                  </div>
+                  {/* Step 5 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">05</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Validasi", "Validate")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Response didikte dengan responseSchema untuk format JSON terstruktur 100%.", "Structured JSON format is guaranteed by configuring responseSchema.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-purple-100 text-purple-800 px-1 border border-purple-300 font-semibold uppercase">Gemini SDK</span>
+                    </div>
+                  </div>
+                  {/* Step 6 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">06</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Visualisasi", "Render")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Frontend memetakan data transaksi ke grafik Recharts & menghitung rasio DSCR.", "Frontend maps transaction records to Recharts & computes DSCR indicator.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-amber-100 text-amber-800 px-1 border border-amber-300 font-semibold uppercase">Client UI</span>
+                    </div>
+                  </div>
+                  {/* Step 7 */}
+                  <div className="border border-ink p-3 bg-slate-50 shadow-[2px_2px_0px_0px_#111827] flex flex-col justify-between min-h-[130px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="bg-blueprint text-white text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">07</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase">{t("Unduh", "Download")}</span>
+                      </div>
+                      <p className="text-[10px] text-ink font-sans leading-relaxed">
+                        {t("Pelaku UMKM mengunduh laporan PDF resmi untuk pengajuan kredit di perbankan.", "Merchant exports bank-ready PDF report for credit application.")}
+                      </p>
+                    </div>
+                    <div className="mt-2 text-right">
+                      <span className="text-[9px] font-mono bg-emerald-100 text-emerald-800 px-1 border border-emerald-300 font-semibold uppercase">jsPDF Engine</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
