@@ -2724,6 +2724,79 @@ export default function App() {
 
             </div>
 
+            {/* Tech Stack & Google AI Architecture Section */}
+            <div className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] space-y-6">
+              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
+                {t("ARSITEKTUR TEKNOLOGI & GOOGLE AI INTEGRATION", "TECHNOLOGY ARCHITECTURE & GOOGLE AI INTEGRATION")}
+              </span>
+              <h3 className="text-2xl font-display font-bold text-ink">
+                {t("Bagaimana Kami Menggunakan Google AI Ecosystem", "How We Leverage the Google AI Ecosystem")}
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed font-sans">
+                {t("UMKM Lens tidak hanya menggunakan AI sebagai wrapper sederhana. Kami mengintegrasikan seluruh ekosistem Google AI secara mendalam untuk menjamin keandalan data finansial bagi bank dan kemudahan akses bagi pelaku usaha mikro.",
+                  "UMKM Lens is not just a simple AI wrapper. We deeply integrate the Google AI ecosystem to ensure financial data reliability for banks and seamless accessibility for micro-entrepreneurs.")}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs pt-2">
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">🤖 {t("Model Layer", "Model Layer")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Menggunakan Gemini 3.5 Flash untuk analisis multimodal OCR. Mampu mengekstrak tulisan tangan bebas dari foto buku kas kumal, memilah kategori kas, dan menerjemahkan istilah/singkatan lokal secara cerdas.",
+                      "Powered by Gemini 3.5 Flash for multimodal OCR analysis. It extracts freeform handwriting from ledger photos, classifies transaction categories, and intelligently resolves local shorthand.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">📦 {t("SDK & Structured Output", "SDK & Structured Output")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Diimplementasikan menggunakan library @google/genai Node.js SDK terbaru dengan konfigurasi responseSchema (Structured Output). Menjamin output data terstruktur dalam JSON format 100% konsisten demi menghindari halusinasi angka.",
+                      "Implemented via the new @google/genai Node.js SDK with responseSchema (Structured Output) configuration. This guarantees 100% consistent structured JSON outputs, eliminating numerical hallucinations.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">⚙️ {t("Development & Prompts", "Development & Prompts")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Prototipe dan penyempurnaan instruksi prompt dikembangkan di Google AI Studio. Memungkinkan tuning batasan klasifikasi (pemasukan/pengeluaran) dan optimalisasi token secara taktis.",
+                      "Prompt prototyping and validation were developed in Google AI Studio, enabling tactical tuning of classification rules (inflow/outflow) and token footprint optimization.")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Text-based architecture diagram */}
+              <div className="border border-ink bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] rounded-sm space-y-2 leading-relaxed shadow-inner">
+                <p className="font-bold text-white uppercase text-center border-b border-emerald-800 pb-1.5">{t("ALIRAN ARSITEKTUR DATA APLIKASI (DATA FLOW ARCHITECTURE)", "APPLICATION DATA FLOW ARCHITECTURE")}</p>
+                <div className="space-y-1 font-mono text-[10px]">
+                  <p className="flex justify-between">
+                    <span>[Step 1] Merchant Uploads Ledger Photo</span>
+                    <span className="text-white">→ Frontend (React + Vite)</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 2] Convert image to Base64 & Send Payload</span>
+                    <span className="text-white">→ Express API Server (/api/analyze-record)</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 3] Fetch via @google/genai SDK with responseSchema</span>
+                    <span className="text-white">→ Google Gemini API</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 4] Process Image with Multimodal Vision</span>
+                    <span className="text-white">→ Gemini 3.5 Flash Model</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 5] Return Validated Structured JSON</span>
+                    <span className="text-white">→ Express API Server</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 6] Render Interactive Dashboard & Recharts</span>
+                    <span className="text-white">→ Frontend Client</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 7] Download Official Pre-Assessment Report</span>
+                    <span className="text-white">→ jsPDF Client Engine</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Clear Disclaimer regarding peer review */}
             <div className="p-4 bg-amber-50 border border-amber-300 rounded-sm">
               <h4 className="text-xs font-mono font-bold text-amber-800 uppercase flex items-center gap-1.5">
