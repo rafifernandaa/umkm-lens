@@ -51,21 +51,5 @@ export const blogPosts: BlogPost[] = [
       "UMKM Lens merespon mandat undang-undang ini dengan cara yang praktis. Kami tidak meminta ibu rumah tangga mengubah kebasaan mereka menjadi mengetik spreadsheet. Kami yang beradaptasi dengan mendengarkan tulisan tangan mereka, lalu menyisipkan disclaimer edukasi pembukuan di setiap lembar PDF yang diekspor.",
       "Ini adalah sinergitas nyata: teknologi AI murni membantu menjembatani standar informal masyarakat kelas bawah dengan regulasi formal perbankan nasional demi akselerasi ekonomi kerakyatan Indonesia."
     ]
-  },
-  {
-    id: "google-ai-stack",
-    title: "Teknologi Google AI di Balik Rekapitulasi Pembukuan Otomatis",
-    slug: "teknologi-google-ai-umkm-lens",
-    category: "Tech Stack & AI",
-    date: "11 Juni 2026",
-    readTime: "3 Menit",
-    summary: "Bedah arsitektur kecerdasan buatan UMKM Lens yang memanfaatkan model multimodal Gemini 3.5 Flash, SDK @google/genai terbaru, dan Google AI Studio untuk mewujudkan OCR tulisan tangan super akurat.",
-    citation: "Google Gen AI SDK & Gemini API Documentation, 2026",
-    content: [
-      "Aplikasi **UMKM Lens** dirancang untuk memecahkan hambatan administrasi finansial UMKM dengan memanfaatkan teknologi AI mutakhir dari Google. Di jantung sistem analisis dokumen kami, terdapat model **Gemini 3.5 Flash** yang diakses secara langsung melalui SDK **@google/genai** terbaru.",
-      "Model **Gemini 3.5 Flash** dipilih karena kemampuannya yang luar biasa dalam memproses input multimodal (gabungan gambar dan instruksi prompt). Kami menguji dan melatih prompt cerdas di **Google AI Studio** untuk membimbing model dalam mengenali struktur baris tabel kas tulisan tangan bebas, mendeteksi singkatan lokal seperti 'kb', 'rb' atau 'k', dan membedakan arus kas masuk (*pemasukan*) dari arus kas keluar (*pengeluaran*).",
-      "Salah satu keunggulan utama integrasi teknologi Google AI ini adalah fitur **Structured Output (JSON Schema)**. Dengan mengaktifkan `responseSchema` dari SDK **@google/genai**, Gemini menjamin data yang dikembalikan selalu terstruktur dalam format JSON yang presisi. Hal ini menjaga keutuhan data matematis untuk visualisasi grafik tren harian dan perhitungan Debt Service Coverage Ratio (DSCR) di sisi frontend secara real-time.",
-      "Dengan dukungan ekosistem Google AI Studio, kami dapat mengiterasi pengujian prompt dengan cepat untuk meminimalisir kesalahan baca (halusinasi angka). Ini membuktikan bahwa teknologi model bahasa besar (LLM) dapat dideploy sebagai solusi praktis yang langsung menyentuh pemecahan masalah riil pengusaha mikro nasional."
-    ]
   }
 ];

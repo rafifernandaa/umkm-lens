@@ -42,8 +42,8 @@ import { AnalysisResult, TransactionItem } from "./types";
 import { jsPDF } from "jspdf";
 
 export default function App() {
-  // Current view management: "blog" | "trial" | "analytics-hub"
-  const [activeTab, setActiveTab] = useState<"blog" | "trial" | "about">("blog");
+  // Current view management: "about" | "blog" | "trial" | "citations"
+  const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("about");
   const [lang, setLang] = useState<"id" | "en">("id");
   const t = (idText: string, enText: string) => lang === "id" ? idText : enText;
   
@@ -1106,6 +1106,17 @@ export default function App() {
           {/* Navigation Links with Raw Architectural Slashes */}
           <nav className="flex items-center gap-1.5 font-mono text-xs text-gray-700">
             <button
+              onClick={() => { setActiveTab("about"); }}
+              className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
+                activeTab === "about" 
+                  ? "bg-ink text-paper font-semibold shadow-inner" 
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              ℹ️ {t("Tentang", "About")}
+            </button>
+            <span className="text-gray-300">/</span>
+            <button
               onClick={() => { setActiveTab("blog"); setSelectedPostSlug(null); }}
               className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
                 activeTab === "blog" 
@@ -1113,7 +1124,7 @@ export default function App() {
                   : "hover:bg-gray-100"
               }`}
             >
-              📖 Problem Research
+              📖 {t("Riset Masalah", "Problem Research")}
             </button>
             <span className="text-gray-300">/</span>
             <button
@@ -1125,18 +1136,18 @@ export default function App() {
                   : "hover:bg-gray-100 text-ink"
               }`}
             >
-              ⚡ Try APP Free
+              ⚡ {t("Coba Aplikasi", "Try APP Free")}
             </button>
             <span className="text-gray-300">/</span>
             <button
-              onClick={() => { setActiveTab("about"); }}
+              onClick={() => { setActiveTab("citations"); }}
               className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
-                activeTab === "about" 
-                  ? "bg-ink text-paper font-semibold" 
+                activeTab === "citations" 
+                  ? "bg-ink text-paper font-semibold shadow-inner" 
                   : "hover:bg-gray-100"
               }`}
             >
-              📍 Citations Hub
+              📍 {t("Pusat Sitasi", "Citations Hub")}
             </button>
           </nav>
 
@@ -1185,6 +1196,127 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 md:py-10">
+
+        {/* ==================== SCREEN 0: ABOUT SECTION ==================== */}
+        {activeTab === "about" && (
+          <div className="space-y-8">
+            
+            {/* Tectonic Brand Architecture Hero */}
+            <div className="tectonic-card bg-white p-6 md:p-10 border-2 border-ink shadow-[4px_4px_0px_0px_#111827]">
+              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
+                {t("PENGANTAR PROYEK & SOLUSI", "PROJECT INTRODUCTION & SOLUTION")}
+              </span>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-ink mt-1">
+                {t("About UMKM Lens", "About UMKM Lens")}
+              </h2>
+              <p className="text-sm text-gray-700 mt-4 leading-relaxed max-w-3xl font-sans">
+                {t("UMKM Lens adalah platform pendeteksi kesiapan kredit alternatif (Alternative Credit Readiness Detector) yang dirancang khusus untuk memecahkan hambatan administrasi pembukuan pelaku usaha mikro. Kami menjembatani kesenjangan antara catatan kas informal (tulisan tangan, nota) dengan standar penilaian kelayakan kredit perbankan formal menggunakan teknologi AI.",
+                  "UMKM Lens is an alternative credit readiness detector platform specifically designed to solve the bookkeeping administration barriers faced by micro-merchants. We bridge the gap between informal ledger records (handwriting, paper notes) and formal banking credit assessment standards utilizing advanced AI technology.")}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+                <div className="border border-ink p-4 space-y-2 bg-slate-50 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-blueprint/10 text-blueprint flex items-center justify-center font-bold text-sm">1</div>
+                  <h4 className="font-bold text-ink uppercase text-xs font-mono">{t("Pindai Multimodal OCR", "Multimodal OCR Scanning")}</h4>
+                  <p className="text-[11px] text-gray-600 font-sans leading-relaxed">
+                    {t("Merchant hanya perlu memotret catatan harian buku kas mereka. AI membaca coretan tangan tersebut dan menstrukturkannya secara otomatis secara instan.",
+                      "Merchants simply take a photo of their handwritten daily ledger sheets. The AI reads the handwriting and structures it automatically and instantly.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-blueprint/10 text-blueprint flex items-center justify-center font-bold text-sm">2</div>
+                  <h4 className="font-bold text-ink uppercase text-xs font-mono">{t("Simulasi Cicilan & DSCR", "Installment & DSCR Simulation")}</h4>
+                  <p className="text-[11px] text-gray-600 font-sans leading-relaxed">
+                    {t("Menghitung kapasitas bayar nyata (Debt Service Coverage Ratio) dari riwayat kas bulanan untuk memberikan rekomendasi plafon pinjaman yang aman.",
+                      "Calculates actual repayment capacity (Debt Service Coverage Ratio) from monthly cash history to provide safe loan limit recommendations.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-blueprint/10 text-blueprint flex items-center justify-center font-bold text-sm">3</div>
+                  <h4 className="font-bold text-ink uppercase text-xs font-mono">{t("Data Alternatif (UU P2SK)", "Alternative Data (UU P2SK)")}</h4>
+                  <p className="text-[11px] text-gray-600 font-sans leading-relaxed">
+                    {t("Mengintegrasikan data utilitas PLN, tagihan pulsa, volume e-wallet, dan e-commerce sebagai indikator kelayakan kredit non-fisik.",
+                      "Integrates utility bills, telecom records, digital wallet volume, and e-commerce ratings as non-physical credit rating indicators.")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tech Stack & Google AI Architecture Section */}
+            <div className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] space-y-6">
+              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
+                {t("ARSITEKTUR TEKNOLOGI & GOOGLE AI INTEGRATION", "TECHNOLOGY ARCHITECTURE & GOOGLE AI INTEGRATION")}
+              </span>
+              <h3 className="text-2xl font-display font-bold text-ink">
+                {t("Bagaimana Kami Menggunakan Google AI Ecosystem", "How We Leverage the Google AI Ecosystem")}
+              </h3>
+              <p className="text-xs text-gray-600 leading-relaxed font-sans">
+                {t("UMKM Lens tidak hanya menggunakan AI sebagai wrapper sederhana. Kami mengintegrasikan seluruh ekosistem Google AI secara mendalam untuk menjamin keandalan data finansial bagi bank dan kemudahan akses bagi pelaku usaha mikro.",
+                  "UMKM Lens is not just a simple AI wrapper. We deeply integrate the Google AI ecosystem to ensure financial data reliability for banks and seamless accessibility for micro-entrepreneurs.")}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs pt-2">
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">🤖 {t("Model Layer", "Model Layer")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Menggunakan Gemini 3.5 Flash untuk analisis multimodal OCR. Mampu mengekstrak tulisan tangan bebas dari foto buku kas kumal, memilah kategori kas, dan menerjemahkan istilah/singkatan lokal secara cerdas.",
+                      "Powered by Gemini 3.5 Flash for multimodal OCR analysis. It extracts freeform handwriting from ledger photos, classifies transaction categories, and intelligently resolves local shorthand.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">📦 {t("SDK & Structured Output", "SDK & Structured Output")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Diimplementasikan menggunakan library @google/genai Node.js SDK terbaru dengan konfigurasi responseSchema (Structured Output). Menjamin output data terstruktur dalam JSON format 100% konsisten demi menghindari halusinasi angka.",
+                      "Implemented via the new @google/genai Node.js SDK with responseSchema (Structured Output) configuration. This guarantees 100% consistent structured JSON outputs, eliminating numerical hallucinations.")}
+                  </p>
+                </div>
+                <div className="border border-ink p-4 space-y-2 bg-slate-50">
+                  <h4 className="font-bold text-blueprint uppercase">⚙️ {t("Development & Prompts", "Development & Prompts")}</h4>
+                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                    {t("Prototipe dan penyempurnaan instruksi prompt dikembangkan di Google AI Studio. Memungkinkan tuning batasan klasifikasi (pemasukan/pengeluaran) dan optimalisasi token secara taktis.",
+                      "Prompt prototyping and validation were developed in Google AI Studio, enabling tactical tuning of classification rules (inflow/outflow) and token footprint optimization.")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Text-based architecture diagram */}
+              <div className="border border-ink bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] rounded-sm space-y-2 leading-relaxed shadow-inner">
+                <p className="font-bold text-white uppercase text-center border-b border-emerald-800 pb-1.5">{t("ALIRAN ARSITEKTUR DATA APLIKASI (DATA FLOW ARCHITECTURE)", "APPLICATION DATA FLOW ARCHITECTURE")}</p>
+                <div className="space-y-1 font-mono text-[10px]">
+                  <p className="flex justify-between">
+                    <span>[Step 1] Merchant Uploads Ledger Photo</span>
+                    <span className="text-white">→ Frontend (React + Vite)</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 2] Convert image to Base64 & Send Payload</span>
+                    <span className="text-white">→ Express API Server (/api/analyze-record)</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 3] Fetch via @google/genai SDK with responseSchema</span>
+                    <span className="text-white">→ Google Gemini API</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 4] Process Image with Multimodal Vision</span>
+                    <span className="text-white">→ Gemini 3.5 Flash Model</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 5] Return Validated Structured JSON</span>
+                    <span className="text-white">→ Express API Server</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 6] Render Interactive Dashboard & Recharts</span>
+                    <span className="text-white">→ Frontend Client</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span>[Step 7] Download Official Pre-Assessment Report</span>
+                    <span className="text-white">→ jsPDF Client Engine</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
 
         {/* ==================== SCREEN 1: THE RESEARCH & PROBLEM PITCH BLOG ==================== */}
         {activeTab === "blog" && (
@@ -2659,7 +2791,7 @@ export default function App() {
         )}
 
         {/* ==================== SCREEN 3: CITATIONS HUB / ABOUT SECTION ==================== */}
-        {activeTab === "about" && (
+        {activeTab === "citations" && (
           <div className="space-y-8">
             
             {/* Citations Dashboard Headline */}
@@ -2722,79 +2854,6 @@ export default function App() {
                 </div>
               </div>
 
-            </div>
-
-            {/* Tech Stack & Google AI Architecture Section */}
-            <div className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] space-y-6">
-              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
-                {t("ARSITEKTUR TEKNOLOGI & GOOGLE AI INTEGRATION", "TECHNOLOGY ARCHITECTURE & GOOGLE AI INTEGRATION")}
-              </span>
-              <h3 className="text-2xl font-display font-bold text-ink">
-                {t("Bagaimana Kami Menggunakan Google AI Ecosystem", "How We Leverage the Google AI Ecosystem")}
-              </h3>
-              <p className="text-xs text-gray-600 leading-relaxed font-sans">
-                {t("UMKM Lens tidak hanya menggunakan AI sebagai wrapper sederhana. Kami mengintegrasikan seluruh ekosistem Google AI secara mendalam untuk menjamin keandalan data finansial bagi bank dan kemudahan akses bagi pelaku usaha mikro.",
-                  "UMKM Lens is not just a simple AI wrapper. We deeply integrate the Google AI ecosystem to ensure financial data reliability for banks and seamless accessibility for micro-entrepreneurs.")}
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs pt-2">
-                <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">🤖 {t("Model Layer", "Model Layer")}</h4>
-                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
-                    {t("Menggunakan Gemini 3.5 Flash untuk analisis multimodal OCR. Mampu mengekstrak tulisan tangan bebas dari foto buku kas kumal, memilah kategori kas, dan menerjemahkan istilah/singkatan lokal secara cerdas.",
-                      "Powered by Gemini 3.5 Flash for multimodal OCR analysis. It extracts freeform handwriting from ledger photos, classifies transaction categories, and intelligently resolves local shorthand.")}
-                  </p>
-                </div>
-                <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">📦 {t("SDK & Structured Output", "SDK & Structured Output")}</h4>
-                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
-                    {t("Diimplementasikan menggunakan library @google/genai Node.js SDK terbaru dengan konfigurasi responseSchema (Structured Output). Menjamin output data terstruktur dalam JSON format 100% konsisten demi menghindari halusinasi angka.",
-                      "Implemented via the new @google/genai Node.js SDK with responseSchema (Structured Output) configuration. This guarantees 100% consistent structured JSON outputs, eliminating numerical hallucinations.")}
-                  </p>
-                </div>
-                <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">⚙️ {t("Development & Prompts", "Development & Prompts")}</h4>
-                  <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
-                    {t("Prototipe dan penyempurnaan instruksi prompt dikembangkan di Google AI Studio. Memungkinkan tuning batasan klasifikasi (pemasukan/pengeluaran) dan optimalisasi token secara taktis.",
-                      "Prompt prototyping and validation were developed in Google AI Studio, enabling tactical tuning of classification rules (inflow/outflow) and token footprint optimization.")}
-                  </p>
-                </div>
-              </div>
-
-              {/* Text-based architecture diagram */}
-              <div className="border border-ink bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] rounded-sm space-y-2 leading-relaxed shadow-inner">
-                <p className="font-bold text-white uppercase text-center border-b border-emerald-800 pb-1.5">{t("ALIRAN ARSITEKTUR DATA APLIKASI (DATA FLOW ARCHITECTURE)", "APPLICATION DATA FLOW ARCHITECTURE")}</p>
-                <div className="space-y-1 font-mono text-[10px]">
-                  <p className="flex justify-between">
-                    <span>[Step 1] Merchant Uploads Ledger Photo</span>
-                    <span className="text-white">→ Frontend (React + Vite)</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 2] Convert image to Base64 & Send Payload</span>
-                    <span className="text-white">→ Express API Server (/api/analyze-record)</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 3] Fetch via @google/genai SDK with responseSchema</span>
-                    <span className="text-white">→ Google Gemini API</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 4] Process Image with Multimodal Vision</span>
-                    <span className="text-white">→ Gemini 3.5 Flash Model</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 5] Return Validated Structured JSON</span>
-                    <span className="text-white">→ Express API Server</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 6] Render Interactive Dashboard & Recharts</span>
-                    <span className="text-white">→ Frontend Client</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>[Step 7] Download Official Pre-Assessment Report</span>
-                    <span className="text-white">→ jsPDF Client Engine</span>
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Clear Disclaimer regarding peer review */}
