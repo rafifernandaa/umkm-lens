@@ -101,6 +101,42 @@ Most micro-merchants record transactions informally—in notebooks, on torn rece
 
 ---
 
+## ☁️ Deployment to Google Cloud Run
+
+You can deploy this application directly to **Google Cloud Run** using one of the following methods.
+
+### Method 1: Continuous Deployment via GitHub (Recommended)
+1. Push your repository to **GitHub**.
+2. Go to the **Google Cloud Console** and navigate to **Cloud Run**.
+3. Click **Create Service**.
+4. Select **Continuously deploy from a git repository** and set up the connection to your GitHub repository.
+5. In the Build Configuration, select **Dockerfile** (the repository includes a ready-to-use `Dockerfile`).
+6. Under **Variables & Secrets**, add the environment variable or secret:
+   - `GEMINI_API_KEY`: Your Gemini API Key from Google AI Studio.
+7. Click **Create** to deploy.
+
+### Method 2: Deploying via Google Cloud Shell
+Since `gcloud` is pre-authenticated in the Google Cloud Shell, you can deploy with a single command:
+
+1. Open **Cloud Shell** in your Google Cloud Console.
+2. Clone your repository:
+   ```bash
+   git clone https://github.com/rafifernandaa/umkm-lens.git
+   cd umkm-lens
+   ```
+3. Deploy directly to Cloud Run:
+   ```bash
+   gcloud run deploy umkm-lens \
+     --source . \
+     --platform managed \
+     --region asia-southeast2 \
+     --allow-unauthenticated \
+     --set-env-vars="GEMINI_API_KEY=your_actual_api_key_here,NODE_ENV=production"
+   ```
+4. Once completed, the command will output a public Service URL where your application is live.
+
+---
+
 ## ⚖️ Legal Alignment (UU P2SK)
 Under **Indonesian Law No. 4 of 2023 concerning the Development and Strengthening of the Financial Sector (UU P2SK)**, financial institutions are encouraged to deploy **Alternative Credit Scoring (ACS)** to foster financial inclusion for the 91 million unbanked/underbanked individuals. 
 
