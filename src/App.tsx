@@ -1413,12 +1413,12 @@ export default function App() {
                 </span>
                 
                 <h1 className="text-3x md:text-5xl lg:text-6xl font-display font-bold text-ink leading-[1.1] tracking-tight">
-                  Menembus Dinding Dokumentasi: <br className="hidden md:inline" />
-                  <span className="marker-highlight">Jaminan Kredit</span> untuk Pengusaha Rumah Tangga Indonesia.
+                  {t("Menembus Dinding Dokumentasi:", "Breaching the Documentation Wall:")} <br className="hidden md:inline" />
+                  <span className="marker-highlight">{t("Jaminan Kredit", "Credit Guarantee")}</span> {t("untuk Pengusaha Rumah Tangga Indonesia.", "for Indonesian Household Businesses.")}
                 </h1>
                 
                 <p className="text-base md:text-lg text-gray-700 font-sans max-w-3xl leading-relaxed">
-                  Usaha mikro menyumbang <strong>61% PDB nasional</strong>, namun <strong>60-70% pengajuan modal perbankan ditolak</strong> sia-sia. Jembatani eksklusi finansial ini dengan konversi berkas informal berbasis AI instan.
+                  {t("Usaha mikro menyumbang 61% PDB nasional, namun 60-70% pengajuan modal perbankan ditolak sia-sia. Jembatani eksklusi finansial ini dengan konversi berkas informal berbasis AI instan.", "Micro-merchants contribute 61% of national GDP, but 60-70% of bank capital applications are rejected in vain. Bridge this financial exclusion with instant AI-driven informal ledger conversion.")}
                 </p>
 
                 {/* Instant Action CTA Row */}
@@ -1433,7 +1433,7 @@ export default function App() {
                     }}
                     className="bg-blueprint text-white px-7 py-4 font-display font-bold text-base transition-all hover:bg-blue-700 text-center uppercase tracking-wider shadow-[4px_4px_0px_0px_#111827] active:translate-x-0.5 active:translate-y-0.5 border-2 border-ink flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    Buka Aplikasi Sekarang <Sparkles className="w-4.5 h-4.5 text-marker-yellow fill-marker-yellow" />
+                    {t("Buka Aplikasi Sekarang", "Open Application Now")} <Sparkles className="w-4.5 h-4.5 text-marker-yellow fill-marker-yellow" />
                   </button>
                   
                   <button
@@ -1443,7 +1443,7 @@ export default function App() {
                     }}
                     className="bg-paper text-ink px-6 py-4 font-mono text-xs tracking-wide border-2 border-ink hover:bg-gray-50 shadow-[4px_4px_0px_0px_#111827] uppercase text-center active:translate-x-0.5 active:translate-y-0.5"
                   >
-                    📊 Loloskan Kredit Anda (Simulator)
+                    {t("📊 Loloskan Kredit Anda (Simulator)", "📊 Qualify Your Credit (Simulator)")}
                   </button>
                 </div>
               </div>
@@ -1451,19 +1451,19 @@ export default function App() {
               {/* Tectonic Stat Boxes Bar */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-8 border-t-2 border-ink/10">
                 <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">Prosi Kontribusi PDB</p>
+                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Prosi Kontribusi PDB", "GDP Contribution Share")}</p>
                   <p className="text-3xl md:text-4xl font-display font-bold text-ink mt-1">61%</p>
-                  <p className="text-[11px] text-gray-500 font-mono mt-1 mt-1 font-semibold">Menggerakkan 97% Tenaga Kerja</p>
+                  <p className="text-[11px] text-gray-500 font-mono mt-1 mt-1 font-semibold">{t("Menggerakkan 97% Tenaga Kerja", "Powers 97% of the Workforce")}</p>
                 </div>
                 <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">Rejection Rate Bank</p>
+                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Rejection Rate Bank", "Bank Rejection Rate")}</p>
                   <p className="text-3xl md:text-4xl font-display font-bold text-red-600 mt-1">60% - 70%</p>
-                  <p className="text-[11px] text-gray-400 font-mono mt-1">Gagal akibat validasi berkas formal</p>
+                  <p className="text-[11px] text-gray-400 font-mono mt-1">{t("Gagal akibat validasi berkas formal", "Fails due to formal document validation")}</p>
                 </div>
                 <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">Unbanked Adults</p>
-                  <p className="text-3xl md:text-4xl font-display font-bold text-blueprint mt-1">91 Juta</p>
-                  <p className="text-[11px] text-gray-500 font-mono mt-1">Kesenjangan akses modal terdalam</p>
+                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Unbanked Adults", "Unbanked Adults")}</p>
+                  <p className="text-3xl md:text-4xl font-display font-bold text-blueprint mt-1">{t("91 Juta", "91 Million")}</p>
+                  <p className="text-[11px] text-gray-500 font-mono mt-1">{t("Kesenjangan akses modal terdalam", "The deepest capital access gap")}</p>
                 </div>
               </div>
             </section>
