@@ -22,12 +22,18 @@ export interface AnalysisResult {
 export interface BlogPost {
   id: string;
   title: string;
+  titleEn?: string;
   slug: string;
   category: string;
+  categoryEn?: string;
   date: string;
+  dateEn?: string;
   readTime: string;
+  readTimeEn?: string;
   summary: string;
+  summaryEn?: string;
   content: string[];
+  contentEn?: string[];
   citation: string;
 }
 

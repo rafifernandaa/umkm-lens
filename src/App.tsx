@@ -1475,11 +1475,14 @@ export default function App() {
               <div className="lg:col-span-8 space-y-8">
                 
                 {/* Blog Header bar with Tectonic Styling */}
+                {/* Blog Header bar with Tectonic Styling */}
                 <div className="border-b-2 border-ink pb-3 flex justify-between items-center bg-gray-50 px-3 py-2 border-2 border-ink">
                   <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink block">
-                    📁 ARSIP PROBLEM ANALYSIS ({blogPosts.length} ARTIKEL)
+                    {t(`📁 ARSIP ANALISIS MASALAH (${blogPosts.length} ARTIKEL)`, `📁 PROBLEM ANALYSIS ARCHIVE (${blogPosts.length} ARTICLES)`)}
                   </h3>
-                  <span className="font-mono text-[10px] text-gray-500">PILIH JUDUL UNTUK MEMBACA</span>
+                  <span className="font-mono text-[10px] text-gray-500">
+                    {t("PILIH JUDUL UNTUK MEMBACA", "SELECT A TITLE TO READ")}
+                  </span>
                 </div>
 
                 {/* Selected Post Detail Viewer */}
@@ -1493,30 +1496,30 @@ export default function App() {
                           onClick={() => setSelectedPostSlug(null)}
                           className="font-mono text-xs text-blueprint hover:underline flex items-center gap-1.5 uppercase tracking-wider mb-4"
                         >
-                          ← Kembali ke Semua Artikel
+                          {t("← Kembali ke Semua Artikel", "← Back to All Articles")}
                         </button>
                         
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="bg-ink text-paper text-[10px] uppercase font-mono px-2 py-0.5 font-bold">
-                              {currentPost.category}
+                              {lang === "id" ? currentPost.category : (currentPost.categoryEn || currentPost.category)}
                             </span>
                             <span className="text-xs text-gray-400 font-mono">
-                              Diterbitkan: {currentPost.date}
+                              {t("Diterbitkan: ", "Published: ")} {lang === "id" ? currentPost.date : (currentPost.dateEn || currentPost.date)}
                             </span>
                           </div>
                           
                           <h2 className="text-2xl md:text-3xl font-display font-bold text-ink leading-snug">
-                            {currentPost.title}
+                            {lang === "id" ? currentPost.title : (currentPost.titleEn || currentPost.title)}
                           </h2>
                           
                           <p className="text-xs text-gray-500 font-mono bg-amber-50 border-l-4 border-amber-300 p-2.5 rounded-sm">
-                            🎯 <strong>Cita-Cari Riset:</strong> Dilansir dari {currentPost.citation}.
+                            {t(`🎯 Dasar Riset: Dilansir dari ${currentPost.citation}.`, `🎯 Research Foundation: Sourced from ${currentPost.citation}.`)}
                           </p>
                         </div>
                         
                         <div className="space-y-4 text-gray-700 leading-relaxed font-sans text-sm md:text-base border-t border-gray-100 pt-6">
-                          {currentPost.content.map((para, i) => {
+                          {(lang === "id" ? currentPost.content : (currentPost.contentEn || currentPost.content)).map((para, i) => {
                             // Render raw markdown-like bold parameters gracefully
                             const parsedText = para.split("**").map((text, idx) => {
                               return idx % 2 === 1 ? <strong key={idx} className="marker-highlight text-ink px-1 font-bold">{text}</strong> : text;
@@ -1527,8 +1530,8 @@ export default function App() {
 
                         <div className="border-t-2 border-dashed border-gray-200 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 p-4 border border-ink">
                           <div>
-                            <p className="text-xs text-gray-500 font-mono uppercase">Langkah Rekomendasi Selanjutnya:</p>
-                            <p className="text-sm font-semibold text-ink mt-0.5">Uji kesiapan laporan keuangan Anda sekarang secara gratis!</p>
+                            <p className="text-xs text-gray-500 font-mono uppercase">{t("Langkah Rekomendasi Selanjutnya:", "Next Recommended Step:")}</p>
+                            <p className="text-sm font-semibold text-ink mt-0.5">{t("Uji kesiapan laporan keuangan Anda sekarang secara gratis!", "Test your financial report readiness now for free!")}</p>
                           </div>
                           <button
                             onClick={() => {
@@ -1540,7 +1543,7 @@ export default function App() {
                             }}
                             className="bg-blueprint text-white text-xs font-mono py-2 px-4 shadow-[2px_2px_0px_0px_#111827] border-2 border-ink hover:translate-y-[-1px] uppercase transition-all"
                           >
-                            Coba UMKM Lens →
+                            {t("Coba UMKM Lens →", "Try UMKM Lens →")}
                           </button>
                         </div>
                       </article>
@@ -1557,27 +1560,27 @@ export default function App() {
                       >
                         <div className="flex justify-between items-start gap-4">
                           <span className="bg-gray-100 border border-ink/40 text-[10px] text-ink font-mono uppercase px-2 py-0.5 tracking-wider font-semibold">
-                            {post.category}
+                            {lang === "id" ? post.category : (post.categoryEn || post.category)}
                           </span>
                           <span className="text-[11px] text-gray-400 font-mono flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-gray-300" /> {post.readTime} Baca
+                            <Calendar className="w-3 h-3 text-gray-300" /> {lang === "id" ? `${post.readTime} Baca` : `${post.readTimeEn || post.readTime} Read`}
                           </span>
                         </div>
 
                         <h3 className="text-xl font-display font-bold text-ink group-hover:text-blueprint transition-colors mt-3 mb-2 leading-tight">
-                          {post.title}
+                          {lang === "id" ? post.title : (post.titleEn || post.title)}
                         </h3>
 
                         <p className="text-xs text-gray-600 font-sans line-clamp-3 leading-relaxed mb-4">
-                          {post.summary}
+                          {lang === "id" ? post.summary : (post.summaryEn || post.summary)}
                         </p>
 
                         <div className="flex gap-2 items-center justify-between border-t border-gray-100 pt-3">
                           <span className="text-[10px] text-gray-400 font-mono italic">
-                            Dasar Riset: {post.citation}
+                            {t(`Dasar Riset: ${post.citation}`, `Research Foundation: ${post.citation}`)}
                           </span>
                           <span className="text-xs text-blueprint font-mono font-bold flex items-center gap-1 group-hover:underline">
-                            Baca Selengkapnya <ArrowUpRight className="w-3.5 h-3.5" />
+                            {t("Baca Selengkapnya", "Read More")} <ArrowUpRight className="w-3.5 h-3.5" />
                           </span>
                         </div>
                       </div>
@@ -1593,16 +1596,16 @@ export default function App() {
                 {/* Interactive Tectonic Growth Dashboard (Live Simulator) */}
                 <div id="analytics-simulator" className="tectonic-card p-5 bg-white border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4">
                   <div className="border-b-2 border-ink pb-2">
-                    <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold">LIVE METRICS SIMULATOR</span>
-                    <h4 className="text-lg font-display font-bold text-ink">Gap Efisiensi Arus Kas</h4>
-                    <p className="text-[11px] text-gray-500">Geser slider untuk melihat bagaimana pencatatan visual langsung menyelamatkan margin usaha.</p>
+                    <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold">{t("SIMULATOR METRIK LANGSUNG", "LIVE METRICS SIMULATOR")}</span>
+                    <h4 className="text-lg font-display font-bold text-ink">{t("Gap Efisiensi Arus Kas", "Cash Flow Efficiency Gap")}</h4>
+                    <p className="text-[11px] text-gray-500">{t("Geser slider untuk melihat bagaimana pencatatan visual langsung menyelamatkan margin usaha.", "Move the slider to see how visual ledger recording saves business margins.")}</p>
                   </div>
 
                   {/* Simulator Sliders */}
                   <div className="space-y-3.5">
                     <div>
                       <div className="flex justify-between text-xs font-mono text-gray-700">
-                        <span>Pemasukan Bulanan (Omset):</span>
+                        <span>{t("Pemasukan Bulanan (Omset):", "Monthly Revenue (Turnover):")}</span>
                         <strong className="text-ink">Rp {sliderRevenue.toLocaleString("id-ID")}</strong>
                       </div>
                       <input 
@@ -1618,7 +1621,7 @@ export default function App() {
 
                     <div>
                       <div className="flex justify-between text-xs font-mono text-gray-700">
-                        <span>Beban / Pengeluaran:</span>
+                        <span>{t("Beban / Pengeluaran:", "Expenses / Outflow:")}</span>
                         <strong className="text-red-600">Rp {sliderExpense.toLocaleString("id-ID")}</strong>
                       </div>
                       <input 
@@ -1641,8 +1644,8 @@ export default function App() {
                         <XAxis dataKey="month" tick={{ fontSize: 10, fontFamily: "monospace" }} />
                         <YAxis tick={{ fontSize: 9, fontFamily: "monospace" }} />
                         <Tooltip formatter={(value) => `Rp ${Number(value).toLocaleString("id-ID")}`} labelStyle={{ fontSize: 10, fontFamily: "monospace" }} />
-                        <Area type="monotone" dataKey="LabaDenganAnalitik" fill="#bbf7d0" stroke="#16a34a" name="Laba AI Lens" />
-                        <Line type="monotone" dataKey="LabaTradisional" stroke="#ef4444" strokeWidth={2} name="Laba Tanpa Catatan" />
+                        <Area type="monotone" dataKey="LabaDenganAnalitik" fill="#bbf7d0" stroke="#16a34a" name={t("Laba AI Lens", "AI Lens Profit")} />
+                        <Line type="monotone" dataKey="LabaTradisional" stroke="#ef4444" strokeWidth={2} name={t("Laba Tanpa Catatan", "Profit Without Records")} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
@@ -1651,16 +1654,16 @@ export default function App() {
                   <div className="bg-marker-yellow/10 border border-amber-300 p-3 rounded-sm space-y-2">
                     <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
                       <TrendingUp className="w-4 h-4 text-amber-700" />
-                      <span>Rugi Keuangan Tersembunyi (Leaking Cash):</span>
+                      <span>{t("Rugi Keuangan Tersembunyi (Leaking Cash):", "Hidden Cash Leakage:")}</span>
                     </div>
                     <div className="flex justify-between items-baseline">
-                      <span className="text-[10px] text-gray-500 font-mono">Batas Error Tanpa Analitik</span>
+                      <span className="text-[10px] text-gray-500 font-mono">{t("Batas Error Tanpa Analitik", "Error Margin Without Analytics")}</span>
                       <span className="text-sm font-bold text-red-700 font-mono">
                         ~ Rp {Math.round((sliderRevenue - sliderExpense) * 0.15).toLocaleString("id-ID")} / bln
                       </span>
                     </div>
                     <p className="text-[10px] text-gray-500 leading-tight">
-                      *Berdasarkan data **World Bank (2024)**, ketiadaan visibilitas harian menyebabkan kekacauan pengeluaran non-operasional sebesar 12% s.d 15%.
+                      {t("*Berdasarkan data **World Bank (2024)**, ketiadaan visibilitas harian menyebabkan kekacauan pengeluaran non-operasional sebesar 12% s.d 15%.", "*Based on **World Bank (2024)** data, a lack of daily visibility leads to non-operational expenditure leakages of 12% to 15%.")}
                     </p>
                   </div>
 
@@ -1675,7 +1678,7 @@ export default function App() {
                     }}
                     className="w-full bg-ink text-paper py-2.5 font-bold font-mono text-xs uppercase tracking-wider text-center border-2 border-ink active:translate-y-px hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 shadow-sm"
                   >
-                    Dapatkan Analitik Real-Time Gratis <ArrowRight className="w-3.5 h-3.5" />
+                    {t("Dapatkan Analitik Real-Time Gratis", "Get Free Real-Time Analytics")} <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
                 </div>
@@ -1684,30 +1687,30 @@ export default function App() {
                 <div className="bg-stone-50 border-2 border-ink p-5 space-y-3.5 shadow-[4px_4px_0px_0px_#111827]">
                   <h4 className="font-display font-bold text-sm text-ink uppercase flex items-center gap-1.5 border-b border-ink/10 pb-1.5">
                     <Layers className="w-4 h-4 text-blueprint" />
-                    Gap Literasi di Balik Layar
+                    {t("Gap Literasi di Balik Layar", "Behind the Scenes: Literacy Gap")}
                   </h4>
                   <p className="text-xs text-gray-600 leading-relaxed font-sans">
-                    Menurut Indeks OJK & BPS (SNLIK 2024), indeks literasi masyarakat Indonesia berkisar <strong>65.43%</strong>. Pengusaha mikro paham persis operasional barangnya, tetapi memiliki pemikiran tabu melamar pinjaman karena dokumen yang menakutkan.
+                    {t("Menurut Indeks OJK & BPS (SNLIK 2024), indeks literasi masyarakat Indonesia berkisar 65.43%. Pengusaha mikro paham persis operasional barangnya, tetapi memiliki pemikiran tabu melamar pinjaman karena dokumen yang menakutkan.", "According to the OJK & BPS Index (SNLIK 2024), the financial literacy index of Indonesians stands at 65.43%. Micro-entrepreneurs understand their physical operations perfectly, but face taboos in applying for loans due to intimidating paperwork.")}
                   </p>
                   
                   <div className="space-y-2 text-[11px] font-mono">
                     <div className="flex justify-between border-b border-gray-200 pb-1 text-gray-700">
-                      <span>Kelayakan Kredit Alternatif:</span>
-                      <span className="text-emerald-700 font-semibold uppercase">Potensial Tinggi</span>
+                      <span>{t("Kelayakan Kredit Alternatif:", "Alternative Credit Worthiness:")}</span>
+                      <span className="text-emerald-700 font-semibold uppercase">{t("Potensial Tinggi", "High Potential")}</span>
                     </div>
                     <div className="flex justify-between border-b border-gray-200 pb-1 text-gray-700">
-                      <span>Hambatan Non-Agunan:</span>
-                      <span className="text-red-600 font-semibold uppercase">Pola Laporan Buku</span>
+                      <span>{t("Hambatan Non-Agunan:", "Non-Collateral Barriers:")}</span>
+                      <span className="text-red-600 font-semibold uppercase">{t("Pola Laporan Buku", "Standardized Bookkeeping Format")}</span>
                     </div>
                     <div className="flex justify-between text-gray-700 pb-1">
-                      <span>Solusi Jangka Pendek:</span>
-                      <span className="text-blueprint font-semibold uppercase">Goresan ke PDF</span>
+                      <span>{t("Solusi Jangka Pendek:", "Short-Term Solution:")}</span>
+                      <span className="text-blueprint font-semibold uppercase">{t("Goresan ke PDF", "Scribble-to-PDF Conversion")}</span>
                     </div>
                   </div>
 
                   <div className="p-2.5 bg-sky-50 border border-sky-200 rounded-sm">
                     <p className="text-[10px] text-sky-800 leading-relaxed font-sans font-medium">
-                      ℹ️ <strong>Rekomendasi Kebijakan:</strong> Regulasi UU P2SK Pasal 4 mewajibkan institusi fintech membina literasi finansial para nasabah unbanked.
+                      {t("ℹ️ Rekomendasi Kebijakan: Regulasi UU P2SK Pasal 4 mewajibkan institusi fintech membina literasi finansial para nasabah unbanked.", "ℹ️ Policy Recommendation: UU P2SK Article 4 mandates fintech institutions to foster financial literacy among unbanked customers.")}
                     </p>
                   </div>
                 </div>
@@ -1721,13 +1724,13 @@ export default function App() {
               <div className="absolute top-[-20px] left-[-20px] w-24 h-24 bg-white/5 rounded-full pointer-events-none" />
               <div className="max-w-3xl mx-auto space-y-4">
                 <span className="bg-marker-yellow text-ink text-xs px-2.5 py-1 font-mono tracking-widest uppercase font-bold inline-block">
-                  SEAMLESS ONBOARDING CONVERSION
+                  {t("SEAMLESS ONBOARDING CONVERSION", "SEAMLESS ONBOARDING CONVERSION")}
                 </span>
                 <h2 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold">
-                  Daftar & Deteksi Sekarang Juga Dengan 1-Klik
+                  {t("Daftar & Deteksi Sekarang Juga Dengan 1-Klik", "Register & Detect Instantly with 1-Click")}
                 </h2>
                 <p className="text-xs md:text-sm text-blue-100 max-w-2xl mx-auto leading-relaxed">
-                  Tanpa kartu kredit, tanpa login rumit. Cukup masukkan nama usaha rumah tangga Anda, dan unggah foto buku catatan harian Anda untuk melihat seberapa sakti laporan keuangan Anda dikonversi dalam hitungan detik.
+                  {t("Tanpa kartu kredit, tanpa login rumit. Cukup masukkan nama usaha rumah tangga Anda, dan unggah foto buku catatan harian Anda untuk melihat seberapa sakti laporan keuangan Anda dikonversi dalam hitungan detik.", "No credit card required, no complex login. Simply enter your household business name, and upload a photo of your daily log to see your financial reports converted instantly.")}
                 </p>
                 
                 <div className="pt-3 flex flex-col sm:flex-row justify-center gap-4">
@@ -1735,7 +1738,7 @@ export default function App() {
                     onClick={handleQuickOnboard}
                     className="bg-marker-yellow hover:bg-yellow-300 text-ink px-6 py-3 font-display font-extrabold text-xs md:text-sm uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_rgba(0,0,0,0.8)] active:translate-y-px transition-all"
                   >
-                    🚀 Coba Demo Instan (Pakai Preset)
+                    {t("🚀 Coba Demo Instan (Pakai Preset)", "🚀 Try Instant Demo (Use Preset)")}
                   </button>
                   <button
                     onClick={() => {
