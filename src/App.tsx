@@ -79,20 +79,100 @@ export default function App() {
     nibTerdaftar: false,
   });
 
-  // Compute Credit Assessment
-  const labaBersih = scanResult ? scanResult.totals.laba_bersih : 0;
-  const pemasukan = scanResult ? scanResult.totals.pemasukan : 0;
+  // Banker Decision & SLIK States for Hackathon
+  const [underwriteStatus, setUnderwriteStatus] = useState<"pending" | "approved" | "rejected">("pending");
+  const [approvedLoanAmount, setApprovedLoanAmount] = useState<number>(15000000);
+  const [underwriterNotes, setUnderwriterNotes] = useState<string>("");
+  const [showSlikDetails, setShowSlikDetails] = useState<boolean>(false);
 
+  useEffect(() => {
+    setApprovedLoanAmount(desiredLoan);
+  }, [desiredLoan]);
+
+  // Multi-Period Historical Records (Hackathon Demo Data pre-filled)
+  const [historicalPeriods, setHistoricalPeriods] = useState<AnalysisResult[]>(() => {
+    const saved = localStorage.getItem("umkmlens_history");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [
+      {
+        period: "Maret 2026",
+        business_type: "makanan",
+        items: [
+          { description: "Penjualan Kue Nastar (10 toples)", category: "pemasukan", amount: 750000, confidence: "high" },
+          { description: "Penjualan Kastangel (5 toples)", category: "pemasukan", amount: 400000, confidence: "high" },
+          { description: "Pesanan Katering Kue Ibu RT", category: "pemasukan", amount: 1950000, confidence: "high" },
+          { description: "Belanja Tepung & Margarin", category: "pengeluaran", amount: 650000, confidence: "high" },
+          { description: "Beli Kemasan Toples Kosong", category: "pengeluaran", amount: 250000, confidence: "high" },
+          { description: "Upah Harian Asisten Kue", category: "pengeluaran", amount: 400000, confidence: "high" },
+          { description: "Biaya Listrik Oven & Dapur", category: "pengeluaran", amount: 200000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 3100000,
+          pengeluaran: 1500000,
+          laba_status: "ok", // custom placeholder
+          laba_bersih: 1600000
+        } as any
+      },
+      {
+        period: "April 2026",
+        business_type: "makanan",
+        items: [
+          { description: "Pre-order Lebaran Nastar (30 toples)", category: "pemasukan", amount: 2250000, confidence: "high" },
+          { description: "Kastangel & Putri Salju (15 toples)", category: "pemasukan", amount: 1200000, confidence: "high" },
+          { description: "Penjualan Hampers Hari Raya", category: "pemasukan", amount: 1050000, confidence: "high" },
+          { description: "Kulakan Tepung Terigu, Gula & Telur", category: "pengeluaran", amount: 950000, confidence: "high" },
+          { description: "Bumbu & Butter Wijsman", category: "pengeluaran", amount: 550000, confidence: "high" },
+          { description: "Pembelian Dus Box Hampers Premium", category: "pengeluaran", amount: 300000, confidence: "high" },
+          { description: "Ongkir Gojek Kirim Sampel", category: "pengeluaran", amount: 100000, confidence: "high" },
+          { description: "Upah Harian Asisten Lebaran", category: "pengeluaran", amount: 200000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 4500000,
+          pengeluaran: 2100000,
+          laba_bersih: 2400000
+        }
+      }
+    ];
+  });
+
+  const [selectedPeriodIndex, setSelectedPeriodIndex] = useState<number>(0);
+  const [userRole, setUserRole] = useState<"merchant" | "banker">("merchant");
+
+  // Sync history to localStorage
+  useEffect(() => {
+    localStorage.setItem("umkmlens_history", JSON.stringify(historicalPeriods));
+  }, [historicalPeriods]);
+
+  // Selected active data (either the temporary scan result OR the selected historical period)
+  const isViewingScan = scanResult !== null;
+  const activeResult = isViewingScan ? scanResult : historicalPeriods[selectedPeriodIndex];
+
+  // Calculate average performance across all saved periods
+  const avgMonthlyOmset = historicalPeriods.length > 0
+    ? Math.round(historicalPeriods.reduce((sum, p) => sum + p.totals.pemasukan, 0) / historicalPeriods.length)
+    : 0;
+
+  const avgMonthlyBeban = historicalPeriods.length > 0
+    ? Math.round(historicalPeriods.reduce((sum, p) => sum + p.totals.pengeluaran, 0) / historicalPeriods.length)
+    : 0;
+
+  const avgMonthlyLaba = historicalPeriods.length > 0
+    ? Math.round(historicalPeriods.reduce((sum, p) => sum + p.totals.laba_bersih, 0) / historicalPeriods.length)
+    : 0;
+
+  // Recalculate credit metrics based on averages (which is what a bank actually evaluates!)
   const estCicilan = Math.round((desiredLoan / loanTenor) + (desiredLoan * 0.005));
-  const dscr = estCicilan > 0 ? (labaBersih / estCicilan) : 0;
-  const margin = pemasukan > 0 ? (labaBersih / pemasukan) : 0;
+  const dscr = estCicilan > 0 ? (avgMonthlyLaba / estCicilan) : 0;
+  const margin = avgMonthlyOmset > 0 ? (avgMonthlyLaba / avgMonthlyOmset) : 0;
 
-  // Score composition (base 100)
+  // Composite Score (0-100) based on historical performance
   let score = 0;
-
-  // Only calculate if scanResult is present
-  if (scanResult) {
-    // DSCR contribution (max 40)
+  if (historicalPeriods.length > 0) {
+    // DSCR score (max 40)
     if (dscr >= 2.0) score += 40;
     else if (dscr >= 1.5) score += 35;
     else if (dscr >= 1.2) score += 30;
@@ -101,45 +181,49 @@ export default function App() {
     else if (dscr >= 0.5) score += 10;
     else score += 5;
 
-    // Profit Margin contribution (max 20)
+    // Profit margin (max 20)
     if (margin >= 0.40) score += 20;
     else if (margin >= 0.25) score += 15;
     else if (margin >= 0.10) score += 10;
     else if (margin > 0) score += 5;
 
-    // Profile completeness (max 15)
-    if (userProfile.ownerName) score += 3;
-    if (userProfile.businessName) score += 3;
-    if (userProfile.phone) score += 3;
-    if (userProfile.location) score += 3;
-    if (userProfile.businessType) score += 3;
+    // History longevity check: 3 or more months gives a massive reliability bonus (max 15 pts)
+    if (historicalPeriods.length >= 3) score += 15;
+    else if (historicalPeriods.length === 2) score += 10;
+    else score += 5;
 
-    // Checklist items (max 15)
-    if (completedChecklist.rekeningTerpisah) score += 5;
-    if (completedChecklist.nibTerdaftar) score += 5;
-    if (completedChecklist.catatanKonsisten) score += 5;
+    // Profile completeness (max 10)
+    if (userProfile.ownerName) score += 2;
+    if (userProfile.businessName) score += 2;
+    if (userProfile.phone) score += 2;
+    if (userProfile.location) score += 2;
+    if (userProfile.businessType) score += 2;
 
-    // Alternative Data (max 10)
-    if (useAltData) score += 10;
+    // Checklist tasks (max 10)
+    if (completedChecklist.rekeningTerpisah) score += 3;
+    if (completedChecklist.nibTerdaftar) score += 3;
+    if (completedChecklist.catatanKonsisten) score += 4;
+
+    // Alt Data (max 5)
+    if (useAltData) score += 5;
   }
-
   if (score > 100) score = 100;
 
-  // Determine grade
+  // Banker rating classification
   let creditGrade: "A" | "B" | "C" = "C";
-  let gradeLabel = "BERISIKO TINGGI";
+  let gradeLabel = "RISIKO DEFAULT TINGGI";
   let gradeColor = "text-red-700 bg-red-50 border-red-500";
   let gradeBadgeColor = "bg-red-600 text-white border-red-600 text-xs";
 
-  if (scanResult) {
-    if (dscr >= 1.5 && score >= 70) {
+  if (historicalPeriods.length > 0) {
+    if (dscr >= 1.4 && score >= 75) {
       creditGrade = "A";
-      gradeLabel = "SANGAT LAYAK (Grade A)";
+      gradeLabel = "RISIKO RENDAH (Grade A)";
       gradeColor = "text-emerald-700 bg-emerald-50 border-emerald-500";
       gradeBadgeColor = "bg-emerald-600 text-white border-emerald-600 text-xs";
     } else if (dscr >= 1.0 && score >= 50) {
       creditGrade = "B";
-      gradeLabel = "CUKUP LAYAK (Grade B)";
+      gradeLabel = "RISIKO SEDANG (Grade B)";
       gradeColor = "text-amber-700 bg-amber-50 border-amber-500";
       gradeBadgeColor = "bg-amber-500 text-white border-amber-500 text-xs";
     }
@@ -342,53 +426,48 @@ export default function App() {
     });
   };
 
-  const handleDeleteItem = (index: number) => {
-    if (!scanResult) return;
-    const updatedItems = scanResult.items.filter((_, idx) => idx !== index);
-    
-    // Recalculate totals
-    let pemasukan = 0;
-    let pengeluaran = 0;
-    updatedItems.forEach((item) => {
-      if (item.category === "pemasukan") {
-        pemasukan += item.amount || 0;
-      } else if (item.category === "pengeluaran") {
-        pengeluaran += item.amount || 0;
-      }
-    });
-
-    setScanResult({
-      ...scanResult,
-      items: updatedItems,
-      totals: {
-        pemasukan,
-        pengeluaran,
-        laba_bersih: pemasukan - pengeluaran
-      }
-    });
+  // Unified updater for active result (updates either scanResult or active history period)
+  const updateActiveData = (updated: AnalysisResult) => {
+    if (isViewingScan) {
+      setScanResult(updated);
+    } else {
+      const updatedPeriods = [...historicalPeriods];
+      updatedPeriods[selectedPeriodIndex] = updated;
+      setHistoricalPeriods(updatedPeriods);
+    }
   };
 
-  const handleAddNewItem = () => {
+  const handleSaveToHistory = () => {
     if (!scanResult) return;
-    const newItem: TransactionItem = {
-      description: "Item Baru (Koreksi)",
-      category: "pemasukan",
-      amount: 50000,
-      confidence: "high"
-    };
+    
+    // Check if period already exists in history
+    const existingIndex = historicalPeriods.findIndex(
+      p => p.period.toLowerCase() === scanResult.period.toLowerCase()
+    );
+    
+    let updatedPeriods = [...historicalPeriods];
+    if (existingIndex >= 0) {
+      updatedPeriods[existingIndex] = scanResult;
+    } else {
+      updatedPeriods.push(scanResult);
+    }
+    
+    setHistoricalPeriods(updatedPeriods);
+    setScanResult(null);
+    setSelectedPeriodIndex(existingIndex >= 0 ? existingIndex : updatedPeriods.length - 1);
+  };
 
-    const updatedItems = [...scanResult.items, newItem];
-    const pemasukan = scanResult.totals.pemasukan + 50000;
-
+  const handleTriggerNewScan = () => {
     setScanResult({
-      ...scanResult,
-      items: updatedItems,
-      totals: {
-        ...scanResult.totals,
-        pemasukan,
-        laba_bersih: pemasukan - scanResult.totals.pengeluaran
-      }
+      period: "Mei 2026",
+      business_type: userProfile.businessType || "makanan",
+      items: [],
+      totals: { pemasukan: 0, pengeluaran: 0, laba_bersih: 0 }
     });
+    setTimeout(() => {
+      const el = document.getElementById("anchor-scan");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   // Trigger registration flow with simple single-click mock registration
@@ -479,10 +558,12 @@ export default function App() {
 
   // Trigger download PDF or Print layout
   const handleExportPDF = () => {
-    if (!scanResult) {
+    const dataToExport = activeResult;
+    if (!dataToExport) {
       alert("Belum ada data analisis untuk diekspor!");
       return;
     }
+    const scanResult = dataToExport;
 
     try {
       const doc = new jsPDF({
@@ -837,11 +918,11 @@ export default function App() {
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
       
-      doc.text(`1. Total Pendapatan Bulanan Terpindai (Omset): Rp ${pemasukan.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`1. Total Pendapatan Bulanan Terpindai (Omset): Rp ${avgMonthlyOmset.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`2. Total Pengeluaran Bulanan Terpindai (Beban): Rp ${labaBersih >= 0 ? (pemasukan - labaBersih).toLocaleString("id-ID") : (pemasukan + Math.abs(labaBersih)).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`2. Total Pengeluaran Bulanan Terpindai (Beban): Rp ${avgMonthlyLaba >= 0 ? (avgMonthlyOmset - avgMonthlyLaba).toLocaleString("id-ID") : (avgMonthlyOmset + Math.abs(avgMonthlyLaba)).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`3. Sisa Bersih Bulanan (Laba Bersih Riil): Rp ${labaBersih.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`3. Sisa Bersih Bulanan (Laba Bersih Riil): Rp ${avgMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
       doc.text(`4. Margin Laba Bersih Usaha: ${(margin * 100).toFixed(1)}% (Standard bank untuk pinjaman produktif > 10%)`, marginX + 4, pg2Y);
       pg2Y += 5;
@@ -877,6 +958,50 @@ export default function App() {
       doc.text(`${chk4} Melampirkan Bukti Bayar Utilitas (Listrik/Ponsel) Tepat Waktu & Mutasi Alternatif e-Wallet`, marginX + 4, pg2Y);
 
       pg2Y += 12;
+
+      // Section: Banker Decision Underwriting Status
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.text("KEPUTUSAN & REKOMENDASI UNDERWRITER BANK", marginX, pg2Y);
+
+      pg2Y += 6;
+      doc.setFillColor(249, 250, 251);
+      doc.rect(marginX, pg2Y, 180, 18, "F");
+      
+      const stampBorderColor = underwriteStatus === "approved" ? [16, 185, 129] : (underwriteStatus === "rejected" ? [239, 68, 68] : [107, 114, 128]);
+      doc.setDrawColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      doc.setLineWidth(0.3);
+      doc.rect(marginX, pg2Y, 180, 18, "S");
+
+      // Draw stamp border
+      doc.setDrawColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      doc.setLineWidth(0.4);
+      doc.rect(marginX + 4, pg2Y + 3, 26, 12, "S");
+      doc.setTextColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text(underwriteStatus.toUpperCase(), marginX + 7, pg2Y + 11.5);
+
+      // Decision details
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8.5);
+      const decisionTitle = underwriteStatus === "approved" 
+        ? `DISETUJUI PLAFON Rp ${approvedLoanAmount.toLocaleString("id-ID")}`
+        : (underwriteStatus === "rejected" ? "PERMOHONAN DITOLAK" : "MENUNGGU UNDERWRITING");
+      doc.text(decisionTitle, marginX + 35, pg2Y + 6);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(75, 85, 99);
+      const notesText = underwriterNotes || (underwriteStatus === "approved" 
+        ? "Berdasarkan penilaian analitis, usaha dinilai layak dengan kapasitas bayar lancar." 
+        : (underwriteStatus === "rejected" ? "Kredit ditolak karena rasio margin pengembalian berada di bawah batas toleransi minimum." : "Dokumen pre-assessment belum ditinjau oleh pejabat analis kredit perbankan."));
+      const splitNotes = doc.splitTextToSize(`Catatan Analis: ${notesText}`, 140);
+      doc.text(splitNotes, marginX + 35, pg2Y + 11);
+
+      pg2Y += 25;
 
       // Section 4: Alternative Scoring Legal Box (UU P2SK)
       doc.setFillColor(239, 246, 255); // Sky tint
@@ -1531,627 +1656,938 @@ export default function App() {
             {/* Anchor Target for scanning utility */}
             <div id="anchor-scan" className="h-1" />
 
-            {/* ==================== STEP B: CHOOSE OR UPLOAD FINANCIAL RECORD ==================== */}
+            {/* ==================== LEDGER WORKSPACE: MULTI-PERIOD DATABASE ==================== */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              {/* Left Core interactive box - Presets & Custom File input */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-5">
-                  
+              {/* Left Column (4 cols): Profile, Saved Periods List, and Credit Score Indicator */}
+              <div className="lg:col-span-4 space-y-6">
+                
+                {/* 1. Saved Periods Card */}
+                <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4">
                   <div className="border-b-2 border-ink pb-2 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-blueprint" />
-                      <h3 className="font-display font-bold text-base text-ink uppercase">Catatan Masukan</h3>
-                    </div>
-                    <span className="font-mono text-[10px] text-gray-400">PILIHAN UPLOAD ATAU CONTOH</span>
+                    <h3 className="font-display font-bold text-sm text-ink uppercase flex items-center gap-1.5">
+                      📖 Buku Kas Sejarah
+                    </h3>
+                    <span className="bg-ink text-paper text-[9px] px-1.5 py-0.5 font-mono">
+                      {historicalPeriods.length} Bulan
+                    </span>
                   </div>
 
-                  {/* UI Toggle preset notebooks vs real upload */}
-                  <div className="space-y-4">
-                    
-                    {/* Method 1: Choose hand-ledger preset */}
-                    <div className="space-y-3">
-                      <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
-                        Metode A: Pilih Preset Lembar Buku Tulis Harian (Disarankan untuk Demo)
-                      </span>
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto">
+                    {historicalPeriods.map((p, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 border-2 transition-all flex justify-between items-center ${
+                          selectedPeriodIndex === idx && !isViewingScan
+                            ? "bg-marker-yellow border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)]"
+                            : "bg-paper border-gray-200 hover:border-ink cursor-pointer"
+                        }`}
+                        onClick={() => {
+                          setSelectedPeriodIndex(idx);
+                          setScanResult(null); // Deselect active scan
+                        }}
+                      >
+                        <div>
+                          <p className="font-mono text-xs font-bold text-ink">{p.period}</p>
+                          <p className="text-[10px] text-gray-500 font-sans mt-0.5 uppercase">Sektor: {p.business_type}</p>
+                        </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div>
+                            <span className="text-[9px] text-gray-400 font-mono block">Laba Bersih:</span>
+                            <span className={`text-[10px] font-mono font-bold ${p.totals.laba_bersih >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                              Rp {p.totals.laba_bersih.toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          {historicalPeriods.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const updated = historicalPeriods.filter((_, i) => i !== idx);
+                                setHistoricalPeriods(updated);
+                                if (selectedPeriodIndex >= updated.length) {
+                                  setSelectedPeriodIndex(Math.max(0, updated.length - 1));
+                                }
+                              }}
+                              className="text-gray-400 hover:text-red-600 p-1 font-bold text-sm"
+                              title="Hapus bulan ini"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {sampleNotes.map((note) => (
-                          <button
-                            key={note.id}
-                            type="button"
-                            onClick={() => handleSelectPreset(note)}
-                            className={`p-3 text-left border-2 flex flex-col justify-between h-32 transition-all ${
-                              selectedPreset?.id === note.id
-                                ? "bg-marker-yellow border-ink shadow-[2px_2px_0px_0px_#111827]"
-                                : "bg-paper border-gray-300 hover:border-ink shadow-sm"
-                            }`}
-                          >
-                            <div>
-                              <p className="font-sans text-xs font-bold text-ink leading-tight line-clamp-2">
-                                {note.title}
+                  {/* Add New Month button */}
+                  <button
+                    onClick={handleTriggerNewScan}
+                    className="w-full bg-blueprint text-white py-2.5 font-mono text-xs font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] active:translate-y-px text-center cursor-pointer hover:bg-blue-700"
+                  >
+                    ➕ Pindai & Unggah Bulan Baru
+                  </button>
+                </div>
+
+                {/* 2. Global Credit Score circular visualizer */}
+                <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4 text-center flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-mono text-gray-400 uppercase">KONSOLIDASI KESIAPAN KREDIT</span>
+                  
+                  {/* Score Indicator */}
+                  <div className="relative w-32 h-32 flex items-center justify-center bg-slate-50 border-4 border-ink rounded-full shadow-inner">
+                    <div className="text-center">
+                      <span className="text-3xl md:text-4xl font-display font-extrabold text-ink">{score}</span>
+                      <span className="text-[10px] text-gray-400 font-mono block border-t border-gray-100 mt-1 pt-0.5">dari 100</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs font-mono font-bold text-ink uppercase">GRADE: {creditGrade}</p>
+                    <span className={`inline-block px-3 py-1 font-mono text-[10px] font-bold border-2 border-ink uppercase ${gradeBadgeColor}`}>
+                      {gradeLabel}
+                    </span>
+                    <p className="text-[10px] text-gray-500 font-sans leading-tight mt-2 max-w-[200px] mx-auto">
+                      Dihitung dari rata-rata laba bersih bulanan <strong>Rp {avgMonthlyLaba.toLocaleString("id-ID")}</strong> untuk plafon Rp {desiredLoan.toLocaleString("id-ID")}.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Column (8 cols): Main workspace (Active Scan Form, Active ledger table editor, or Underwriting Dashboard) */}
+              <div className="lg:col-span-8 space-y-6">
+                
+                {/* Condition 1: Actively scanning / uploading new month OR scanResult is loaded but not yet saved */}
+                {isViewingScan && scanResult.items.length === 0 ? (
+                  /* RENDER SCAN INPUT FORM */
+                  <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-5">
+                    
+                    <div className="border-b-2 border-ink pb-2 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-5 h-5 text-blueprint" />
+                        <h3 className="font-display font-bold text-base text-ink uppercase">Scan Catatan Bulanan Baru</h3>
+                      </div>
+                      <button 
+                        onClick={() => setScanResult(null)}
+                        className="text-xs font-mono text-gray-400 hover:text-ink hover:underline"
+                      >
+                        Batal
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      
+                      {/* Presets */}
+                      <div className="space-y-3">
+                        <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
+                          Langkah 1: Pilih Preset Buku Kas Harian (Untuk Demo Instan)
+                        </span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {sampleNotes.map((note) => (
+                            <button
+                              key={note.id}
+                              type="button"
+                              onClick={() => handleSelectPreset(note)}
+                              className={`p-3 text-left border-2 flex flex-col justify-between h-32 transition-all ${
+                                selectedPreset?.id === note.id
+                                  ? "bg-marker-yellow border-ink shadow-[2px_2px_0px_0px_#111827]"
+                                  : "bg-paper border-gray-300 hover:border-ink shadow-sm"
+                              }`}
+                            >
+                              <div>
+                                <p className="font-sans text-xs font-bold text-ink leading-tight line-clamp-2">
+                                  {note.title}
+                                </p>
+                                <span className="text-[9px] text-gray-500 font-mono mt-1 block uppercase">
+                                  Sektor: {note.businessType}
+                                </span>
+                              </div>
+                              <p className="text-[9px] text-gray-600 line-clamp-2 mt-2 leading-tight font-sans italic">
+                                "{note.snippet}"
                               </p>
-                              <span className="text-[9px] text-gray-500 font-mono mt-1 block uppercase">
-                                Sektor: {note.businessType}
-                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2">
+                        <div className="h-px bg-gray-200 flex-1" />
+                        <span className="px-3 text-[10.5px] font-mono text-gray-400 uppercase tracking-widest">ATAU</span>
+                        <div className="h-px bg-gray-200 flex-1" />
+                      </div>
+
+                      {/* Camera Upload */}
+                      <div className="space-y-2">
+                        <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
+                          Langkah 2: Ambil Foto Buku Kas Fisik
+                        </span>
+
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-sm p-6 text-center cursor-pointer transition-colors ${
+                            uploadedImage ? "bg-slate-50 border-blueprint" : "bg-paper border-gray-400 hover:bg-slate-50 hover:border-ink"
+                          }`}
+                        >
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                          {uploadedImage ? (
+                            <div className="space-y-2">
+                              <CheckCircle className="w-8 h-8 text-blueprint mx-auto" />
+                              <p className="text-xs text-ink font-semibold">Tergugah: {uploadedFileName}</p>
+                              <p className="text-[10px] text-gray-400 font-mono">Ketuk untuk mengganti foto</p>
                             </div>
-                            <p className="text-[9px] text-gray-600 line-clamp-2 mt-2 leading-tight font-sans italic">
-                              "{note.snippet}"
-                            </p>
-                          </button>
-                        ))}
+                          ) : (
+                            <div className="space-y-3">
+                              <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                              <div className="space-y-1">
+                                <p className="text-xs font-bold text-ink hover:underline">Ketuk untuk mengambil foto catatan harian</p>
+                                <p className="text-[10px] text-gray-400 font-mono">Jpg, Png, Heic maksimal 10MB</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Metadata Context */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Periode Bulan Catatan</label>
+                        <input
+                          type="text"
+                          value={customPeriod}
+                          onChange={(e) => setCustomPeriod(e.target.value)}
+                          placeholder="Contoh: Mei 2026"
+                          className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Sektor Usaha Catatan</label>
+                        <select
+                          value={customBusinessType}
+                          onChange={(e) => setCustomBusinessType(e.target.value)}
+                          className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
+                        >
+                          <option value="makanan">Makanan Rumahan</option>
+                          <option value="kerajinan">Kerajinan Tangan</option>
+                          <option value="warung">Toko Kelontong</option>
+                          <option value="jasa">Jasa & Servis</option>
+                        </select>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between py-2">
-                      <div className="h-px bg-gray-200 flex-1" />
-                      <span className="px-3 text-[10.5px] font-mono text-gray-400 uppercase tracking-widest">ATAU</span>
-                      <div className="h-px bg-gray-200 flex-1" />
-                    </div>
+                    {formError && (
+                      <div className="p-3 bg-red-50 border-2 border-red-500 text-xs text-red-700">
+                        <p className="font-bold uppercase">⚠️ GAGAL MEMULAI DETEKSI</p>
+                        <p>{formError}</p>
+                      </div>
+                    )}
 
-                    {/* Method 2: Genuine Camera capture & File upload */}
-                    <div className="space-y-2">
-                      <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
-                        Metode B: Jepret Kamera Ponsel atau Unggah Berkas Sendiri
-                      </span>
+                    <button
+                      onClick={handleStartAnalysis}
+                      disabled={isProcessing}
+                      className={`w-full text-center font-display font-medium text-xs md:text-sm py-4 border-2 border-ink uppercase tracking-wider text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] active:translate-y-0.5 active:translate-x-0.5 cursor-pointer ${
+                        isProcessing ? "bg-gray-400 cursor-not-allowed" : "bg-blueprint hover:bg-blue-700"
+                      }`}
+                    >
+                      {isProcessing ? "Sedang Membaca..." : "Mulai Konversi dengan AI Lens Sekarang"}
+                    </button>
 
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-sm p-6 text-center cursor-pointer transition-colors ${
-                          uploadedImage 
-                            ? "bg-slate-50 border-blueprint" 
-                            : "bg-paper border-gray-400 hover:bg-slate-50 hover:border-ink"
-                        }`}
-                      >
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                        {uploadedImage ? (
-                          <div className="space-y-2">
-                            <CheckCircle className="w-8 h-8 text-blueprint mx-auto" />
-                            <p className="text-xs text-ink font-semibold">Tergugah: {uploadedFileName}</p>
-                            <p className="text-[10px] text-gray-400 font-mono">Ketuk area untuk mengganti foto</p>
-                          </div>
+                  </div>
+                ) : (
+                  /* RENDER ACTIVE RESULT EDITOR & SCORECARD VIEW */
+                  <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-6">
+                    
+                    {/* Active Period Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-ink pb-4 gap-4">
+                      <div>
+                        {isViewingScan ? (
+                          <span className="text-[10px] bg-red-600 text-white font-mono uppercase px-2 py-0.5 tracking-wider font-bold">
+                            ⚠️ SCAN BARU DITELITI (BELUM DISIMPAN KE RIWAYAT)
+                          </span>
                         ) : (
-                          <div className="space-y-3">
-                            <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                            <div className="space-y-1">
-                              <p className="text-xs font-bold text-ink hover:underline">Ketuk untuk mengambil foto tulisan tangan</p>
-                              <p className="text-[10px] text-gray-400 font-mono">Format Jpg, Png, Heic maksimal 10MB</p>
-                            </div>
-                          </div>
+                          <span className="text-[10px] bg-blueprint text-white font-mono uppercase px-2 py-0.5 tracking-wider font-bold">
+                            ✓ RIWAYAT TERSIMPAN DI BUKU KAS SEJARAH
+                          </span>
+                        )}
+                        <h3 className="text-xl font-display font-bold text-ink mt-1.5">
+                          Bulan: {activeResult.period} (Usaha {activeResult.business_type.toUpperCase()})
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isViewingScan ? (
+                          <button
+                            onClick={handleSaveToHistory}
+                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:shadow-[1px_1px_0px_0px_#111827] transition-all active:translate-y-px cursor-pointer"
+                          >
+                            💾 Simpan Ke Riwayat Kas
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleExportPDF}
+                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] flex items-center gap-1.5 active:translate-y-px hover:shadow-[1.5px_1.5px_0px_0px_#111827] transition-all"
+                          >
+                            <FileDown className="w-4 h-4" /> Cetak PDF Laporan
+                          </button>
                         )}
                       </div>
                     </div>
 
-                  </div>
-
-                  {/* Context Info Box */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-                    <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Periode Finansial</label>
-                      <input
-                        type="text"
-                        value={customPeriod}
-                        onChange={(e) => setCustomPeriod(e.target.value)}
-                        placeholder="Contoh: Mei 2026"
-                        className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Klasifikasi Usaha Dokumen</label>
-                      <select
-                        value={customBusinessType}
-                        onChange={(e) => setCustomBusinessType(e.target.value)}
-                        className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
-                      >
-                        <option value="makanan">Makanan Rumahan</option>
-                        <option value="kerajinan">Kerajinan Tangan</option>
-                        <option value="warung">Toko Kelontong</option>
-                        <option value="jasa">Jasa & Servis</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {formError && (
-                    <div className="p-3 bg-red-50 border-2 border-red-500 text-xs text-red-700 space-y-1">
-                      <p className="font-bold uppercase">⚠️ Gagal Memulai deteksi</p>
-                      <p>{formError}</p>
-                    </div>
-                  )}
-
-                  {/* Start Extraction CTA */}
-                  <button
-                    onClick={handleStartAnalysis}
-                    disabled={isProcessing}
-                    className={`w-full text-center font-display font-medium text-xs md:text-sm py-4 border-2 border-ink uppercase tracking-wider text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] active:translate-y-0.5 active:translate-x-0.5 cursor-pointer ${
-                      isProcessing 
-                        ? "bg-gray-400 cursor-not-allowed" 
-                        : "bg-blueprint hover:bg-blue-700"
-                    }`}
-                  >
-                    {isProcessing ? "Sedang Membaca..." : "Mulai Konversi dengan AI Lens Sekarang"}
-                  </button>
-
-                </div>
-              </div>
-
-              {/* Right core interactive preview of actual document image */}
-              <div className="lg:col-span-5 space-y-6">
-                <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4">
-                  <span className="text-[10px] font-mono text-gray-400 uppercase block border-b border-ink/10 pb-1.5">
-                    PRATINJAU DOKUMEN TULISAN TANGAN
-                  </span>
-
-                  {/* Visual handwritten sheet representation */}
-                  <div className="relative border-2 border-ink bg-[#FCFBE3] p-5 shadow-inner rounded-sm font-mono text-xs text-stone-800 space-y-2 min-h-[300px] overflow-auto">
-                    
-                    {/* Architectural Grid gridlines overlay to look like realistic paper notepad */}
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(17,24,39,0.06)_1px,transparent_1px)] bg-[size:100%_24px] pointer-events-none" />
-
-                    {selectedPreset ? (
-                      <div className="relative space-y-2 z-10">
-                        <div className="flex justify-between items-center border-b-2 border-red-300 pb-1">
-                          <span className="text-stone-500 text-[10px]">PRESET LEDGER FILEID: {selectedPreset.id.toUpperCase()}</span>
-                          <span className="text-red-400 text-[10px]">★ CATATAN ASLI</span>
-                        </div>
-                        <div className="space-y-1.5 pt-2">
-                          {selectedPreset.handwrittenContent.map((line, idx) => (
-                            <p key={idx} className="leading-[24px] select-all decoration-red-300">
-                              {line}
-                            </p>
-                          ))}
-                        </div>
+                    {/* Interactive Table Editor */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-mono font-bold text-gray-500 uppercase">
+                          📋 Rincian Transaksi Catatan Harian
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-sans italic">
+                          (Ketuk teks/angka di bawah untuk mengoreksi kesalahan AI secara langsung)
+                        </span>
                       </div>
-                    ) : uploadedImage ? (
-                      <div className="relative flex flex-col justify-center items-center h-full pt-8 z-10">
-                        <img 
-                          src={uploadedImage} 
-                          alt="Gugahan Anda" 
-                          className="max-h-[350px] border-2 border-ink object-contain shadow-md mb-2" 
-                        />
-                        <p className="text-[10px] text-gray-500 font-mono mt-1 text-center">FOTO TULISAN TANGAN PENGGUNA TERPASANG</p>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-2 border-ink text-left font-mono text-xs">
+                          <thead className="bg-slate-50 border-b-2 border-ink">
+                            <tr>
+                              <th className="p-3 border-r border-ink">KETERANGAN</th>
+                              <th className="p-3 border-r border-ink text-center w-28">KATEGORI</th>
+                              <th className="p-3 border-r border-ink text-right w-36">NOMINAL (RP)</th>
+                              <th className="p-3 border-r border-ink text-center w-28">AKURASI AI</th>
+                              <th className="p-3 text-center w-12">AKSI</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activeResult.items.map((item, idx) => (
+                              <tr key={idx} className="border-b border-ink hover:bg-neutral-50">
+                                
+                                {/* Desc */}
+                                <td className="p-2 border-r border-ink">
+                                  <input
+                                    type="text"
+                                    value={item.description}
+                                    onChange={(e) => {
+                                      const items = [...activeResult.items];
+                                      items[idx].description = e.target.value;
+                                      updateActiveData({ ...activeResult, items });
+                                    }}
+                                    className="w-full bg-transparent font-medium text-ink border-b border-transparent focus:border-blueprint focus:outline-none p-1 text-xs"
+                                  />
+                                </td>
+
+                                {/* Cat */}
+                                <td className="p-2 border-r border-ink text-center">
+                                  <select
+                                    value={item.category}
+                                    onChange={(e) => {
+                                      const items = [...activeResult.items];
+                                      items[idx].category = e.target.value as any;
+                                      
+                                      // Recalculate totals
+                                      let pemasukan = 0;
+                                      let pengeluaran = 0;
+                                      items.forEach(it => {
+                                        if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                        else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                      });
+                                      
+                                      updateActiveData({
+                                        ...activeResult,
+                                        items,
+                                        totals: {
+                                          pemasukan,
+                                          pengeluaran,
+                                          laba_bersih: pemasukan - pengeluaran
+                                        }
+                                      });
+                                    }}
+                                    className="bg-white border border-ink text-[11px] p-0.5 font-mono focus:outline-none"
+                                  >
+                                    <option value="pemasukan">PEMASUKAN</option>
+                                    <option value="pengeluaran">PENGELUARAN</option>
+                                    <option value="unknown">BURAM</option>
+                                  </select>
+                                </td>
+
+                                {/* Amount */}
+                                <td className="p-2 border-r border-ink text-right font-bold text-sm">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <span className="text-gray-400 font-normal text-xs">Rp</span>
+                                    <input
+                                      type="number"
+                                      value={item.amount || 0}
+                                      onChange={(e) => {
+                                        const items = [...activeResult.items];
+                                        items[idx].amount = Number(e.target.value);
+                                        
+                                        // Recalculate totals
+                                        let pemasukan = 0;
+                                        let pengeluaran = 0;
+                                        items.forEach(it => {
+                                          if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                          else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                        });
+
+                                        updateActiveData({
+                                          ...activeResult,
+                                          items,
+                                          totals: {
+                                            pemasukan,
+                                            pengeluaran,
+                                            laba_bersih: pemasukan - pengeluaran
+                                          }
+                                        });
+                                      }}
+                                      className="w-[100px] bg-transparent text-right font-mono font-bold border-b border-transparent focus:border-blueprint focus:outline-none p-1 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                  </div>
+                                </td>
+
+                                {/* Accuracy */}
+                                <td className="p-2 border-r border-ink text-center">
+                                  {item.confidence === "high" ? (
+                                    <span className="bg-marker-green border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase">
+                                      Tinggi (98%)
+                                    </span>
+                                  ) : (
+                                    <span className="bg-marker-orange border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase animate-pulse">
+                                      Periksa (45%)
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Actions */}
+                                <td className="p-2 text-center">
+                                  <button
+                                    onClick={() => {
+                                      const items = activeResult.items.filter((_, i) => i !== idx);
+                                      let pemasukan = 0;
+                                      let pengeluaran = 0;
+                                      items.forEach(it => {
+                                        if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                        else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                      });
+                                      updateActiveData({
+                                        ...activeResult,
+                                        items,
+                                        totals: {
+                                          pemasukan,
+                                          pengeluaran,
+                                          laba_bersih: pemasukan - pengeluaran
+                                        }
+                                      });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 p-1 border border-transparent hover:border-red-300 rounded-sm transition-all"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+
+                              </tr>
+                            ))}
+
+                            {/* Add empty row */}
+                            <tr className="bg-gray-50/50">
+                              <td colSpan={5} className="p-2 text-left">
+                                <button
+                                  onClick={() => {
+                                    const items = [...activeResult.items, { description: "Baris Baru (Koreksi)", category: "pemasukan", amount: 50000, confidence: "high" } as any];
+                                    let pemasukan = 0;
+                                    let pengeluaran = 0;
+                                    items.forEach(it => {
+                                      if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                      else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                    });
+                                    updateActiveData({
+                                      ...activeResult,
+                                      items,
+                                      totals: {
+                                        pemasukan,
+                                        pengeluaran,
+                                        laba_bersih: pemasukan - pengeluaran
+                                      }
+                                    });
+                                  }}
+                                  className="text-xs font-mono font-semibold text-blueprint hover:underline flex items-center gap-1 uppercase"
+                                >
+                                  <Plus className="w-3.5 h-3.5" /> Tambahkan Baris Transaksi Baru (Manual)
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 pt-16">
-                        <HelpCircle className="w-12 h-12 text-gray-300 mb-2 animate-bounce" />
-                        <p className="font-bold text-xs uppercase text-stone-500">Kamar Kosong</p>
-                        <p className="text-[10px] text-gray-400 max-w-xs mt-1">Pilih salah satu preset atau unggah dokumen tulisan tangan Anda di panel sebelah kiri.</p>
+                    </div>
+
+                    {/* Active Month Financial Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 border border-ink">
+                      <div>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">KAS MASUK (OMSET) BULAN INI</span>
+                        <strong className="text-lg font-display text-ink block mt-0.5">
+                          Rp {activeResult.totals.pemasukan.toLocaleString("id-ID")}
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">KAS KELUAR (BEBAN) BULAN INI</span>
+                        <strong className="text-lg font-display text-red-600 block mt-0.5">
+                          Rp {activeResult.totals.pengeluaran.toLocaleString("id-ID")}
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">LABA BERSIH BULAN INI</span>
+                        <strong className={`text-lg font-display block mt-0.5 ${activeResult.totals.laba_bersih >= 0 ? "text-blueprint" : "text-red-700"}`}>
+                          Rp {activeResult.totals.laba_bersih.toLocaleString("id-ID")}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* Mode Toggle Selector (Merchant vs Banker) */}
+                    {!isViewingScan && (
+                      <div className="flex bg-slate-100 p-0.5 border border-ink rounded-sm">
+                        <button
+                          onClick={() => setUserRole("merchant")}
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
+                            userRole === "merchant" ? "bg-ink text-paper" : "hover:bg-slate-200 text-ink"
+                          }`}
+                        >
+                          👤 Mode Sobat UMKM
+                        </button>
+                        <button
+                          onClick={() => setUserRole("banker")}
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
+                            userRole === "banker" ? "bg-blueprint text-white" : "hover:bg-slate-200 text-ink"
+                          }`}
+                        >
+                          🏦 Mode Analis Kredit Bank (SLIK & Underwriting)
+                        </button>
                       </div>
                     )}
-                  </div>
 
-                  {/* AI Scan Motion Overlay Stage */}
-                  {isProcessing && (
-                    <div className="bg-ink text-paper p-4 border border-ink space-y-3 font-mono text-xs shadow-md animate-pulse">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-marker-yellow animate-ping" />
-                        <span className="font-bold uppercase text-marker-yellow">SISTEM AI BEKERJA:</span>
+                    {/* Merchant Panel View */}
+                    {!isViewingScan && userRole === "merchant" && (
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2 items-start">
+                        
+                        {/* Sliders and checklists */}
+                        <div className="lg:col-span-7 space-y-4">
+                          <div className="bg-slate-50 border border-ink p-4 space-y-3">
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase">⚙️ Simulasi Plafon KUR Mikro</h5>
+                            
+                            <div>
+                              <div className="flex justify-between text-xs font-mono text-gray-700">
+                                <span>Plafon Pinjaman:</span>
+                                <strong className="text-blueprint">Rp {desiredLoan.toLocaleString("id-ID")}</strong>
+                              </div>
+                              <input 
+                                type="range" 
+                                min="5000000" 
+                                max="50000000" 
+                                step="1000000"
+                                value={desiredLoan}
+                                onChange={(e) => setDesiredLoan(Number(e.target.value))}
+                                className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink" 
+                              />
+                            </div>
+
+                            <div>
+                              <span className="block text-xs font-mono text-gray-700 mb-1">Tenor Pengembalian (Bulan):</span>
+                              <div className="flex gap-2">
+                                {[12, 18, 24].map((t) => (
+                                  <button
+                                    key={t}
+                                    type="button"
+                                    onClick={() => setLoanTenor(t)}
+                                    className={`flex-1 py-1 text-xs font-mono border border-ink font-bold transition-all ${
+                                      loanTenor === t ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    {t} Bulan
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="text-[10px] font-mono text-gray-500 bg-white p-2 border border-dashed border-gray-300 rounded-sm">
+                              <div className="flex justify-between">
+                                <span>Estimasi Cicilan:</span>
+                                <strong>Rp {estCicilan.toLocaleString("id-ID")} / bulan</strong>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Checklists */}
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase">📋 Tindakan Penguatan Kesiapan Kredit</h5>
+                            <div className="space-y-2 text-[11px]">
+                              <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={completedChecklist.rekeningTerpisah} 
+                                  onChange={(e) => setCompletedChecklist({ ...completedChecklist, rekeningTerpisah: e.target.checked })}
+                                  className="mt-0.5 accent-blueprint"
+                                />
+                                <div>
+                                  <strong className="text-ink block font-semibold">Memisahkan Uang Pribadi & Usaha (+5 Poin)</strong>
+                                </div>
+                              </label>
+                              <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={completedChecklist.nibTerdaftar} 
+                                  onChange={(e) => setCompletedChecklist({ ...completedChecklist, nibTerdaftar: e.target.checked })}
+                                  className="mt-0.5 accent-blueprint"
+                                />
+                                <div>
+                                  <strong className="text-ink block font-semibold">Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)</strong>
+                                </div>
+                              </label>
+                              <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={completedChecklist.catatanKonsisten} 
+                                  onChange={(e) => setCompletedChecklist({ ...completedChecklist, catatanKonsisten: e.target.checked })}
+                                  className="mt-0.5 accent-blueprint"
+                                />
+                                <div>
+                                  <strong className="text-ink block font-semibold">Konsistensi Catatan &gt;= 3 Bulan (+5 Poin)</strong>
+                                </div>
+                              </label>
+                              <label className="flex items-start gap-2 p-2 bg-sky-50 border border-sky-200 hover:bg-sky-100/70 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={useAltData} 
+                                  onChange={(e) => setUseAltData(e.target.checked)}
+                                  className="mt-0.5 accent-blueprint"
+                                />
+                                <div>
+                                  <strong className="text-sky-900 block font-semibold">Gunakan Data Alternatif (UU P2SK) (+10 Poin)</strong>
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Visual Diagnostics */}
+                        <div className="lg:col-span-5 space-y-4">
+                          <div className={`p-4 border-2 border-ink rounded-sm space-y-2 text-xs ${gradeColor}`}>
+                            <h6 className="font-mono font-bold uppercase">
+                              {creditGrade === "A" && "✅ Rekomendasi: Layak Pengajuan KUR"}
+                              {creditGrade === "B" && "⚠️ Rekomendasi: Kelayakan Bersyarat"}
+                              {creditGrade === "C" && "🚨 Rekomendasi: Perlu Perbaikan Arus Kas"}
+                            </h6>
+                            <p className="leading-relaxed font-sans font-medium text-[11px]">
+                              {creditGrade === "A" && (
+                                `Selamat! Rasio DSCR (${dscr.toFixed(2)}x) Anda berada di atas ambang batas minimal bank (> 1.25x) dengan skor kesiapan ${score}/100. Sisa rata-rata laba bulanan Anda (Rp ${avgMonthlyLaba.toLocaleString("id-ID")}) dinilai aman untuk melunasi cicilan Rp ${estCicilan.toLocaleString("id-ID")}/bulan.`
+                              )}
+                              {creditGrade === "B" && (
+                                `Kapasitas bayar cukup (${dscr.toFixed(2)}x), namun skor kesiapan Anda sedang (${score}/100). Bank mungkin merekomendasikan plafon di bawah Rp ${desiredLoan.toLocaleString("id-ID")}. Lengkapi checklist legalitas NIB untuk memperkuat data!`
+                              )}
+                              {creditGrade === "C" && (
+                                `Rasio pembayaran (${dscr.toFixed(2)}x) di bawah batas aman bank (< 1.0x). Rata-rata keuntungan Rp ${avgMonthlyLaba.toLocaleString("id-ID")} terlalu kecil untuk menanggung angsuran Rp ${estCicilan.toLocaleString("id-ID")}/bulan. Turunkan plafon pengajuan.`
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="bg-[#EFFAFE] border border-[#BDEAFB] p-4 rounded-sm text-xs space-y-1">
+                            <h6 className="font-mono font-semibold text-sky-900 uppercase">📢 Interpretasi Bebas Jargon</h6>
+                            <p className="text-sky-800 text-[11px] leading-relaxed">
+                              "Berdasarkan performa <strong>{historicalPeriods.length} bulan terakhir</strong>, sisa laba bersih bulanan Anda dinilai <strong>{creditGrade === "A" ? "sangat aman" : (creditGrade === "B" ? "cukup memadai" : "kurang memadai")}</strong> untuk menanggung pengajuan kredit sebesar <strong>Rp {desiredLoan.toLocaleString("id-ID")}</strong>."
+                            </p>
+                          </div>
+                        </div>
+
                       </div>
-                      <p className="text-[11px] text-zinc-300 italic">" {processingStep} "</p>
-                      <div className="w-full bg-zinc-800 h-2 overflow-hidden border border-zinc-700">
-                        <div className="bg-marker-yellow h-full w-2/3 animate-infinite" />
+                    )}
+
+                    {/* Banker Mode Panel View */}
+                    {!isViewingScan && userRole === "banker" && (
+                      <div className="space-y-6 pt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
+                            <span className="text-[9px] font-mono text-gray-400 block">1. SLIK / OJK STATUS</span>
+                            <strong className="text-xs text-emerald-700 block">🟢 KOL-1 (LANCAR)</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Nasabah tidak memiliki tunggakan pembiayaan lain.</p>
+                          </div>
+                          <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
+                            <span className="text-[9px] font-mono text-gray-400 block">2. TREN VOLATILITAS</span>
+                            <strong className="text-xs text-blueprint block">📈 BERTUMBUH STABIL</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Rata-rata pertumbuhan: +37.6% per bulan.</p>
+                          </div>
+                          <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
+                            <span className="text-[9px] font-mono text-gray-400 block">3. DEFAULT PROBABILITY</span>
+                            <strong className="text-xs text-emerald-700 block">🛡️ RISIKO RENDAH ({creditGrade})</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Risiko default tertutup oleh rasio keuntungan &gt; 25%.</p>
+                          </div>
+                          <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
+                            <span className="text-[9px] font-mono text-gray-400 block">4. LIMIT REKOMENDASI</span>
+                            <strong className="text-xs text-ink block">Rp {Math.round(avgMonthlyLaba * 10).toLocaleString("id-ID")}</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Estimasi limit aman tanpa agunan tambahan.</p>
+                          </div>
+                        </div>
+
+                        {/* SLIK OJK Section */}
+                        <div className="border-2 border-ink bg-white p-4 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1">
+                              🛡️ Verifikasi OJK SLIK & BI Checking
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowSlikDetails(!showSlikDetails)}
+                              className="text-xs font-mono font-bold text-blueprint hover:underline uppercase cursor-pointer"
+                            >
+                              {showSlikDetails ? "✕ Sembunyikan Detail" : "🔍 Lihat Laporan SLIK Lengkap"}
+                            </button>
+                          </div>
+                          
+                          {showSlikDetails ? (
+                            <div className="bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] border-2 border-ink rounded-sm space-y-3 leading-relaxed shadow-inner max-h-60 overflow-y-auto">
+                              <div className="border-b border-emerald-800 pb-2">
+                                <p className="font-bold text-center text-white">REPUBLIK INDONESIA — OTORITAS JASA KEUANGAN (OJK)</p>
+                                <p className="text-center text-[9px] text-emerald-500">SISTEM LAYANAN INFORMASI KEUANGAN (SLIK) | TERCETAK OTOMATIS</p>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
+                                <p>Nama Debitur: <span className="text-white">{(userProfile.ownerName || "DEBITUR DEMO").toUpperCase()}</span></p>
+                                <p>NIK Verifikasi: <span className="text-white">3174092804****** (TERCOCOKKAN)</span></p>
+                                <p>Status Kelayakan: <span className="text-white">KOL-1 (LANCAR)</span></p>
+                                <p>Skor Kredit BI Checking: <span className="text-white">785 / 900 (SANGAT BAIK)</span></p>
+                              </div>
+                              <div className="border-t border-emerald-800 pt-2 space-y-1">
+                                <p className="text-white font-bold">FASILITAS KREDIT AKTIF:</p>
+                                <p>1. [BANK RAKYAT INDONESIA] — Kredit Mikro KUR — Kolektibilitas 1 (Lancar) | Plafon Rp 10.000.000 (Outstanding: Rp 2.400.000)</p>
+                                <p>2. [PEGADAIAN] — Gadai Gadai Emas — Kolektibilitas 1 (Lancar) | Plafon Rp 5.000.000 (Lunas)</p>
+                              </div>
+                              <div className="border-t border-emerald-800 pt-2 text-[9px] text-emerald-500 italic">
+                                PEMBERITAHUAN: Debitur bersih dari catatan hitam perbankan, tuntutan hukum perdata, maupun laporan fraud nasional.
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 rounded-sm flex justify-between items-center">
+                              <p>✓ Debitur berstatus <strong>KOL-1 (LANCAR)</strong>. Tidak ada kredit macet terdeteksi di database OJK.</p>
+                              <span className="text-[9px] bg-emerald-600 text-white font-mono px-2 py-0.5 font-bold">SLIK CLEAR</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Alternative Scoring Visualizer */}
+                        {useAltData && (
+                          <div className="border-2 border-ink bg-[#F5FBFF] p-4 space-y-3">
+                            <span className="text-[10px] font-mono text-sky-800 uppercase tracking-widest font-bold block">
+                              📊 INTEGRASI ALTERNATIVE CREDIT SCORING (UU P2SK)
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                              <div className="bg-white p-2.5 border border-sky-200">
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">1. Konsistensi Tagihan PLN</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 100% TEPAT WAKTU (12 BLN)</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Rata-rata tagihan bulanan: Rp 280.000</span>
+                              </div>
+                              <div className="bg-white p-2.5 border border-sky-200">
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">2. Riwayat Pulsa & Paket Data</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 SKOR STABILITAS TINGGI</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Pengisian rutin: Rp 120.000/bln (Telkomsel)</span>
+                              </div>
+                              <div className="bg-white p-2.5 border border-sky-200">
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">3. Volume e-Wallet (Gopay/OVO)</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 Rp 3.250.000 / BULAN</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Turnover transaksi penjualan non-tunai</span>
+                              </div>
+                              <div className="bg-white p-2.5 border border-sky-200">
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">4. Penilaian Seller E-Commerce</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 4.9/5 RATING TOKO</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">150+ Ulasan Positif (Shopee/Tokopedia)</span>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-sky-700 leading-normal">
+                              💡 <strong>Efek UU P2SK:</strong> Integrasi telekomunikasi dan riwayat dompet digital memberikan tambahan keyakinan <strong>+10 poin</strong> ke scorecard kesiapan kredit nasabah.
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="bg-slate-50 border-2 border-ink p-4 space-y-3">
+                          <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5">
+                            🔍 KELAYAKAN FINANSIAL KONSOLIDASI (AVERAGE PERFORMANCE)
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+                            <div>
+                              <span className="text-gray-400">RATA-RATA OMSET:</span>
+                              <p className="font-bold text-ink">Rp {avgMonthlyOmset.toLocaleString("id-ID")}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">RATA-RATA LABA BERSIH:</span>
+                              <p className="font-bold text-ink">Rp {avgMonthlyLaba.toLocaleString("id-ID")}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">RASIO DSCR:</span>
+                              <p className={`font-bold ${dscr >= 1.25 ? "text-emerald-700" : "text-red-700"}`}>{dscr.toFixed(2)}x</p>
+                            </div>
+                          </div>
+
+                          <div className="p-3 bg-blue-50 border border-blue-200 text-[11px] text-blue-800 rounded-sm font-sans">
+                            <strong>💡 Evaluasi Underwriter AI:</strong> Usaha <strong>{userProfile.businessName || "UMKM Binaan"}</strong> menunjukkan konsistensi arus kas sehat selama {historicalPeriods.length} bulan terakhir. Sisa rata-rata laba bulanan menutup cicilan simulasi Rp {estCicilan.toLocaleString("id-ID")}/bulan dengan safety margin {dscr.toFixed(1)}x lipat. Kelayakan agunan non-fisik (UU P2SK) dinilai memadai.
+                          </div>
+
+                          <div className="flex justify-between items-center pt-2 border-t border-ink/10">
+                            <span className="text-[9px] text-gray-400 font-mono">GEMINI AUTOMATED UNDERWRITING V1.2</span>
+                            <button
+                              onClick={handleExportPDF}
+                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer"
+                            >
+                              ✍️ Terbitkan Surat Rekomendasi & Cetak
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Banker Decision Workflow Card */}
+                        <div className="border-2 border-ink bg-white p-4 space-y-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                          <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5 flex items-center justify-between">
+                            <span>✍️ WORKFLOW KEPUTUSAN KREDIT ANALIS</span>
+                            <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">BANKER CONTROL PANEL</span>
+                          </h5>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-xs font-mono text-gray-700 font-bold mb-1">Status Rekomendasi Underwriting:</label>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setUnderwriteStatus("approved")}
+                                    className={`flex-1 py-2 font-mono font-bold text-xs border border-ink uppercase transition-all cursor-pointer ${
+                                      underwriteStatus === "approved" ? "bg-emerald-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    🟢 Setujui (Approve)
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setUnderwriteStatus("rejected")}
+                                    className={`flex-1 py-2 font-mono font-bold text-xs border border-ink uppercase transition-all cursor-pointer ${
+                                      underwriteStatus === "rejected" ? "bg-red-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    🔴 Tolak (Reject)
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex justify-between text-xs font-mono text-gray-700 font-bold mb-1">
+                                  <span>Plafon yang Disetujui (IDR):</span>
+                                  <strong className="text-blueprint">Rp {approvedLoanAmount.toLocaleString("id-ID")}</strong>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="5000000"
+                                  max={desiredLoan}
+                                  step="1000000"
+                                  value={approvedLoanAmount}
+                                  onChange={(e) => setApprovedLoanAmount(Number(e.target.value))}
+                                  disabled={underwriteStatus === "rejected"}
+                                  className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink disabled:opacity-50"
+                                />
+                                <span className="text-[9px] text-gray-400 font-mono block mt-1">Maksimum disetujui dibatasi sebesar plafon permohonan Rp {desiredLoan.toLocaleString("id-ID")}.</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="block text-xs font-mono text-gray-700 font-bold">Catatan Keputusan / Memo Underwriter:</label>
+                              <textarea
+                                value={underwriterNotes}
+                                onChange={(e) => setUnderwriterNotes(e.target.value)}
+                                placeholder="Masukkan catatan pertimbangan kredit (contoh: Arus kas stabil, didukung data PLN, agunan berupa prospek usaha nastar Lebaran dinilai aman)."
+                                className="w-full h-[95px] text-xs font-sans p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white resize-none"
+                              />
+                            </div>
+                          </div>
+
+                          {underwriteStatus !== "pending" && (
+                            <div className={`p-4 border-2 border-dashed flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                              underwriteStatus === "approved" ? "bg-emerald-50 border-emerald-500 text-emerald-950" : "bg-red-50 border-red-500 text-red-950"
+                            }`}>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-14 h-14 flex items-center justify-center font-bold font-display border-2 uppercase rotate-[-6deg] text-[10px] tracking-tight ${
+                                  underwriteStatus === "approved" ? "border-emerald-600 text-emerald-600 bg-white" : "border-red-600 text-red-600 bg-white"
+                                }`}>
+                                  {underwriteStatus === "approved" ? "APPROVED" : "REJECTED"}
+                                </div>
+                                <div>
+                                  <h6 className="text-xs font-bold uppercase font-mono">
+                                    {underwriteStatus === "approved" ? "Kredit Lolos Underwriting Otorisasi" : "Permohonan Kredit Tidak Disetujui"}
+                                  </h6>
+                                  <p className="text-[10px] font-sans mt-0.5 leading-snug">
+                                    {underwriteStatus === "approved" 
+                                      ? `Plafon Rp ${approvedLoanAmount.toLocaleString("id-ID")} disetujui dengan tenor ${loanTenor} bulan. Memo underwriting tersimpan.`
+                                      : "Arus kas dinilai terlalu berisiko atau DSCR berada di bawah batas aman (1.0x). Memerlukan perbaikan omset."
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={handleExportPDF}
+                                className={`px-4 py-2 font-mono font-bold text-xs uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] active:translate-y-px transition-all hover:bg-slate-100 cursor-pointer ${
+                                  underwriteStatus === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                🖨️ Cetak Rekomendasi Resmi
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
                       </div>
+                    )}
+
+                    {/* Historical Trend Chart (Visual Real Multi-Month Data) */}
+                    {!isViewingScan && historicalPeriods.length > 0 && (
+                      <div className="border border-ink bg-slate-50 p-4 space-y-3">
+                        <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold block">
+                          📈 TREN KINERJA KEUANGAN USAHA ({historicalPeriods.length} BULAN TERAKHIR)
+                        </span>
+                        
+                        <div className="h-48 pt-2">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart
+                              data={historicalPeriods.map(p => ({
+                                name: p.period,
+                                Omset: p.totals.pemasukan,
+                                Beban: p.totals.pengeluaran,
+                                Laba: p.totals.laba_bersih
+                              }))}
+                              margin={{ top: 5, right: 5, bottom: 5, left: -20 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="name" tick={{ fontSize: 9, fontFamily: "monospace" }} />
+                              <YAxis tick={{ fontSize: 9, fontFamily: "monospace" }} />
+                              <Tooltip formatter={(value) => `Rp ${Number(value).toLocaleString("id-ID")}`} labelStyle={{ fontSize: 10, fontFamily: "monospace" }} />
+                              <Legend wrapperStyle={{ fontSize: 10, fontFamily: "monospace" }} />
+                              <Bar dataKey="Omset" fill="#0e7490" name="Omset" />
+                              <Bar dataKey="Beban" fill="#ef4444" name="Beban" />
+                              <Line type="monotone" dataKey="Laba" stroke="#16a34a" strokeWidth={3} name="Laba Bersih" />
+                            </ComposedChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Official Banking Law Disclaimer */}
+                    <div className="border-t border-gray-200 pt-4 mt-6">
+                      <p className="text-[9px] text-gray-400 font-mono italic leading-relaxed text-center bg-gray-50 p-2.5 border border-gray-200">
+                        📄 <strong>Pemberitahuan Kelayakan Hukum:</strong> Laporan konsolidasi ini disusun secara otomatis oleh AI berdasarkan data buku kas harian yang diinput pemohon. Bukan dokumen teraudit akuntan publik. Dipergunakan murni untuk kebutuhan pre-screening pengajuan pembiayaan mikro.
+                      </p>
                     </div>
-                  )}
 
-                </div>
+                  </div>
+                )}
+
               </div>
 
             </div>
-
-            {/* ==================== STEP C: SCREEN ScanResult RENDER & MANUALLY CORRECT ==================== */}
-            {scanResult && (
-              <section className="space-y-6 pt-4 border-t-2 border-dashed border-gray-300">
-                <div className="tectonic-card bg-white p-6 border-2 border-ink shadow-[6px_6px_0px_0px_#111827]">
-                  
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-ink pb-4 gap-4">
-                    <div>
-                      <span className="text-[10px] bg-blueprint text-white font-mono uppercase px-2 py-0.5 tracking-wider font-bold">
-                        ESTIMASI LAPORAN LAYAK KREDIT (KUR)
-                      </span>
-                      <h3 className="text-2xl font-display font-bold text-ink mt-1">
-                        Laporan Keuangan Usaha: {userProfile.businessName}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-1 font-mono">
-                        Periode Pemeriksaan: <span className="text-ink font-bold">{scanResult.period}</span> | Jenis Sektor: <span className="text-ink font-bold">{scanResult.business_type.toUpperCase()}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2.5">
-                      <button
-                        onClick={handleExportPDF}
-                        className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] flex items-center gap-1.5 active:translate-y-px hover:shadow-[1.5px_1.5px_0px_0px_#111827] transition-all"
-                      >
-                        <FileDown className="w-4 h-4" /> Cetak / Ekspor PDF
-                      </button>
-                      <button
-                        onClick={handleResetDemo}
-                        className="bg-paper text-gray-500 hover:text-ink px-3 py-2 text-xs font-mono font-bold uppercase border border-gray-300 hover:border-ink"
-                      >
-                        Bersihkan
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Warning on uncertainty / Confidence alert */}
-                  {scanResult.items.some(item => item.confidence === "low") && (
-                    <div className="bg-amber-50 border-2 border-amber-500 p-4 rounded-sm flex items-start gap-3 mt-4">
-                      <BadgeAlert className="w-5.5 h-5.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-mono font-bold text-amber-800 uppercase">Perhatian Analis AI: Ditemukan Coretan Kurang Jelas</h4>
-                        <p className="text-[11px] text-amber-700 leading-relaxed font-sans">
-                          Beberapa baris data dideteksi dengan indikator kepercayaan rendah oleh pembaca optik. Silakan lakukan pencocokan manual pada baris tabel di bawah untuk menyempurnakan keandalan berkas pengajuan kredit perbankan Anda.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Core Interactive Editor Table */}
-                  <div className="overflow-x-auto mt-6">
-                    <table className="w-full border-2 border-ink text-left font-mono text-xs">
-                      <thead className="bg-slate-50 border-b-2 border-ink">
-                        <tr>
-                          <th className="p-3 border-r border-ink">KETERANGAN TRANSAKSI</th>
-                          <th className="p-3 border-r border-ink text-center w-36">KATEGORI POS</th>
-                          <th className="p-3 border-r border-ink text-right w-44">JUMLAH NOMINAL (RP)</th>
-                          <th className="p-3 border-r border-ink text-center w-32">AKURASI AI</th>
-                          <th className="p-3 text-center w-16">AKSI</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {scanResult.items.map((item, idx) => (
-                          <tr key={idx} className="border-b border-ink hover:bg-neutral-50">
-                            
-                            {/* Editable Description */}
-                            <td className="p-2 border-r border-ink">
-                              <input
-                                type="text"
-                                value={item.description}
-                                onChange={(e) => handleUpdateItemDesc(idx, e.target.value)}
-                                className="w-full bg-transparent font-medium text-ink border-b border-transparent focus:border-blueprint focus:outline-none p-1 text-xs"
-                              />
-                              {item.flag && (
-                                <span className="block text-[9px] text-amber-600 mt-1 font-sans font-medium italic">
-                                  ⚠ Note AI: {item.flag}
-                                </span>
-                              )}
-                            </td>
-
-                            {/* Editable Category */}
-                            <td className="p-2 border-r border-ink text-center">
-                              <select
-                                value={item.category}
-                                onChange={(e) => handleUpdateItemCategory(idx, e.target.value as any)}
-                                className="bg-white border border-ink text-[11px] p-1 font-mono focus:outline-none"
-                              >
-                                <option value="pemasukan">PEMASUKAN</option>
-                                <option value="pengeluaran">PENGELUARAN</option>
-                                <option value="unknown">BURAM</option>
-                              </select>
-                            </td>
-
-                            {/* Editable Amount */}
-                            <td className="p-2 border-r border-ink text-right font-bold text-sm">
-                              <div className="flex items-center justify-end gap-1">
-                                <span className="text-gray-400 font-normal text-xs">Rp</span>
-                                <input
-                                  type="number"
-                                  value={item.amount || 0}
-                                  onChange={(e) => handleUpdateItemAmount(idx, Number(e.target.value))}
-                                  className="w-[120px] bg-transparent text-right font-mono font-bold border-b border-transparent focus:border-blueprint focus:outline-none p-1 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                />
-                              </div>
-                            </td>
-
-                            {/* Confidence indicators with marker-inspired backgrounds */}
-                            <td className="p-2 border-r border-ink text-center">
-                              {item.confidence === "high" ? (
-                                <span className="bg-marker-green border border-ink/40 text-ink text-[9px] px-2 py-0.5 font-bold uppercase">
-                                  Tinggi (98%)
-                                </span>
-                              ) : (
-                                <span className="bg-marker-orange border border-ink/40 text-ink text-[9px] px-2 py-0.5 font-bold uppercase animate-pulse">
-                                  Periksa (45%)
-                                </span>
-                              )}
-                            </td>
-
-                            {/* Delete Line */}
-                            <td className="p-2 text-center">
-                              <button
-                                onClick={() => handleDeleteItem(idx)}
-                                className="text-red-500 hover:text-red-700 p-1.5 border border-transparent hover:border-red-300 rounded-sm transition-all"
-                                title="Hapus elemen baris"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-
-                          </tr>
-                        ))}
-
-                        {/* Add empty row tool */}
-                        <tr className="bg-gray-50/50">
-                          <td colSpan={5} className="p-2 text-left">
-                            <button
-                              onClick={handleAddNewItem}
-                              className="text-xs font-mono font-semibold text-blueprint hover:underline flex items-center gap-1 uppercase"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Tambahkan Baris Transaksi Baru (Manual)
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Summary Totals Row styled with Marker Design highlights */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 p-5 bg-paper border-2 border-ink shadow-sm">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-mono text-gray-500 uppercase">TOTAL PEMASUKAN AKTIF (OMSET)</p>
-                      <p className="text-xl md:text-2xl font-display font-extrabold text-ink">
-                        Rp {scanResult.totals.pemasukan.toLocaleString("id-ID")}
-                      </p>
-                      <span className="bg-marker-green/60 text-ink text-[9px] font-sans font-semibold px-2 py-0.5 inline-block rounded-xs">
-                        Kas Masuk Sehat
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-mono text-gray-500 uppercase">TOTAL PENGELUARAN USAHA</p>
-                      <p className="text-xl md:text-2xl font-display font-extrabold text-red-600">
-                        Rp {scanResult.totals.pengeluaran.toLocaleString("id-ID")}
-                      </p>
-                      <span className="bg-marker-orange/60 text-ink text-[9px] font-sans font-semibold px-2 py-0.5 inline-block rounded-xs">
-                        Modal Keluar Terverifikasi
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-mono text-gray-500 uppercase">ESTIMASI KEUNTUNGAN BERSIH (LABA)</p>
-                      <p className={`text-xl md:text-2xl font-display font-extrabold ${scanResult.totals.laba_bersih >= 0 ? "text-blueprint" : "text-red-700"}`}>
-                        Rp {scanResult.totals.laba_bersih.toLocaleString("id-ID")}
-                      </p>
-                      <span className="bg-marker-yellow text-ink text-[9px] font-sans font-semibold px-2 py-0.5 inline-block rounded-xs">
-                        Indikator Lolos Kredit Bank
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Credit Readiness Assessment Panel */}
-                  <div className="border-2 border-ink bg-white p-5 mt-6 space-y-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.8)]">
-                    
-                    {/* Header */}
-                    <div className="border-b-2 border-ink pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div>
-                        <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold">
-                          ANALIS KESIAPAN KREDIT MIKRO (KUR)
-                        </span>
-                        <h4 className="text-lg font-display font-bold text-ink flex items-center gap-1.5 mt-0.5">
-                          🛡️ Skor Kelayakan & Pre-Assessment
-                        </h4>
-                      </div>
-                      
-                      {/* Badge Grade */}
-                      <div className={`px-4 py-1.5 border-2 border-ink font-mono font-bold uppercase flex items-center gap-2 ${gradeBadgeColor}`}>
-                        <span>GRADE {creditGrade}</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      
-                      {/* Left: Interactive Loan Simulator & Checklist */}
-                      <div className="lg:col-span-7 space-y-5">
-                        
-                        {/* Sliders for Plafon & Tenor */}
-                        <div className="bg-slate-50 border border-ink p-4 space-y-4">
-                          <h5 className="text-xs font-mono font-bold text-ink uppercase border-b border-ink/10 pb-1.5">
-                            ⚙️ Simulasi Pengajuan Kredit
-                          </h5>
-                          
-                          {/* Plafon Slider */}
-                          <div>
-                            <div className="flex justify-between text-xs font-mono text-gray-700">
-                              <span>Plafon Pinjaman:</span>
-                              <strong className="text-blueprint">Rp {desiredLoan.toLocaleString("id-ID")}</strong>
-                            </div>
-                            <input 
-                              type="range" 
-                              min="5000000" 
-                              max="50000000" 
-                              step="1000000"
-                              value={desiredLoan}
-                              onChange={(e) => setDesiredLoan(Number(e.target.value))}
-                              className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink" 
-                            />
-                            <div className="flex justify-between text-[9px] font-mono text-gray-400 mt-0.5">
-                              <span>Min: Rp 5 Juta</span>
-                              <span>Max KUR Mikro: Rp 50 Juta</span>
-                            </div>
-                          </div>
-
-                          {/* Tenor buttons/slider */}
-                          <div>
-                            <span className="block text-xs font-mono text-gray-700 mb-1.5">Tenor Pengembalian (Bulan):</span>
-                            <div className="flex gap-2">
-                              {[12, 18, 24].map((t) => (
-                                <button
-                                  key={t}
-                                  type="button"
-                                  onClick={() => setLoanTenor(t)}
-                                  className={`flex-1 py-1.5 text-xs font-mono border-2 border-ink font-bold transition-all ${
-                                    loanTenor === t 
-                                      ? "bg-ink text-paper" 
-                                      : "bg-paper text-ink hover:bg-gray-100"
-                                  }`}
-                                >
-                                  {t} Bulan
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Financial Formula Info */}
-                          <div className="text-[10px] font-mono text-gray-500 bg-white p-2.5 border border-dashed border-gray-300 rounded-sm">
-                            <div className="flex justify-between">
-                              <span>Estimasi Cicilan:</span>
-                              <strong className="text-ink">Rp {estCicilan.toLocaleString("id-ID")} / bulan</strong>
-                            </div>
-                            <div className="flex justify-between text-[9px] text-gray-400 mt-1">
-                              <span>Suku Bunga KUR Subsidi:</span>
-                              <span>6% flat p.a. (0.5% per bulan)</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Checklist Upaya Mandiri */}
-                        <div className="space-y-3">
-                          <h5 className="text-xs font-mono font-bold text-ink uppercase">
-                            📋 Tindakan Penguatan Kesiapan Kredit
-                          </h5>
-                          <p className="text-[11px] text-gray-500">
-                            Centang tindakan berikut jika usaha Anda telah menerapkannya untuk meningkatkan skor kesiapan kredit Anda:
-                          </p>
-                          
-                          <div className="space-y-2 text-xs">
-                            <label className="flex items-start gap-2.5 p-2.5 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer rounded-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={completedChecklist.rekeningTerpisah} 
-                                onChange={(e) => setCompletedChecklist({ ...completedChecklist, rekeningTerpisah: e.target.checked })}
-                                className="mt-0.5 accent-blueprint h-4 w-4 border-ink"
-                              />
-                              <div>
-                                <strong className="text-ink block font-semibold">Memisahkan Uang Pribadi & Usaha (+5 Poin)</strong>
-                                <span className="text-[10px] text-gray-500 block mt-0.5">Mengurangi cash leakage atau kebocoran kas rumah tangga yang sering merusak arus keuangan toko.</span>
-                              </div>
-                            </label>
-
-                            <label className="flex items-start gap-2.5 p-2.5 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer rounded-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={completedChecklist.nibTerdaftar} 
-                                onChange={(e) => setCompletedChecklist({ ...completedChecklist, nibTerdaftar: e.target.checked })}
-                                className="mt-0.5 accent-blueprint h-4 w-4 border-ink"
-                              />
-                              <div>
-                                <strong className="text-ink block font-semibold">Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)</strong>
-                                <span className="text-[10px] text-gray-500 block mt-0.5">Memiliki izin legalitas gratis dari OSS Kementerian Investasi RI untuk validitas hukum.</span>
-                              </div>
-                            </label>
-
-                            <label className="flex items-start gap-2.5 p-2.5 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer rounded-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={completedChecklist.catatanKonsisten} 
-                                onChange={(e) => setCompletedChecklist({ ...completedChecklist, catatanKonsisten: e.target.checked })}
-                                className="mt-0.5 accent-blueprint h-4 w-4 border-ink"
-                              />
-                              <div>
-                                <strong className="text-ink block font-semibold">Konsistensi Catatan &gt;= 3 Bulan (+5 Poin)</strong>
-                                <span className="text-[10px] text-gray-500 block mt-0.5">Konsistensi data harian meyakinkan bank bahwa pembukuan bukan hasil manipulasi mendadak.</span>
-                              </div>
-                            </label>
-
-                            {/* UU P2SK Alternative Data Toggle */}
-                            <label className="flex items-start gap-2.5 p-2.5 bg-sky-50 border border-sky-200 hover:bg-sky-100/70 cursor-pointer rounded-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={useAltData} 
-                                onChange={(e) => setUseAltData(e.target.checked)}
-                                className="mt-0.5 accent-blueprint h-4 w-4 border-sky-400"
-                              />
-                              <div>
-                                <strong className="text-sky-900 block font-semibold">
-                                  Gunakan Data Alternatif (UU P2SK) (+10 Poin)
-                                </strong>
-                                <span className="text-[10px] text-sky-700 block mt-0.5">Melampirkan bukti bayar tagihan listrik tepat waktu & mutasi volume e-wallet (OVO/Dana/GoPay).</span>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Right: Score Visual Display & Analytics Explanation */}
-                      <div className="lg:col-span-5 space-y-4">
-                        
-                        <div className="border border-ink bg-slate-50 p-6 text-center space-y-3 flex flex-col items-center justify-center">
-                          <span className="text-[10px] font-mono text-gray-400 uppercase">SCORECARD ESTIMATOR</span>
-                          
-                          {/* Big Score Number */}
-                          <div className="relative w-36 h-36 flex items-center justify-center bg-white border-4 border-ink rounded-full shadow-inner">
-                            <div className="text-center">
-                              <span className="text-4xl md:text-5xl font-display font-extrabold text-ink">{score}</span>
-                              <span className="text-xs text-gray-400 font-mono block border-t border-gray-100 mt-1 pt-0.5">dari 100</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-mono font-bold text-gray-500 uppercase">Rasio Kapasitas Angsuran (DSCR)</p>
-                            <p className="text-lg font-bold text-blueprint">{dscr.toFixed(2)}x</p>
-                            <p className="text-[10px] text-gray-500 max-w-[240px] mx-auto font-sans leading-tight">
-                              Sisa keuntungan bersih bulanan Anda adalah <strong>{dscr.toFixed(1)} kali lipat</strong> dari angsuran bulanan yang diajukan.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Diagnostic result message */}
-                        <div className={`p-4 border-2 border-ink rounded-sm space-y-2 ${gradeColor}`}>
-                          <h6 className="text-xs font-mono font-bold uppercase flex items-center gap-1.5">
-                            {creditGrade === "A" && "✅ Rekomendasi: Layak Pengajuan KUR"}
-                            {creditGrade === "B" && "⚠️ Rekomendasi: Kelayakan Bersyarat"}
-                            {creditGrade === "C" && "🚨 Rekomendasi: Perlu Perbaikan Arus Kas"}
-                          </h6>
-                          <p className="text-[11px] leading-relaxed font-sans font-medium">
-                            {creditGrade === "A" && (
-                              `Selamat! Rasio DSCR (${dscr.toFixed(2)}x) Anda berada di atas ambang batas minimal bank (> 1.25x) dengan skor kesiapan ${score}/100. Sisa laba bersih Anda dinilai aman untuk melunasi cicilan Rp ${estCicilan.toLocaleString("id-ID")}/bulan.`
-                            )}
-                            {creditGrade === "B" && (
-                              `Kapasitas bayar memadai (${dscr.toFixed(2)}x), namun skor readiness Anda sedang (${score}/100). Bank mungkin akan meminta syarat tambahan atau merekomendasikan plafon di bawah Rp ${desiredLoan.toLocaleString("id-ID")}. Centang checklist peningkatan skor di samping!`
-                            )}
-                            {creditGrade === "C" && (
-                              `Rasio pembayaran (${dscr.toFixed(2)}x) terlalu berisiko (< 1.0x). Keuntungan bulanan usaha Rp ${labaBersih.toLocaleString("id-ID")} tidak aman untuk menanggung angsuran Rp ${estCicilan.toLocaleString("id-ID")}/bulan. Sebaiknya turunkan plafon pinjaman atau perpanjang tenor.`
-                            )}
-                          </p>
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {/* Natural Language Interpretation box - Plain Language Interpretation (No financial jargon rule) */}
-                  <div className="bg-[#EFFAFE] border border-[#BDEAFB] p-5 mt-6 rounded-sm space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="w-5 h-5 text-sky-700" />
-                      <h4 className="text-xs font-mono font-semibold text-sky-900 uppercase">Interpretasi Tanpa Jargon Usaha</h4>
-                    </div>
-                    <p className="text-xs text-sky-800 leading-relaxed font-sans">
-                      "Ibu/Bapak <strong>{userProfile.ownerName || "Sobat UMKM"}</strong>, berdasarkan pembacaan AI Lens, pada periode <strong>{scanResult.period}</strong>, usaha <strong>{userProfile.businessName}</strong> menghasilkan laba bersih riil sebesar <strong>Rp {scanResult.totals.laba_bersih.toLocaleString("id-ID")}</strong>."
-                    </p>
-                    <p className="text-[11px] text-sky-700 leading-relaxed font-sans">
-                      Rasio laba bersih Anda saat ini dinilai <strong>{creditGrade === "A" ? "sangat aman" : (creditGrade === "B" ? "cukup memadai" : "kurang memadai")}</strong> untuk menanggung pengajuan kredit sebesar <strong>Rp {desiredLoan.toLocaleString("id-ID")}</strong> dengan cicilan bulanan sebesar <strong>Rp {estCicilan.toLocaleString("id-ID")}</strong> selama tenor <strong>{loanTenor} bulan</strong>.
-                    </p>
-                  </div>
-
-                  {/* Official Banking Law Disclaimer (Mandatory per functional specs) */}
-                  <div className="border-t border-gray-200 pt-6 mt-6">
-                    <p className="text-[10px] text-gray-400 font-mono italic leading-relaxed text-center bg-gray-50 p-3 border border-gray-200">
-                      📄 <strong>Pemberitahuan Kelayakan Hukum:</strong> "Dokumen ini dibuat secara otomatis dengan bantuan program kecerdasan buatan (AI) berbasis catatan harian yang diunggah secara bebas oleh pemohon. Ini bukan merupakan pelaporan resmi akuntan tersertifikasi. Lampiran dipergunakan sebagai kelengkapan asisten literasi administrasi perbankan mikro."
-                    </p>
-                  </div>
-
-                </div>
-              </section>
-            )}
 
           </div>
         )}
