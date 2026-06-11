@@ -35,7 +35,7 @@ function getAiClient() {
 // REST Route for financial record extraction from receipt photos / handwriting images
 app.post("/api/analyze-record", async (req, res) => {
   try {
-    const { image, businessType, period, recordType } = req.body;
+    const { image, businessType, period, recordType, lang } = req.body;
 
     if (!image) {
       res.status(400).json({ error: "Missing image payload. Please capture or upload a photo." });
@@ -61,9 +61,9 @@ app.post("/api/analyze-record", async (req, res) => {
          - Resolve Indonesian and local Javanese/Sunda slang or abbreviations where possible (e.g., 'pesen' -> order, 'bks' -> bungkus, 'modal' -> initial cash or expense context, 'telor' -> eggs, etc.).
       4. Ambiguity / Lower Confidence:
          - If any item name is blurry, has unreadable numbers, or is cut off, assign a confidence level of "low".
-         - Provide a helpful flag message in Bahasa Indonesia suggesting how they might double-check or rewrite (e.g., "Tulisan tidak terbaca - mohon periksa kembali").
+         - Provide a helpful flag message suggesting how they might double-check or rewrite (in ${lang === "en" ? "English" : "Bahasa Indonesia"}).
          - If highly readable, set confidence to "high".
-      5. Output Language: Use clear, jargon-free Bahasa Indonesia (e.g., "pemasukan", "pengeluaran", "laba_bersih", "penjualan", "pembelian").
+      5. Output Language: Use clear, jargon-free ${lang === "en" ? "English" : "Bahasa Indonesia"} for item descriptions and flag warnings. Keep categories as "pemasukan", "pengeluaran", or "unknown" and keys as "pemasukan", "pengeluaran", "laba_bersih" in totals to preserve data structures.
       
       Return a response strictly matching the schema below.
     `;

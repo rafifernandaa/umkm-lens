@@ -44,6 +44,8 @@ import { jsPDF } from "jspdf";
 export default function App() {
   // Current view management: "blog" | "trial" | "analytics-hub"
   const [activeTab, setActiveTab] = useState<"blog" | "trial" | "about">("blog");
+  const [lang, setLang] = useState<"id" | "en">("id");
+  const t = (idText: string, enText: string) => lang === "id" ? idText : enText;
   
   // Blog detailed post state (null means list view)
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
@@ -332,7 +334,8 @@ export default function App() {
           image: uploadedImage,
           businessType: customBusinessType,
           period: customPeriod,
-          recordType: "keduanya"
+          recordType: "keduanya",
+          lang
         };
 
         const response = await fetch("/api/analyze-record", {
@@ -560,7 +563,7 @@ export default function App() {
   const handleExportPDF = () => {
     const dataToExport = activeResult;
     if (!dataToExport) {
-      alert("Belum ada data analisis untuk diekspor!");
+      alert(lang === "id" ? "Belum ada data analisis untuk diekspor!" : "No analysis data to export!");
       return;
     }
     const scanResult = dataToExport;
@@ -583,13 +586,13 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(14);
-      doc.text("UMKM LENS — REKAPITULASI LAPORAN FINANSIAL", marginX + 6, posY + 8);
+      doc.text(lang === "id" ? "UMKM LENS — REKAPITULASI LAPORAN FINANSIAL" : "UMKM LENS — FINANCIAL REPORT SUMMARY", marginX + 6, posY + 8);
       
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
-      doc.text("LAPORAN REKAPITULASI TRANSAKSI UMKM / PERIODE: " + scanResult.period.toUpperCase(), marginX + 6, posY + 14);
+      doc.text((lang === "id" ? "LAPORAN REKAPITULASI TRANSAKSI UMKM / PERIODE: " : "MSME TRANSACTION SUMMARY REPORT / PERIOD: ") + scanResult.period.toUpperCase(), marginX + 6, posY + 14);
       doc.setFont("Courier", "italic");
-      doc.text("UMKM Lens — Prototipe", marginX + 6, posY + 18);
+      doc.text(lang === "id" ? "UMKM Lens — Prototipe" : "UMKM Lens — Prototype", marginX + 6, posY + 18);
 
       posY += 26;
 
@@ -603,7 +606,7 @@ export default function App() {
       doc.setTextColor(75, 85, 99); // Medium-dark gray
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7.5);
-      doc.text("PENTING: Laporan ini berbasis foto catatan unggahan pemilik usaha. Akurasi rekapitulasi bergantung penuh pada kualitas & keterbacaan tulisan tangan asli.", marginX + 3, posY + 5.5);
+      doc.text(lang === "id" ? "PENTING: Laporan ini berbasis foto catatan unggahan pemilik usaha. Akurasi rekapitulasi bergantung penuh pada kualitas & keterbacaan tulisan tangan asli." : "IMPORTANT: This report is based on the uploaded photo of the merchant's handwritten records. Accuracy depends entirely on quality & legibility.", marginX + 3, posY + 5.5);
 
       posY += 13;
 
@@ -619,21 +622,31 @@ export default function App() {
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(10);
-      doc.text("PROFIL PEMILIK USAHA", marginX + 5, posY + 5);
+      doc.text(lang === "id" ? "PROFIL PEMILIK USAHA" : "MERCHANT PROFILE", marginX + 5, posY + 5);
+
+      const sectorTranslation: Record<string, {id: string, en: string}> = {
+        makanan: { id: "Makanan", en: "Food" },
+        ritel: { id: "Ritel/Warung", en: "Retail/Shop" },
+        jasa: { id: "Jasa", en: "Services" },
+        kerajinan: { id: "Kerajinan/Kreatif", en: "Craft/Creative" }
+      };
+      const typeLower = scanResult.business_type.toLowerCase();
+      const sectorObj = sectorTranslation[typeLower] || { id: scanResult.business_type, en: scanResult.business_type };
+      const sectorName = lang === "id" ? sectorObj.id : sectorObj.en;
 
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(`Nama Pemilik: ${userProfile.ownerName || "Sobat UMKM"}`, marginX + 5, posY + 10);
-      doc.text(`Nama Toko: ${userProfile.businessName || "Toko Kelontong Handal"}`, marginX + 5, posY + 14.5);
-      doc.text(`Sektor Bisnis: Usaha ${scanResult.business_type.toUpperCase()}`, marginX + 5, posY + 19);
-      doc.text(`Lokasi Usaha: ${userProfile.location || "[diisi pengguna]"}`, marginX + 5, posY + 23.5);
+      doc.text(`${lang === "id" ? "Nama Pemilik" : "Owner Name"}: ${userProfile.ownerName || (lang === "id" ? "Sobat UMKM" : "MSME Owner")}`, marginX + 5, posY + 10);
+      doc.text(`${lang === "id" ? "Nama Toko" : "Business Name"}: ${userProfile.businessName || (lang === "id" ? "Toko Kelontong Handal" : "Trusted Merchant")}`, marginX + 5, posY + 14.5);
+      doc.text(`${lang === "id" ? "Sektor Bisnis" : "Business Sector"}: ${lang === "id" ? "Usaha" : ""} ${sectorName}`, marginX + 5, posY + 19);
+      doc.text(`${lang === "id" ? "Lokasi Usaha" : "Business Location"}: ${userProfile.location || (lang === "id" ? "[belum diisi]" : "[not specified]")}`, marginX + 5, posY + 23.5);
 
       doc.setFont("Helvetica", "bold");
-      doc.text("INFORMASI DOKUMEN", marginX + 95, posY + 5);
+      doc.text(lang === "id" ? "INFORMASI DOKUMEN" : "DOCUMENT INFORMATION", marginX + 95, posY + 5);
       doc.setFont("Helvetica", "normal");
-      doc.text(`Tujuan Laporan: Ringkasan Catatan Keuangan Pribadi`, marginX + 95, posY + 10);
-      doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, marginX + 95, posY + 16);
-      doc.text(`Periode Laporan: ${scanResult.period}`, marginX + 95, posY + 22);
+      doc.text(`${lang === "id" ? "Tujuan Laporan: Ringkasan Catatan Keuangan Pribadi" : "Document Purpose: Personal Financial Summary"}`, marginX + 95, posY + 10);
+      doc.text(`${lang === "id" ? "Tanggal Cetak" : "Date Printed"}: ${new Date().toLocaleDateString(lang === "id" ? "id-ID" : "en-US")}`, marginX + 95, posY + 16);
+      doc.text(`${lang === "id" ? "Periode Laporan" : "Report Period"}: ${scanResult.period}`, marginX + 95, posY + 22);
 
       posY += 36;
 
@@ -647,9 +660,9 @@ export default function App() {
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(8.5);
-      doc.text("DESKRIPSI TRANSAKSI", marginX + 4, posY + 5.5);
-      doc.text("KATEGORI", marginX + 95, posY + 5.5);
-      doc.text("NOMINAL TRANSAKSI (IDR)", marginX + 135, posY + 5.5);
+      doc.text(lang === "id" ? "DESKRIPSI TRANSAKSI" : "TRANSACTION DESCRIPTION", marginX + 4, posY + 5.5);
+      doc.text(lang === "id" ? "KATEGORI" : "CATEGORY", marginX + 95, posY + 5.5);
+      doc.text(lang === "id" ? "NOMINAL TRANSAKSI (IDR)" : "TRANSACTION AMOUNT (IDR)", marginX + 135, posY + 5.5);
 
       posY += 8;
 
@@ -668,9 +681,9 @@ export default function App() {
           doc.rect(marginX, posY, 180, 8, "F");
           doc.setTextColor(255, 255, 255);
           doc.setFont("Helvetica", "bold");
-          doc.text("DESKRIPSI TRANSAKSI", marginX + 4, posY + 5.5);
-          doc.text("KATEGORI", marginX + 95, posY + 5.5);
-          doc.text("NOMINAL TRANSAKSI (IDR)", marginX + 135, posY + 5.5);
+          doc.text(lang === "id" ? "DESKRIPSI TRANSAKSI" : "TRANSACTION DESCRIPTION", marginX + 4, posY + 5.5);
+          doc.text(lang === "id" ? "KATEGORI" : "CATEGORY", marginX + 95, posY + 5.5);
+          doc.text(lang === "id" ? "NOMINAL TRANSAKSI (IDR)" : "TRANSACTION AMOUNT (IDR)", marginX + 135, posY + 5.5);
           posY += 8;
           doc.setFont("Helvetica", "normal");
         }
@@ -692,11 +705,11 @@ export default function App() {
           doc.setFont("Helvetica", "italic");
           doc.setTextColor(180, 83, 9); // amber-700
           
-          const descText = "1 item tidak terbaca - jumlah tidak diketahui (periksa catatan asli)";
+          const descText = lang === "id" ? "1 item tidak terbaca - jumlah tidak diketahui (periksa catatan asli)" : "1 unreadable item - amount unknown (check original note)";
           doc.text(descText, marginX + 4, posY + 5.5);
           
-          doc.text("KENDALA BACA", marginX + 95, posY + 5.5);
-          doc.text("Tidak Diketahui", marginX + 135, posY + 5.5);
+          doc.text(lang === "id" ? "KENDALA BACA" : "READ ERROR", marginX + 95, posY + 5.5);
+          doc.text(lang === "id" ? "Tidak Diketahui" : "Unknown", marginX + 135, posY + 5.5);
           
           doc.setFont("Helvetica", "normal"); // restore default
         } else {
@@ -705,7 +718,11 @@ export default function App() {
           doc.text(descText, marginX + 4, posY + 5.5);
           
           // Category representation
-          const categoryLabel = item.category.toUpperCase();
+          let categoryLabel = item.category.toUpperCase();
+          if (lang === "en") {
+            if (item.category === "pemasukan") categoryLabel = "INCOME";
+            else if (item.category === "pengeluaran") categoryLabel = "EXPENSE";
+          }
           if (item.category === "pemasukan") {
             doc.setTextColor(22, 101, 52); // green text
           } else if (item.category === "pengeluaran") {
@@ -751,40 +768,40 @@ export default function App() {
       doc.setTextColor(55, 65, 81);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("TOTAL PEMASUKAN TERPINDAI", marginX + 4, posY + 6);
+      doc.text(lang === "id" ? "TOTAL PEMASUKAN TERPINDAI" : "TOTAL SCANNED INCOME", marginX + 4, posY + 6);
       doc.setTextColor(22, 101, 52);
       doc.setFontSize(11);
       doc.text(`Rp ${scanResult.totals.pemasukan.toLocaleString("id-ID")}`, marginX + 4, posY + 15);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7);
       doc.setTextColor(107, 114, 128);
-      doc.text("Arus Masuk Terpindai", marginX + 4, posY + 22);
+      doc.text(lang === "id" ? "Arus Masuk Terpindai" : "Scanned Cash Inflow", marginX + 4, posY + 22);
 
       // Total Pengeluaran Block
       doc.setTextColor(55, 65, 81);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("TOTAL PENGELUARAN (KELUAR)", marginX + 64, posY + 6);
+      doc.text(lang === "id" ? "TOTAL PENGELUARAN (KELUAR)" : "TOTAL SCANNED EXPENSES", marginX + 64, posY + 6);
       doc.setTextColor(185, 28, 28);
       doc.setFontSize(11);
       doc.text(`Rp ${scanResult.totals.pengeluaran.toLocaleString("id-ID")}`, marginX + 64, posY + 15);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7);
       doc.setTextColor(107, 114, 128);
-      doc.text("Arus Keluar Terpindai", marginX + 64, posY + 22);
+      doc.text(lang === "id" ? "Arus Keluar Terpindai" : "Scanned Cash Outflow", marginX + 64, posY + 22);
 
       // Laba Bersih Block
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("ESTIMASI LABA BERSIH", marginX + 124, posY + 6);
+      doc.text(lang === "id" ? "ESTIMASI LABA BERSIH" : "ESTIMATED NET PROFIT", marginX + 124, posY + 6);
       doc.setTextColor(14, 116, 144); // blueprint color
       doc.setFontSize(11.5);
       doc.text(`Rp ${scanResult.totals.laba_bersih.toLocaleString("id-ID")}`, marginX + 124, posY + 15);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7);
       doc.setTextColor(107, 114, 128);
-      doc.text("Estimasi Laba Bersih", marginX + 124, posY + 22);
+      doc.text(lang === "id" ? "Estimasi Laba Bersih" : "Estimated Net Profit", marginX + 124, posY + 22);
 
       posY += 36;
 
@@ -803,13 +820,15 @@ export default function App() {
       doc.setTextColor(14, 116, 144);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(8.5);
-      doc.text("DISCLAIMER DAN RINGKASAN DATA", marginX + 5, posY + 5.5);
+      doc.text(lang === "id" ? "DISCLAIMER DAN RINGKASAN DATA" : "DISCLAIMER & DATA SUMMARY", marginX + 5, posY + 5.5);
 
       doc.setTextColor(55, 65, 81);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7.5);
       
-      const textDisclaimer = `Dokumen ini merangkum data transaksi yang diunggah oleh pemilik usaha untuk periode ${scanResult.period}. Estimasi laba bersih dihitung berdasarkan data yang tersedia dan dapat dijadikan bahan referensi pribadi dalam mempersiapkan pengajuan pembiayaan. Dokumen ini bukan penilaian kredit resmi dan tidak menjamin persetujuan pinjaman dari lembaga keuangan manapun.`;
+      const textDisclaimer = lang === "id" 
+        ? `Dokumen ini merangkum data transaksi yang diunggah oleh pemilik usaha untuk periode ${scanResult.period}. Estimasi laba bersih dihitung berdasarkan data yang tersedia dan dapat dijadikan bahan referensi pribadi dalam mempersiapkan pengajuan pembiayaan. Dokumen ini bukan penilaian kredit resmi dan tidak menjamin persetujuan pinjaman dari lembaga keuangan manapun.`
+        : `This document summarizes the transaction data uploaded by the business owner for the period ${scanResult.period}. The estimated net profit is calculated based on available data and can be used as a personal reference when preparing for a financing application. This document is not an official credit assessment and does not guarantee loan approval from any financial institution.`;
       const splitDisclaimer = doc.splitTextToSize(textDisclaimer, 170);
       doc.text(splitDisclaimer, marginX + 5, posY + 10.5);
 
@@ -829,9 +848,9 @@ export default function App() {
       doc.setFont("Helvetica", "oblique");
       doc.setFontSize(6.5);
       
-      const legalText1 = "Catatan: Laporan ini dirancang secara otomatis menggunakan pengolahan dokumen pintar berbasis teknologi kecerdasan buatan (AI) yang membaca foto tulisan tangan dari berkas fisik tulisan tangan.";
-      const legalText2 = "Dokumen ini murni berfungsi sebagai alat bantu perapian catatan finansial pribadi pemilik usaha, bukan merupakan dokumen perpajakan resmi maupun laporan keuangan teraudit.";
-      const legalText3 = `Dihasilkan oleh: Sistem Prototipe UMKM Lens Indonesia | ${new Date().toLocaleDateString("id-ID")}`;
+      const legalText1 = lang === "id" ? "Catatan: Laporan ini dirancang secara otomatis menggunakan pengolahan dokumen pintar berbasis teknologi kecerdasan buatan (AI) yang membaca foto tulisan tangan dari berkas fisik tulisan tangan." : "Note: This report is automatically generated using intelligent document processing based on artificial intelligence (AI) reading handwriting photos from physical documents.";
+      const legalText2 = lang === "id" ? "Dokumen ini murni berfungsi sebagai alat bantu perapian catatan finansial pribadi pemilik usaha, bukan merupakan dokumen perpajakan resmi maupun laporan keuangan teraudit." : "This document serves purely as a tool to organize the personal financial records of the business owner and is not an official tax document or audited financial statement.";
+      const legalText3 = lang === "id" ? `Dihasilkan oleh: Sistem Prototipe UMKM Lens Indonesia | ${new Date().toLocaleDateString("id-ID")}` : `Generated by: UMKM Lens Indonesia Prototype System | ${new Date().toLocaleDateString("en-US")}`;
 
       doc.text(legalText1, marginX, posY + 4.5);
       doc.text(legalText2, marginX, posY + 8);
@@ -847,7 +866,7 @@ export default function App() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(10);
-      doc.text("LAMPIRAN B: ANALISIS KELAYAKAN KREDIT ALTERNATIF (PRE-ASSESSMENT)", marginX + 5, pg2Y + 9);
+      doc.text(lang === "id" ? "LAMPIRAN B: ANALISIS KELAYAKAN KREDIT ALTERNATIF (PRE-ASSESSMENT)" : "ANNEX B: ALTERNATIVE CREDIT ELIGIBILITY ANALYSIS (PRE-ASSESSMENT)", marginX + 5, pg2Y + 9);
 
       pg2Y += 20;
 
@@ -868,34 +887,34 @@ export default function App() {
       doc.setTextColor(75, 85, 99);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("SKOR KESIAPAN KREDIT", marginX + 4, pg2Y + 6);
+      doc.text(lang === "id" ? "SKOR KESIAPAN KREDIT" : "CREDIT READINESS SCORE", marginX + 4, pg2Y + 6);
       doc.setTextColor(14, 116, 144);
       doc.setFontSize(22);
       doc.text(`${score} / 100`, marginX + 4, pg2Y + 18);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(107, 114, 128);
-      doc.text("Berdasarkan profil & data kas", marginX + 4, pg2Y + 25);
+      doc.text(lang === "id" ? "Berdasarkan profil & data kas" : "Based on profile & cash data", marginX + 4, pg2Y + 25);
 
       // Col 2: Repayment capacity (DSCR)
       doc.setTextColor(75, 85, 99);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("KAPASITAS BAYAR (DSCR)", marginX + 64, pg2Y + 6);
+      doc.text(lang === "id" ? "KAPASITAS BAYAR (DSCR)" : "REPAYMENT CAPACITY (DSCR)", marginX + 64, pg2Y + 6);
       doc.setTextColor(17, 24, 39);
       doc.setFontSize(13);
       doc.text(`${dscr.toFixed(2)}x`, marginX + 64, pg2Y + 15);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(107, 114, 128);
-      doc.text(`Est. Cicilan: Rp ${estCicilan.toLocaleString("id-ID")}/bln`, marginX + 64, pg2Y + 22);
-      doc.text(`Tenor Pengajuan: ${loanTenor} Bulan`, marginX + 64, pg2Y + 27);
+      doc.text(`${lang === "id" ? "Est. Cicilan" : "Est. Installment"}: Rp ${estCicilan.toLocaleString("id-ID")}/${lang === "id" ? "bln" : "mo"}`, marginX + 64, pg2Y + 22);
+      doc.text(`${lang === "id" ? "Tenor Pengajuan" : "Requested Tenor"}: ${loanTenor} ${lang === "id" ? "Bulan" : "Months"}`, marginX + 64, pg2Y + 27);
 
       // Col 3: Status / Grade
       doc.setTextColor(75, 85, 99);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text("GRADE PRE-ASSESSMENT", marginX + 124, pg2Y + 6);
+      doc.text(lang === "id" ? "GRADE PRE-ASSESSMENT" : "PRE-ASSESSMENT GRADE", marginX + 124, pg2Y + 6);
       
       const gColor = creditGrade === "A" ? [22, 101, 52] : (creditGrade === "B" ? [180, 83, 9] : [185, 28, 28]);
       doc.setTextColor(gColor[0], gColor[1], gColor[2]);
@@ -904,7 +923,7 @@ export default function App() {
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7);
       doc.setTextColor(107, 114, 128);
-      doc.text(gradeLabel, marginX + 124, pg2Y + 22);
+      doc.text(lang === "id" ? gradeLabel : gradeLabel.replace("RISIKO RENDAH", "LOW RISK").replace("RISIKO SEDANG", "MEDIUM RISK").replace("RISIKO DEFAULT TINGGI", "HIGH DEFAULT RISK"), marginX + 124, pg2Y + 22);
 
       pg2Y += 40;
 
@@ -912,23 +931,23 @@ export default function App() {
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(9.5);
-      doc.text("RINCIAN PARAMETER & RASIO KEUANGAN MIKRO", marginX, pg2Y);
+      doc.text(lang === "id" ? "RINCIAN PARAMETER & RASIO KEUANGAN MIKRO" : "MICRO-FINANCIAL RATIOS & PARAMETERS DETAILS", marginX, pg2Y);
       
       pg2Y += 6;
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
       
-      doc.text(`1. Total Pendapatan Bulanan Terpindai (Omset): Rp ${avgMonthlyOmset.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`1. ${lang === "id" ? "Total Pendapatan Bulanan Terpindai (Omset)" : "Total Scanned Monthly Revenue (Omset)"}: Rp ${avgMonthlyOmset.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`2. Total Pengeluaran Bulanan Terpindai (Beban): Rp ${avgMonthlyLaba >= 0 ? (avgMonthlyOmset - avgMonthlyLaba).toLocaleString("id-ID") : (avgMonthlyOmset + Math.abs(avgMonthlyLaba)).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`2. ${lang === "id" ? "Total Pengeluaran Bulanan Terpindai (Beban)" : "Total Scanned Monthly Expenses (Beban)"}: Rp ${(avgMonthlyLaba >= 0 ? (avgMonthlyOmset - avgMonthlyLaba) : (avgMonthlyOmset + Math.abs(avgMonthlyLaba))).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`3. Sisa Bersih Bulanan (Laba Bersih Riil): Rp ${avgMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`3. ${lang === "id" ? "Sisa Bersih Bulanan (Laba Bersih Riil)" : "Net Monthly Balance (Real Net Profit)"}: Rp ${avgMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`4. Margin Laba Bersih Usaha: ${(margin * 100).toFixed(1)}% (Standard bank untuk pinjaman produktif > 10%)`, marginX + 4, pg2Y);
+      doc.text(`4. ${lang === "id" ? "Margin Laba Bersih Usaha" : "Business Net Profit Margin"}: ${(margin * 100).toFixed(1)}% ${lang === "id" ? "(Standard bank untuk pinjaman produktif > 10%)" : "(Bank standard for productive loans > 10%)"}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`5. Debt Service Coverage Ratio (DSCR): ${dscr.toFixed(2)}x (Batas aman kelayakan pelunasan bank > 1.25x)`, marginX + 4, pg2Y);
+      doc.text(`5. Debt Service Coverage Ratio (DSCR): ${dscr.toFixed(2)}x ${lang === "id" ? "(Batas aman kelayakan pelunasan bank > 1.25x)" : "(Bank safety repayment threshold > 1.25x)"}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`6. Plafon Pengajuan Simulasi: Rp ${desiredLoan.toLocaleString("id-ID")} (Tenor ${loanTenor} bulan)`, marginX + 4, pg2Y);
+      doc.text(`6. ${lang === "id" ? "Plafon Pengajuan Simulasi" : "Simulated Loan Limit"}: Rp ${desiredLoan.toLocaleString("id-ID")} (${lang === "id" ? "Tenor" : "Tenor"} ${loanTenor} ${lang === "id" ? "bulan" : "months"})`, marginX + 4, pg2Y);
 
       pg2Y += 12;
 
@@ -936,26 +955,26 @@ export default function App() {
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(9.5);
-      doc.text("CHECKLIST TINDAKAN KELAYAKAN MANDIRI PEMOHON", marginX, pg2Y);
+      doc.text(lang === "id" ? "CHECKLIST TINDAKAN KELAYAKAN MANDIRI PEMOHON" : "APPLICANT SELF-ELIGIBILITY ACTION CHECKLIST", marginX, pg2Y);
 
       pg2Y += 6;
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
 
       const chk1 = completedChecklist.rekeningTerpisah ? "[ V ]" : "[   ]";
-      doc.text(`${chk1} Memisahkan Rekening Pribadi & Rekening Kas Usaha (Mengurangi Cash Leakage)`, marginX + 4, pg2Y);
+      doc.text(`${chk1} ${lang === "id" ? "Memisahkan Rekening Pribadi & Rekening Kas Usaha (Mengurangi Cash Leakage)" : "Separated Personal & Business Bank Accounts (Reduces Cash Leakage)"}`, marginX + 4, pg2Y);
       pg2Y += 5;
 
       const chk2 = completedChecklist.nibTerdaftar ? "[ V ]" : "[   ]";
-      doc.text(`${chk2} Memiliki Nomor Induk Berusaha (NIB) Resmi dari Kemeninvest RI (Legalitas Mikro)`, marginX + 4, pg2Y);
+      doc.text(`${chk2} ${lang === "id" ? "Memiliki Nomor Induk Berusaha (NIB) Resmi dari Kemeninvest RI (Legalitas Mikro)" : "Possess Official Business ID (NIB) from Ministry of Investment (Micro Legal status)"}`, marginX + 4, pg2Y);
       pg2Y += 5;
 
       const chk3 = completedChecklist.catatanKonsisten ? "[ V ]" : "[   ]";
-      doc.text(`${chk3} Mempertahankan Pencatatan Keuangan Harian Konsisten >= 3 Bulan Berturut-turut`, marginX + 4, pg2Y);
+      doc.text(`${chk3} ${lang === "id" ? "Mempertahankan Pencatatan Keuangan Harian Konsisten >= 3 Bulan Berturut-turut" : "Maintained Consistent Daily Ledger Keeping for >= 3 Consecutive Months"}`, marginX + 4, pg2Y);
       pg2Y += 5;
 
       const chk4 = useAltData ? "[ V ]" : "[   ]";
-      doc.text(`${chk4} Melampirkan Bukti Bayar Utilitas (Listrik/Ponsel) Tepat Waktu & Mutasi Alternatif e-Wallet`, marginX + 4, pg2Y);
+      doc.text(`${chk4} ${lang === "id" ? "Melampirkan Bukti Bayar Utilitas (Listrik/Ponsel) Tepat Waktu & Mutasi Alternatif e-Wallet" : "Attached Utility Payment proof (Power/Telecom) On-Time & e-Wallet Statements"}`, marginX + 4, pg2Y);
 
       pg2Y += 12;
 
@@ -963,7 +982,7 @@ export default function App() {
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(9.5);
-      doc.text("KEPUTUSAN & REKOMENDASI UNDERWRITER BANK", marginX, pg2Y);
+      doc.text(lang === "id" ? "KEPUTUSAN & REKOMENDASI UNDERWRITER BANK" : "BANK UNDERWRITER DECISION & RECOMMENDATIONS", marginX, pg2Y);
 
       pg2Y += 6;
       doc.setFillColor(249, 250, 251);
@@ -981,24 +1000,34 @@ export default function App() {
       doc.setTextColor(stampBorderColor[0], stampBorderColor[1], stampBorderColor[2]);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(7.5);
-      doc.text(underwriteStatus.toUpperCase(), marginX + 7, pg2Y + 11.5);
+      doc.text(lang === "id" ? underwriteStatus.toUpperCase() : (underwriteStatus === "approved" ? "APPROVED" : (underwriteStatus === "rejected" ? "REJECTED" : "PENDING")), marginX + 7, pg2Y + 11.5);
 
       // Decision details
       doc.setTextColor(17, 24, 39);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(8.5);
       const decisionTitle = underwriteStatus === "approved" 
-        ? `DISETUJUI PLAFON Rp ${approvedLoanAmount.toLocaleString("id-ID")}`
-        : (underwriteStatus === "rejected" ? "PERMOHONAN DITOLAK" : "MENUNGGU UNDERWRITING");
+        ? (lang === "id" ? `DISETUJUI PLAFON Rp ${approvedLoanAmount.toLocaleString("id-ID")}` : `APPROVED LIMIT Rp ${approvedLoanAmount.toLocaleString("id-ID")}`)
+        : (underwriteStatus === "rejected" 
+            ? (lang === "id" ? "PERMOHONAN DITOLAK" : "APPLICATION REJECTED") 
+            : (lang === "id" ? "MENUNGGU UNDERWRITING" : "PENDING UNDERWRITING"));
       doc.text(decisionTitle, marginX + 35, pg2Y + 6);
 
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(7.5);
       doc.setTextColor(75, 85, 99);
       const notesText = underwriterNotes || (underwriteStatus === "approved" 
-        ? "Berdasarkan penilaian analitis, usaha dinilai layak dengan kapasitas bayar lancar." 
-        : (underwriteStatus === "rejected" ? "Kredit ditolak karena rasio margin pengembalian berada di bawah batas toleransi minimum." : "Dokumen pre-assessment belum ditinjau oleh pejabat analis kredit perbankan."));
-      const splitNotes = doc.splitTextToSize(`Catatan Analis: ${notesText}`, 140);
+        ? (lang === "id" 
+            ? "Berdasarkan penilaian analitis, usaha dinilai layak dengan kapasitas bayar lancar." 
+            : "Based on analytical assessment, the business is deemed eligible with current repayment capacity.")
+        : (underwriteStatus === "rejected" 
+            ? (lang === "id" 
+                ? "Kredit ditolak karena rasio margin pengembalian berada di bawah batas toleransi minimum." 
+                : "Credit rejected because repayment margin ratio is below the minimum tolerance limit.") 
+            : (lang === "id" 
+                ? "Dokumen pre-assessment belum ditinjau oleh pejabat analis kredit perbankan." 
+                : "Pre-assessment document has not been reviewed by a bank credit analyst officer.")));
+      const splitNotes = doc.splitTextToSize(`${lang === "id" ? "Catatan Analis" : "Analyst Notes"}: ${notesText}`, 140);
       doc.text(splitNotes, marginX + 35, pg2Y + 11);
 
       pg2Y += 25;
@@ -1012,12 +1041,14 @@ export default function App() {
       doc.setTextColor(14, 116, 144);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(8);
-      doc.text("EDUKASI ALTERNATIVE CREDIT SCORING (UU NO. 4 TAHUN 2023 - P2SK)", marginX + 4, pg2Y + 5);
+      doc.text(lang === "id" ? "EDUKASI ALTERNATIVE CREDIT SCORING (UU NO. 4 TAHUN 2023 - P2SK)" : "ALTERNATIVE CREDIT SCORING EDUCATION (LAW NO. 4 OF 2023 - P2SK)", marginX + 4, pg2Y + 5);
 
       doc.setTextColor(55, 65, 81);
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(6.8);
-      const p2skText = "Sesuai amanat Undang-Undang Pengembangan dan Penguatan Sektor Keuangan (UU P2SK), komite regulasi perbankan mikro didorong menggunakan inovasi penilaian kredit alternatif (Alternative Credit Scoring) memanfaatkan pembayaran tagihan listrik, BPJS, pulsa, dan riwayat e-commerce. Ini membuka kesempatan bagi pengusaha rumah tangga tanpa agunan tambahan untuk dinilai layak mendapat pembiayaan formal secara adil.";
+      const p2skText = lang === "id" 
+        ? "Sesuai amanat Undang-Undang Pengembangan dan Penguatan Sektor Keuangan (UU P2SK), komite regulasi perbankan mikro didorong menggunakan inovasi penilaian kredit alternatif (Alternative Credit Scoring) memanfaatkan pembayaran tagihan listrik, BPJS, pulsa, dan riwayat e-commerce. Ini membuka kesempatan bagi pengusaha rumah tangga tanpa agunan tambahan untuk dinilai layak mendapat pembiayaan formal secara adil."
+        : "In line with the mandate of the Law on Development and Strengthening of the Financial Sector (UU P2SK), the micro-banking regulatory committee is encouraged to use innovative alternative credit scoring utilizing utility bill payments, social security (BPJS), phone credit, and e-commerce history. This opens opportunities for micro/household entrepreneurs without physical collateral to be fairly assessed for formal financing.";
       const splitP2SK = doc.splitTextToSize(p2skText, 172);
       doc.text(splitP2SK, marginX + 4, pg2Y + 9.5);
 
@@ -1035,11 +1066,11 @@ export default function App() {
       doc.text(legalText3, marginX, pg2Y + 11.5);
 
       // Trigger standard local action to download the beautifully designed PDF report
-      doc.save(`Laporan_Finansial_${(userProfile.businessName || "UMKM").replace(/\s+/g, "_")}.pdf`);
+      doc.save(`${lang === "id" ? "Laporan_Finansial" : "Financial_Report"}_${(userProfile.businessName || "UMKM").replace(/\s+/g, "_")}.pdf`);
 
     } catch (error) {
       console.error(error);
-      alert("Terdapat kendala sewaktu memproses file PDF. Silakan ulangi.");
+      alert(lang === "id" ? "Terdapat kendala sewaktu memproses file PDF. Silakan ulangi." : "An error occurred while processing the PDF file. Please try again.");
     }
   };
 
@@ -1109,19 +1140,45 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Prompt User Status Bar */}
-          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] bg-gray-50 px-3 py-1.5 border border-gray-200 rounded-sm">
-            {userProfile.isOnboarded ? (
-              <>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-gray-600">Terdaftar: <strong>{userProfile.businessName}</strong></span>
-              </>
-            ) : (
-              <>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <span className="text-gray-500 text-xs">Belum Bergabung</span>
-              </>
-            )}
+          {/* Prompt User Status Bar & Language Switcher */}
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] bg-gray-50 px-3 py-1.5 border border-gray-200 rounded-sm">
+              {userProfile.isOnboarded ? (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-gray-600">
+                    {t("Terdaftar: ", "Registered: ")}<strong>{userProfile.businessName}</strong>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <span className="text-gray-500 text-xs">{t("Belum Bergabung", "Not Joined")}</span>
+                </>
+              )}
+            </div>
+
+            {/* Language Switcher */}
+            <div className="flex items-center gap-0.5 border-2 border-ink p-0.5 bg-gray-50 shadow-[1.5px_1.5px_0px_0px_#111827] rounded-sm font-mono text-[9px]">
+              <button
+                type="button"
+                onClick={() => setLang("id")}
+                className={`px-1.5 py-0.5 font-bold transition-all cursor-pointer ${
+                  lang === "id" ? "bg-ink text-paper" : "text-gray-500 hover:text-ink hover:bg-gray-200"
+                }`}
+              >
+                ID
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("en")}
+                className={`px-1.5 py-0.5 font-bold transition-all cursor-pointer ${
+                  lang === "en" ? "bg-blueprint text-white" : "text-gray-500 hover:text-ink hover:bg-gray-200"
+                }`}
+              >
+                EN
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1498,23 +1555,23 @@ export default function App() {
                 onClick={() => { setActiveTab("blog"); }}
                 className="font-mono text-xs text-blueprint hover:underline flex items-center gap-1 uppercase font-bold"
               >
-                ← Kembali Ke Buku Analisis Masalah
+                {t("← Kembali Ke Buku Analisis Masalah", "← Back to Problem Analysis")}
               </button>
               <span className="font-mono text-[9px] text-gray-500 bg-gray-100 px-2 py-1 border border-gray-200">
-                STATUS PERANGKAT: KAMERA AKTIF / SIAP
+                {t("STATUS PERANGKAT: KAMERA AKTIF / SIAP", "DEVICE STATUS: CAMERA ACTIVE / READY")}
               </span>
             </div>
 
             {/* Heading Section */}
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <span className="text-xs uppercase font-mono text-blueprint font-bold tracking-widest bg-blue-50 px-2.5 py-1 border border-blue-200">
-                PONDASI KELAYAKAN FINANSIAL
+                {t("PONDASI KELAYAKAN FINANSIAL", "FINANCIAL FEASIBILITY BASELINE")}
               </span>
               <h2 className="text-3xl md:text-4xl font-display font-bold text-ink">
-                Ubah Coretan Menjadi Laporan Laba Rugi
+                {t("Ubah Coretan Menjadi Laporan Laba Rugi", "Transform Handwritings into P&L Statements")}
               </h2>
               <p className="text-xs md:text-sm text-gray-500">
-                Unggah jepretan kamera kertas catatan supplier atau buku kas harian Anda. Agen AI UMKM Lens akan secara instan merapikannya menjadi siap cetak.
+                {t("Unggah jepretan kamera kertas catatan supplier atau buku kas harian Anda. Agen AI UMKM Lens akan secara instan merapikannya menjadi siap cetak.", "Upload snapshots of supplier receipts or daily cash logs. The UMKM Lens AI Agent will instantly clean and structure them into bank-ready statements.")}
               </p>
             </div>
 
@@ -1523,15 +1580,15 @@ export default function App() {
               <div className="border-b-2 border-ink pb-3 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <UserCheck className="w-5 h-5 text-blueprint" />
-                  <h3 className="font-display font-bold text-lg text-ink uppercase">Daftar Identitas UMKM</h3>
+                  <h3 className="font-display font-bold text-lg text-ink uppercase">{t("Daftar Identitas UMKM", "UMKM Identity Registration")}</h3>
                 </div>
                 {userProfile.isOnboarded ? (
                   <span className="bg-emerald-100 border border-emerald-500 text-emerald-800 text-[10px] uppercase font-mono px-2 py-0.5 font-bold">
-                    ✓ TERONBOARD
+                    {t("✓ TERONBOARD", "✓ ONBOARDED")}
                   </span>
                 ) : (
-                  <span className="bg-amber-100 border border-amber-500 text-amber-800 text-[10px] uppercase font-mono px-2 py-0.5 px-2 py-0.5 font-bold">
-                    WAJIB DIISI
+                  <span className="bg-amber-100 border border-amber-500 text-amber-800 text-[10px] uppercase font-mono px-2 py-0.5 font-bold">
+                    {t("WAJIB DIISI", "REQUIRED")}
                   </span>
                 )}
               </div>
@@ -1539,15 +1596,15 @@ export default function App() {
               {!userProfile.isOnboarded ? (
                 <form onSubmit={handleRegisterUser} className="space-y-4">
                   <p className="text-xs text-gray-600 leading-relaxed font-sans">
-                    Daftar di bawah ini untuk mengunci nama usaha Anda di kop lampiran PDF perbankan. Ini memberikan kredibilitas yang dicari analis mikro KUR.
+                    {t("Daftar di bawah ini untuk mengunci nama usaha Anda di kop lampiran PDF perbankan. Ini memberikan kredibilitas yang dicari analis mikro KUR.", "Register below to secure your business name in the banking PDF report header. This provides the credibility required by micro-credit analysts.")}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Nama Pemilik Usaha</label>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Nama Pemilik Usaha", "Business Owner Name")}</label>
                       <input
                         type="text"
-                        placeholder="Contoh: Ibu Lilis Suranti"
+                        placeholder={t("Contoh: Ibu Lilis Suranti", "Example: Mrs. Lilis Suranti")}
                         value={userProfile.ownerName}
                         onChange={(e) => setUserProfile({ ...userProfile, ownerName: e.target.value })}
                         className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
@@ -1556,10 +1613,10 @@ export default function App() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Nama Usaha / Toko</label>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Nama Usaha / Toko", "Business / Shop Name")}</label>
                       <input
                         type="text"
-                        placeholder="Contoh: Nastar Makmur Jagakarsa"
+                        placeholder={t("Contoh: Nastar Makmur Jagakarsa", "Example: Nastar Makmur Jagakarsa")}
                         value={userProfile.businessName}
                         onChange={(e) => setUserProfile({ ...userProfile, businessName: e.target.value })}
                         className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
@@ -1570,21 +1627,21 @@ export default function App() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Jenis Sektor Bisnis</label>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Jenis Sektor Bisnis", "Business Sector")}</label>
                       <select
                         value={userProfile.businessType}
                         onChange={(e) => setUserProfile({ ...userProfile, businessType: e.target.value })}
                         className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:outline-none font-mono"
                       >
-                        <option value="makanan">Makanan / Minuman Rumahan</option>
-                        <option value="kerajinan">Kerajinan Tangan (Rajut, Anyam, Kulit)</option>
-                        <option value="warung">Warung Kelontong / Toko Kelontong</option>
-                        <option value="jasa">Jasa Domestik (Laundry, Ojek, Bengkel)</option>
+                        <option value="makanan">{t("Makanan / Minuman Rumahan", "Homemade Food & Beverage")}</option>
+                        <option value="kerajinan">{t("Kerajinan Tangan (Rajut, Anyam, Kulit)", "Handicrafts (Knitting, Weaving, Leather)")}</option>
+                        <option value="warung">{t("Warung Kelontong / Toko Kelontong", "Grocery / Retail Shop")}</option>
+                        <option value="jasa">{t("Jasa Domestik (Laundry, Ojek, Bengkel)", "Domestic Services (Laundry, Ride-hail, Repair)")}</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Nomor WhatsApp Aktif</label>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Nomor WhatsApp Aktif", "Active WhatsApp Number")}</label>
                       <input
                         type="tel"
                         placeholder="Contoh: 081234567890"
@@ -1596,10 +1653,10 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Lokasi Usaha (Kabupaten / Kota)</label>
+                    <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Lokasi Usaha (Kabupaten / Kota)", "Business Location (Regency / City)")}</label>
                     <input
                       type="text"
-                      placeholder="Contoh: Jagakarsa, Jakarta Selatan atau Bogor, Jawa Barat"
+                      placeholder={t("Contoh: Jagakarsa, Jakarta Selatan atau Bogor, Jawa Barat", "Example: Jagakarsa, South Jakarta")}
                       value={userProfile.location}
                       onChange={(e) => setUserProfile({ ...userProfile, location: e.target.value })}
                       className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
@@ -1609,7 +1666,7 @@ export default function App() {
                   <div className="bg-yellow-50 border border-yellow-200 p-3 flex gap-2 rounded-sm mt-2">
                     <Info className="w-5 h-5 text-amber-600 flex-shrink-0" />
                     <p className="text-[11px] text-amber-800 leading-normal font-sans">
-                      <strong>Privasi Terjamin:</strong> Data disimpan sepenuhnya secara lokal di peramban Anda. Aplikasi ini dirancang sesuai standard tanpa login yang frictionless demi kenyamanan Ibu Rumah Tangga.
+                      <strong>{t("Privasi Terjamin:", "Privacy Guaranteed:")}</strong> {t("Data disimpan sepenuhnya secara lokal di peramban Anda. Aplikasi ini dirancang sesuai standard tanpa login yang frictionless demi kenyamanan Ibu Rumah Tangga.", "All data is stored purely locally in your browser. This application is designed without a login barrier for a friction-free experience for micro-merchants.")}
                     </p>
                   </div>
 
@@ -1618,14 +1675,14 @@ export default function App() {
                       type="submit"
                       className="flex-1 bg-blueprint text-white py-3.5 font-display font-bold text-xs uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer text-center"
                     >
-                      Daftar UMKM Baru & Mulai Deteksi Catatan
+                      {t("Daftar UMKM Baru & Mulai Deteksi Catatan", "Register New UMKM & Start Scanning")}
                     </button>
                     <button
                       type="button"
                       onClick={handleQuickOnboard}
-                      className="bg-marker-yellow hover:bg-yellow-300 text-ink py-3.5 px-4 font-mono font-bold text-xs uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_#111827]"
+                      className="bg-marker-yellow hover:bg-yellow-300 text-ink py-3.5 px-4 font-mono font-bold text-xs uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_#111827] cursor-pointer"
                     >
-                      🚀 Lewati & Isi Data Demo Instan
+                      {t("🚀 Lewati & Isi Data Demo Instan", "🚀 Skip & Fill Demo Data")}
                     </button>
                   </div>
                 </form>
@@ -1634,9 +1691,9 @@ export default function App() {
                   <div className="p-4 bg-emerald-50 border-2 border-emerald-500 rounded-sm flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-bold text-emerald-900">Pendaftaran Berhasil & Terkonfirmasi</h4>
+                      <h4 className="text-sm font-bold text-emerald-900">{t("Pendaftaran Berhasil & Terkonfirmasi", "Registration Successful & Verified")}</h4>
                       <p className="text-xs text-emerald-700 mt-1 font-sans">
-                        Kop Laporan Usaha sekarang terdaftar atas nama <strong>{userProfile.businessName}</strong> (Pemilik: {userProfile.ownerName}) dengan sektor <strong>Usaha {userProfile.businessType.toUpperCase()}</strong>.
+                        {t("Kop Laporan Usaha sekarang terdaftar atas nama ", "Business report header is now registered under ")} <strong>{userProfile.businessName}</strong> ({t("Pemilik: ", "Owner: ")}{userProfile.ownerName}) {t(" dengan sektor ", " within the sector ")} <strong>Usaha {userProfile.businessType.toUpperCase()}</strong>.
                       </p>
                     </div>
                   </div>
@@ -1644,9 +1701,9 @@ export default function App() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setUserProfile({ ...userProfile, isOnboarded: false })}
-                      className="text-[10px] font-mono text-gray-500 uppercase hover:underline flex items-center gap-1 hover:text-ink"
+                      className="text-[10px] font-mono text-gray-500 uppercase hover:underline flex items-center gap-1 hover:text-ink cursor-pointer"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" /> Ganti Identitas Profil
+                      <RotateCcw className="w-3.5 h-3.5" /> {t("Ganti Identitas Profil", "Change Profile Identity")}
                     </button>
                   </div>
                 </div>
@@ -1666,10 +1723,10 @@ export default function App() {
                 <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4">
                   <div className="border-b-2 border-ink pb-2 flex justify-between items-center">
                     <h3 className="font-display font-bold text-sm text-ink uppercase flex items-center gap-1.5">
-                      📖 Buku Kas Sejarah
+                      📖 {t("Buku Kas Sejarah", "Historical Ledger")}
                     </h3>
                     <span className="bg-ink text-paper text-[9px] px-1.5 py-0.5 font-mono">
-                      {historicalPeriods.length} Bulan
+                      {historicalPeriods.length} {t("Bulan", "Months")}
                     </span>
                   </div>
 
@@ -1689,11 +1746,11 @@ export default function App() {
                       >
                         <div>
                           <p className="font-mono text-xs font-bold text-ink">{p.period}</p>
-                          <p className="text-[10px] text-gray-500 font-sans mt-0.5 uppercase">Sektor: {p.business_type}</p>
+                          <p className="text-[10px] text-gray-500 font-sans mt-0.5 uppercase">{t("Sektor: ", "Sector: ")}{p.business_type}</p>
                         </div>
                         <div className="text-right flex items-center gap-2">
                           <div>
-                            <span className="text-[9px] text-gray-400 font-mono block">Laba Bersih:</span>
+                            <span className="text-[9px] text-gray-400 font-mono block">{t("Laba Bersih:", "Net Profit:")}</span>
                             <span className={`text-[10px] font-mono font-bold ${p.totals.laba_bersih >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                               Rp {p.totals.laba_bersih.toLocaleString("id-ID")}
                             </span>
@@ -1709,8 +1766,8 @@ export default function App() {
                                   setSelectedPeriodIndex(Math.max(0, updated.length - 1));
                                 }
                               }}
-                              className="text-gray-400 hover:text-red-600 p-1 font-bold text-sm"
-                              title="Hapus bulan ini"
+                              className="text-gray-400 hover:text-red-600 p-1 font-bold text-sm cursor-pointer"
+                              title={t("Hapus bulan ini", "Delete this month")}
                             >
                               ×
                             </button>
@@ -1725,29 +1782,29 @@ export default function App() {
                     onClick={handleTriggerNewScan}
                     className="w-full bg-blueprint text-white py-2.5 font-mono text-xs font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_rgba(0,0,0,0.8)] active:translate-y-px text-center cursor-pointer hover:bg-blue-700"
                   >
-                    ➕ Pindai & Unggah Bulan Baru
+                    {t("➕ Pindai & Unggah Bulan Baru", "➕ Scan & Upload New Month")}
                   </button>
                 </div>
 
                 {/* 2. Global Credit Score circular visualizer */}
                 <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4 text-center flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-mono text-gray-400 uppercase">KONSOLIDASI KESIAPAN KREDIT</span>
+                  <span className="text-[10px] font-mono text-gray-400 uppercase">{t("KONSOLIDASI KESIAPAN KREDIT", "CONSOLIDATED CREDIT READINESS")}</span>
                   
                   {/* Score Indicator */}
                   <div className="relative w-32 h-32 flex items-center justify-center bg-slate-50 border-4 border-ink rounded-full shadow-inner">
                     <div className="text-center">
                       <span className="text-3xl md:text-4xl font-display font-extrabold text-ink">{score}</span>
-                      <span className="text-[10px] text-gray-400 font-mono block border-t border-gray-100 mt-1 pt-0.5">dari 100</span>
+                      <span className="text-[10px] text-gray-400 font-mono block border-t border-gray-100 mt-1 pt-0.5">{t("dari 100", "out of 100")}</span>
                     </div>
                   </div>
 
                   <div className="space-y-1">
                     <p className="text-xs font-mono font-bold text-ink uppercase">GRADE: {creditGrade}</p>
                     <span className={`inline-block px-3 py-1 font-mono text-[10px] font-bold border-2 border-ink uppercase ${gradeBadgeColor}`}>
-                      {gradeLabel}
+                      {lang === "id" ? gradeLabel : gradeLabel.replace("RISIKO RENDAH", "LOW RISK").replace("RISIKO SEDANG", "MEDIUM RISK").replace("RISIKO DEFAULT TINGGI", "HIGH DEFAULT RISK")}
                     </span>
                     <p className="text-[10px] text-gray-500 font-sans leading-tight mt-2 max-w-[200px] mx-auto">
-                      Dihitung dari rata-rata laba bersih bulanan <strong>Rp {avgMonthlyLaba.toLocaleString("id-ID")}</strong> untuk plafon Rp {desiredLoan.toLocaleString("id-ID")}.
+                      {t("Dihitung dari rata-rata laba bersih bulanan ", "Calculated from average monthly net profit of ")} <strong>Rp {avgMonthlyLaba.toLocaleString("id-ID")}</strong> {t(" untuk plafon ", " for a credit limit of ")} Rp {desiredLoan.toLocaleString("id-ID")}.
                     </p>
                   </div>
                 </div>
@@ -1765,13 +1822,13 @@ export default function App() {
                     <div className="border-b-2 border-ink pb-2 flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Camera className="w-5 h-5 text-blueprint" />
-                        <h3 className="font-display font-bold text-base text-ink uppercase">Scan Catatan Bulanan Baru</h3>
+                        <h3 className="font-display font-bold text-base text-ink uppercase">{t("Scan Catatan Bulanan Baru", "Scan New Monthly Ledger")}</h3>
                       </div>
                       <button 
                         onClick={() => setScanResult(null)}
-                        className="text-xs font-mono text-gray-400 hover:text-ink hover:underline"
+                        className="text-xs font-mono text-gray-400 hover:text-ink hover:underline cursor-pointer"
                       >
-                        Batal
+                        {t("Batal", "Cancel")}
                       </button>
                     </div>
 
@@ -1780,7 +1837,7 @@ export default function App() {
                       {/* Presets */}
                       <div className="space-y-3">
                         <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
-                          Langkah 1: Pilih Preset Buku Kas Harian (Untuk Demo Instan)
+                          {t("Langkah 1: Pilih Preset Buku Kas Harian (Untuk Demo Instan)", "Step 1: Choose Daily Cash Ledger Preset (For Instant Demo)")}
                         </span>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1797,14 +1854,14 @@ export default function App() {
                             >
                               <div>
                                 <p className="font-sans text-xs font-bold text-ink leading-tight line-clamp-2">
-                                  {note.title}
+                                  {lang === "id" ? note.title : note.title.replace("Catatan Buku Kas Nastar Ibu Lilis", "Mrs. Lilis Nastar Book Cash Logs").replace("Nota Penjualan Anyaman Pak Made", "Mr. Made Rattan Sales Invoice").replace("Buku Pembelian Grosir Warung Bu Rahma", "Mrs. Rahma Grocery Supplier Invoice")}
                                 </p>
                                 <span className="text-[9px] text-gray-500 font-mono mt-1 block uppercase">
-                                  Sektor: {note.businessType}
+                                  {t("Sektor: ", "Sector: ")}{note.businessType}
                                 </span>
                               </div>
                               <p className="text-[9px] text-gray-600 line-clamp-2 mt-2 leading-tight font-sans italic">
-                                "{note.snippet}"
+                                "{lang === "id" ? note.snippet : note.snippet.replace("Buku harian kue kering lebaran. Ada biaya margarin, terigu, penjualan 15 toples, oven gas, dll.", "Holiday cookies journal. Margarine costs, flour, 15 jars sales, oven gas, etc.").replace("Nota laci kerajinan bambu & rotan. Ada pesanan dari hotel Sanur, beli cat pelitur, anyaman lampion, dll.", "Bamboo & rattan ledger. Sanur hotel order, varnish paint, lantern weaving, etc.").replace("Buku nota supplier logistik sembako kelontong. Kulakan beras, minyak goreng, sewa kulkas es krim dsb.", "Grocery logistics supplier invoice book. Bulk rice, cooking oil, ice cream freezer rent, etc.")}"
                               </p>
                             </button>
                           ))}
@@ -1813,14 +1870,14 @@ export default function App() {
 
                       <div className="flex items-center justify-between py-2">
                         <div className="h-px bg-gray-200 flex-1" />
-                        <span className="px-3 text-[10.5px] font-mono text-gray-400 uppercase tracking-widest">ATAU</span>
+                        <span className="px-3 text-[10.5px] font-mono text-gray-400 uppercase tracking-widest">{t("ATAU", "OR")}</span>
                         <div className="h-px bg-gray-200 flex-1" />
                       </div>
 
                       {/* Camera Upload */}
                       <div className="space-y-2">
                         <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
-                          Langkah 2: Ambil Foto Buku Kas Fisik
+                          {t("Langkah 2: Ambil Foto Buku Kas Fisik", "Step 2: Capture or Upload Physical Ledger Photo")}
                         </span>
 
                         <div 
@@ -1839,15 +1896,15 @@ export default function App() {
                           {uploadedImage ? (
                             <div className="space-y-2">
                               <CheckCircle className="w-8 h-8 text-blueprint mx-auto" />
-                              <p className="text-xs text-ink font-semibold">Tergugah: {uploadedFileName}</p>
-                              <p className="text-[10px] text-gray-400 font-mono">Ketuk untuk mengganti foto</p>
+                              <p className="text-xs text-ink font-semibold">{t("Tergugah: ", "Uploaded: ")}{uploadedFileName}</p>
+                              <p className="text-[10px] text-gray-400 font-mono">{t("Ketuk untuk mengganti foto", "Tap to change photo")}</p>
                             </div>
                           ) : (
                             <div className="space-y-3">
                               <Upload className="w-8 h-8 text-gray-400 mx-auto" />
                               <div className="space-y-1">
-                                <p className="text-xs font-bold text-ink hover:underline">Ketuk untuk mengambil foto catatan harian</p>
-                                <p className="text-[10px] text-gray-400 font-mono">Jpg, Png, Heic maksimal 10MB</p>
+                                <p className="text-xs font-bold text-ink hover:underline">{t("Ketuk untuk mengambil foto catatan harian", "Tap to capture/upload ledger photo")}</p>
+                                <p className="text-[10px] text-gray-400 font-mono">{t("Jpg, Png, Heic maksimal 10MB", "Jpg, Png, Heic max 10MB")}</p>
                               </div>
                             </div>
                           )}
@@ -1859,33 +1916,33 @@ export default function App() {
                     {/* Metadata Context */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
                       <div>
-                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Periode Bulan Catatan</label>
+                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Periode Bulan Catatan", "Ledger Month Period")}</label>
                         <input
                           type="text"
                           value={customPeriod}
                           onChange={(e) => setCustomPeriod(e.target.value)}
-                          placeholder="Contoh: Mei 2026"
+                          placeholder={t("Contoh: Mei 2026", "Example: May 2026")}
                           className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">Sektor Usaha Catatan</label>
+                        <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Sektor Usaha Catatan", "Ledger Business Sector")}</label>
                         <select
                           value={customBusinessType}
                           onChange={(e) => setCustomBusinessType(e.target.value)}
                           className="w-full text-xs font-mono p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white"
                         >
-                          <option value="makanan">Makanan Rumahan</option>
-                          <option value="kerajinan">Kerajinan Tangan</option>
-                          <option value="warung">Toko Kelontong</option>
-                          <option value="jasa">Jasa & Servis</option>
+                          <option value="makanan">{t("Makanan Rumahan", "Homemade Food")}</option>
+                          <option value="kerajinan">{t("Kerajinan Tangan", "Handicrafts")}</option>
+                          <option value="warung">{t("Toko Kelontong", "Grocery Shop")}</option>
+                          <option value="jasa">{t("Jasa & Servis", "Domestic Services")}</option>
                         </select>
                       </div>
                     </div>
 
                     {formError && (
                       <div className="p-3 bg-red-50 border-2 border-red-500 text-xs text-red-700">
-                        <p className="font-bold uppercase">⚠️ GAGAL MEMULAI DETEKSI</p>
+                        <p className="font-bold uppercase">{t("⚠️ GAGAL MEMULAI DETEKSI", "⚠️ DETECTION FAILED")}</p>
                         <p>{formError}</p>
                       </div>
                     )}
@@ -1897,7 +1954,7 @@ export default function App() {
                         isProcessing ? "bg-gray-400 cursor-not-allowed" : "bg-blueprint hover:bg-blue-700"
                       }`}
                     >
-                      {isProcessing ? "Sedang Membaca..." : "Mulai Konversi dengan AI Lens Sekarang"}
+                      {isProcessing ? t("Sedang Membaca...", "Analyzing with AI...") : t("Mulai Konversi dengan AI Lens Sekarang", "Start AI Lens Conversion Now")}
                     </button>
 
                   </div>
@@ -1910,15 +1967,15 @@ export default function App() {
                       <div>
                         {isViewingScan ? (
                           <span className="text-[10px] bg-red-600 text-white font-mono uppercase px-2 py-0.5 tracking-wider font-bold">
-                            ⚠️ SCAN BARU DITELITI (BELUM DISIMPAN KE RIWAYAT)
+                            {t("⚠️ SCAN BARU DITELITI (BELUM DISIMPAN KE RIWAYAT)", "⚠️ NEW SCAN UNDER REVIEW (NOT YET SAVED)")}
                           </span>
                         ) : (
                           <span className="text-[10px] bg-blueprint text-white font-mono uppercase px-2 py-0.5 tracking-wider font-bold">
-                            ✓ RIWAYAT TERSIMPAN DI BUKU KAS SEJARAH
+                            {t("✓ RIWAYAT TERSIMPAN DI BUKU KAS SEJARAH", "✓ RECORD SAVED IN HISTORICAL LEDGER")}
                           </span>
                         )}
                         <h3 className="text-xl font-display font-bold text-ink mt-1.5">
-                          Bulan: {activeResult.period} (Usaha {activeResult.business_type.toUpperCase()})
+                          {t("Bulan: ", "Month: ")}{activeResult.period} ({t("Usaha ", "Business ")}{activeResult.business_type.toUpperCase()})
                         </h3>
                       </div>
 
@@ -1928,14 +1985,14 @@ export default function App() {
                             onClick={handleSaveToHistory}
                             className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:shadow-[1px_1px_0px_0px_#111827] transition-all active:translate-y-px cursor-pointer"
                           >
-                            💾 Simpan Ke Riwayat Kas
+                            {t("💾 Simpan Ke Riwayat Kas", "💾 Save to Ledger History")}
                           </button>
                         ) : (
                           <button
                             onClick={handleExportPDF}
-                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] flex items-center gap-1.5 active:translate-y-px hover:shadow-[1.5px_1.5px_0px_0px_#111827] transition-all"
+                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] flex items-center gap-1.5 active:translate-y-px hover:shadow-[1.5px_1.5px_0px_0px_#111827] transition-all cursor-pointer"
                           >
-                            <FileDown className="w-4 h-4" /> Cetak PDF Laporan
+                            <FileDown className="w-4 h-4" /> {t("Cetak PDF Laporan", "Print PDF Report")}
                           </button>
                         )}
                       </div>
@@ -1945,10 +2002,10 @@ export default function App() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-[11px] font-mono font-bold text-gray-500 uppercase">
-                          📋 Rincian Transaksi Catatan Harian
+                          {t("📋 Rincian Transaksi Catatan Harian", "📋 Transaction Details Log")}
                         </span>
                         <span className="text-[10px] text-gray-400 font-sans italic">
-                          (Ketuk teks/angka di bawah untuk mengoreksi kesalahan AI secara langsung)
+                          {t("(Ketuk teks/angka di bawah untuk mengoreksi kesalahan AI secara langsung)", "(Tap text or value below to manually edit and correct AI parsing error)")}
                         </span>
                       </div>
 
@@ -1956,11 +2013,11 @@ export default function App() {
                         <table className="w-full border-2 border-ink text-left font-mono text-xs">
                           <thead className="bg-slate-50 border-b-2 border-ink">
                             <tr>
-                              <th className="p-3 border-r border-ink">KETERANGAN</th>
-                              <th className="p-3 border-r border-ink text-center w-28">KATEGORI</th>
-                              <th className="p-3 border-r border-ink text-right w-36">NOMINAL (RP)</th>
-                              <th className="p-3 border-r border-ink text-center w-28">AKURASI AI</th>
-                              <th className="p-3 text-center w-12">AKSI</th>
+                              <th className="p-3 border-r border-ink">{t("KETERANGAN", "DESCRIPTION")}</th>
+                              <th className="p-3 border-r border-ink text-center w-28">{t("KATEGORI", "CATEGORY")}</th>
+                              <th className="p-3 border-r border-ink text-right w-36">{t("NOMINAL (RP)", "AMOUNT (IDR)")}</th>
+                              <th className="p-3 border-r border-ink text-center w-28">{t("AKURASI AI", "AI ACCURACY")}</th>
+                              <th className="p-3 text-center w-12">{t("AKSI", "ACTION")}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2009,9 +2066,9 @@ export default function App() {
                                     }}
                                     className="bg-white border border-ink text-[11px] p-0.5 font-mono focus:outline-none"
                                   >
-                                    <option value="pemasukan">PEMASUKAN</option>
-                                    <option value="pengeluaran">PENGELUARAN</option>
-                                    <option value="unknown">BURAM</option>
+                                    <option value="pemasukan">{t("PEMASUKAN", "INCOME")}</option>
+                                    <option value="pengeluaran">{t("PENGELUARAN", "EXPENSE")}</option>
+                                    <option value="unknown">{t("BURAM", "UNCLEAR")}</option>
                                   </select>
                                 </td>
 
@@ -2033,7 +2090,7 @@ export default function App() {
                                           if (it.category === "pemasukan") pemasukan += it.amount || 0;
                                           else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
                                         });
-
+ 
                                         updateActiveData({
                                           ...activeResult,
                                           items,
@@ -2053,11 +2110,11 @@ export default function App() {
                                 <td className="p-2 border-r border-ink text-center">
                                   {item.confidence === "high" ? (
                                     <span className="bg-marker-green border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase">
-                                      Tinggi (98%)
+                                      {t("Tinggi (98%)", "High (98%)")}
                                     </span>
                                   ) : (
                                     <span className="bg-marker-orange border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase animate-pulse">
-                                      Periksa (45%)
+                                      {t("Periksa (45%)", "Verify (45%)")}
                                     </span>
                                   )}
                                 </td>
@@ -2083,7 +2140,7 @@ export default function App() {
                                         }
                                       });
                                     }}
-                                    className="text-red-500 hover:text-red-700 p-1 border border-transparent hover:border-red-300 rounded-sm transition-all"
+                                    className="text-red-500 hover:text-red-700 p-1 border border-transparent hover:border-red-300 rounded-sm transition-all cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -2097,7 +2154,7 @@ export default function App() {
                               <td colSpan={5} className="p-2 text-left">
                                 <button
                                   onClick={() => {
-                                    const items = [...activeResult.items, { description: "Baris Baru (Koreksi)", category: "pemasukan", amount: 50000, confidence: "high" } as any];
+                                    const items = [...activeResult.items, { description: t("Baris Baru (Koreksi)", "New Line (Correction)"), category: "pemasukan", amount: 50000, confidence: "high" } as any];
                                     let pemasukan = 0;
                                     let pengeluaran = 0;
                                     items.forEach(it => {
@@ -2114,9 +2171,9 @@ export default function App() {
                                       }
                                     });
                                   }}
-                                  className="text-xs font-mono font-semibold text-blueprint hover:underline flex items-center gap-1 uppercase"
+                                  className="text-xs font-mono font-semibold text-blueprint hover:underline flex items-center gap-1 uppercase cursor-pointer"
                                 >
-                                  <Plus className="w-3.5 h-3.5" /> Tambahkan Baris Transaksi Baru (Manual)
+                                  <Plus className="w-3.5 h-3.5" /> {t("Tambahkan Baris Transaksi Baru (Manual)", "Add New Transaction Row (Manual)")}
                                 </button>
                               </td>
                             </tr>
@@ -2128,19 +2185,19 @@ export default function App() {
                     {/* Active Month Financial Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 border border-ink">
                       <div>
-                        <span className="text-[9px] font-mono text-gray-500 uppercase block">KAS MASUK (OMSET) BULAN INI</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">{t("KAS MASUK (OMSET) BULAN INI", "CASH INFLOW (REVENUE) THIS MONTH")}</span>
                         <strong className="text-lg font-display text-ink block mt-0.5">
                           Rp {activeResult.totals.pemasukan.toLocaleString("id-ID")}
                         </strong>
                       </div>
                       <div>
-                        <span className="text-[9px] font-mono text-gray-500 uppercase block">KAS KELUAR (BEBAN) BULAN INI</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">{t("KAS KELUAR (BEBAN) BULAN INI", "CASH OUTFLOW (EXPENSES) THIS MONTH")}</span>
                         <strong className="text-lg font-display text-red-600 block mt-0.5">
                           Rp {activeResult.totals.pengeluaran.toLocaleString("id-ID")}
                         </strong>
                       </div>
                       <div>
-                        <span className="text-[9px] font-mono text-gray-500 uppercase block">LABA BERSIH BULAN INI</span>
+                        <span className="text-[9px] font-mono text-gray-500 uppercase block">{t("LABA BERSIH BULAN INI", "NET PROFIT THIS MONTH")}</span>
                         <strong className={`text-lg font-display block mt-0.5 ${activeResult.totals.laba_bersih >= 0 ? "text-blueprint" : "text-red-700"}`}>
                           Rp {activeResult.totals.laba_bersih.toLocaleString("id-ID")}
                         </strong>
@@ -2152,19 +2209,19 @@ export default function App() {
                       <div className="flex bg-slate-100 p-0.5 border border-ink rounded-sm">
                         <button
                           onClick={() => setUserRole("merchant")}
-                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all cursor-pointer ${
                             userRole === "merchant" ? "bg-ink text-paper" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          👤 Mode Sobat UMKM
+                          {t("👤 Mode Sobat UMKM", "👤 UMKM Merchant Mode")}
                         </button>
                         <button
                           onClick={() => setUserRole("banker")}
-                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all ${
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all cursor-pointer ${
                             userRole === "banker" ? "bg-blueprint text-white" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          🏦 Mode Analis Kredit Bank (SLIK & Underwriting)
+                          {t("🏦 Mode Analis Kredit Bank (SLIK & Underwriting)", "🏦 Banker Credit Analyst Mode")}
                         </button>
                       </div>
                     )}
@@ -2176,11 +2233,11 @@ export default function App() {
                         {/* Sliders and checklists */}
                         <div className="lg:col-span-7 space-y-4">
                           <div className="bg-slate-50 border border-ink p-4 space-y-3">
-                            <h5 className="text-xs font-mono font-bold text-ink uppercase">⚙️ Simulasi Plafon KUR Mikro</h5>
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase">{t("⚙️ Simulasi Plafon KUR Mikro", "⚙️ Micro Loan Limit Simulation")}</h5>
                             
                             <div>
                               <div className="flex justify-between text-xs font-mono text-gray-700">
-                                <span>Plafon Pinjaman:</span>
+                                <span>{t("Plafon Pinjaman:", "Loan Limit (Plafon):")}</span>
                                 <strong className="text-blueprint">Rp {desiredLoan.toLocaleString("id-ID")}</strong>
                               </div>
                               <input 
@@ -2191,22 +2248,23 @@ export default function App() {
                                 value={desiredLoan}
                                 onChange={(e) => setDesiredLoan(Number(e.target.value))}
                                 className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink" 
+                                id="loan-limit-slider"
                               />
                             </div>
 
                             <div>
-                              <span className="block text-xs font-mono text-gray-700 mb-1">Tenor Pengembalian (Bulan):</span>
+                              <span className="block text-xs font-mono text-gray-700 mb-1">{t("Tenor Pengembalian (Bulan):", "Repayment Tenor (Months):")}</span>
                               <div className="flex gap-2">
-                                {[12, 18, 24].map((t) => (
+                                {[12, 18, 24].map((tenor) => (
                                   <button
-                                    key={t}
+                                    key={tenor}
                                     type="button"
-                                    onClick={() => setLoanTenor(t)}
+                                    onClick={() => setLoanTenor(tenor)}
                                     className={`flex-1 py-1 text-xs font-mono border border-ink font-bold transition-all ${
-                                      loanTenor === t ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-gray-100"
+                                      loanTenor === tenor ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-gray-100"
                                     }`}
                                   >
-                                    {t} Bulan
+                                    {tenor} {t("Bulan", "Months")}
                                   </button>
                                 ))}
                               </div>
@@ -2214,15 +2272,15 @@ export default function App() {
 
                             <div className="text-[10px] font-mono text-gray-500 bg-white p-2 border border-dashed border-gray-300 rounded-sm">
                               <div className="flex justify-between">
-                                <span>Estimasi Cicilan:</span>
-                                <strong>Rp {estCicilan.toLocaleString("id-ID")} / bulan</strong>
+                                <span>{t("Estimasi Cicilan:", "Est. Installment:")}</span>
+                                <strong>Rp {estCicilan.toLocaleString("id-ID")} / {t("bulan", "month")}</strong>
                               </div>
                             </div>
                           </div>
 
                           {/* Checklists */}
                           <div className="space-y-2">
-                            <h5 className="text-xs font-mono font-bold text-ink uppercase">📋 Tindakan Penguatan Kesiapan Kredit</h5>
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase">{t("📋 Tindakan Penguatan Kesiapan Kredit", "📋 Credit Readiness Action Items")}</h5>
                             <div className="space-y-2 text-[11px]">
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
                                 <input 
@@ -2230,9 +2288,10 @@ export default function App() {
                                   checked={completedChecklist.rekeningTerpisah} 
                                   onChange={(e) => setCompletedChecklist({ ...completedChecklist, rekeningTerpisah: e.target.checked })}
                                   className="mt-0.5 accent-blueprint"
+                                  id="chk-rekening-terpisah"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">Memisahkan Uang Pribadi & Usaha (+5 Poin)</strong>
+                                  <strong className="text-ink block font-semibold">{t("Memisahkan Uang Pribadi & Usaha (+5 Poin)", "Separate Personal & Business Funds (+5 Pts)")}</strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
@@ -2241,9 +2300,10 @@ export default function App() {
                                   checked={completedChecklist.nibTerdaftar} 
                                   onChange={(e) => setCompletedChecklist({ ...completedChecklist, nibTerdaftar: e.target.checked })}
                                   className="mt-0.5 accent-blueprint"
+                                  id="chk-nib-terdaftar"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)</strong>
+                                  <strong className="text-ink block font-semibold">{t("Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)", "Business ID (NIB) Registered (+5 Pts)")}</strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
@@ -2252,9 +2312,10 @@ export default function App() {
                                   checked={completedChecklist.catatanKonsisten} 
                                   onChange={(e) => setCompletedChecklist({ ...completedChecklist, catatanKonsisten: e.target.checked })}
                                   className="mt-0.5 accent-blueprint"
+                                  id="chk-catatan-konsisten"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">Konsistensi Catatan &gt;= 3 Bulan (+5 Poin)</strong>
+                                  <strong className="text-ink block font-semibold">{t("Konsistensi Catatan >= 3 Bulan (+5 Poin)", "Consistent Record Keeping >= 3 Months (+5 Pts)")}</strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-sky-50 border border-sky-200 hover:bg-sky-100/70 cursor-pointer">
@@ -2263,9 +2324,10 @@ export default function App() {
                                   checked={useAltData} 
                                   onChange={(e) => setUseAltData(e.target.checked)}
                                   className="mt-0.5 accent-blueprint"
+                                  id="chk-alt-data"
                                 />
                                 <div>
-                                  <strong className="text-sky-900 block font-semibold">Gunakan Data Alternatif (UU P2SK) (+10 Poin)</strong>
+                                  <strong className="text-sky-900 block font-semibold">{t("Gunakan Data Alternatif (UU P2SK) (+10 Poin)", "Use Alternative Data (UU P2SK) (+10 Pts)")}</strong>
                                 </div>
                               </label>
                             </div>
@@ -2276,27 +2338,30 @@ export default function App() {
                         <div className="lg:col-span-5 space-y-4">
                           <div className={`p-4 border-2 border-ink rounded-sm space-y-2 text-xs ${gradeColor}`}>
                             <h6 className="font-mono font-bold uppercase">
-                              {creditGrade === "A" && "✅ Rekomendasi: Layak Pengajuan KUR"}
-                              {creditGrade === "B" && "⚠️ Rekomendasi: Kelayakan Bersyarat"}
-                              {creditGrade === "C" && "🚨 Rekomendasi: Perlu Perbaikan Arus Kas"}
+                              {creditGrade === "A" && t("✅ Rekomendasi: Layak Pengajuan KUR", "✅ Recommendation: Eligible for Micro Loan")}
+                              {creditGrade === "B" && t("⚠️ Rekomendasi: Kelayakan Bersyarat", "⚠️ Recommendation: Conditional Eligibility")}
+                              {creditGrade === "C" && t("🚨 Rekomendasi: Perlu Perbaikan Arus Kas", "🚨 Recommendation: Cash Flow Improvement Needed")}
                             </h6>
                             <p className="leading-relaxed font-sans font-medium text-[11px]">
                               {creditGrade === "A" && (
-                                `Selamat! Rasio DSCR (${dscr.toFixed(2)}x) Anda berada di atas ambang batas minimal bank (> 1.25x) dengan skor kesiapan ${score}/100. Sisa rata-rata laba bulanan Anda (Rp ${avgMonthlyLaba.toLocaleString("id-ID")}) dinilai aman untuk melunasi cicilan Rp ${estCicilan.toLocaleString("id-ID")}/bulan.`
+                                t(`Selamat! Rasio DSCR (${dscr.toFixed(2)}x) Anda berada di atas ambang batas minimal bank (> 1.25x) dengan skor kesiapan ${score}/100. Sisa rata-rata laba bulanan Anda (Rp ${avgMonthlyLaba.toLocaleString("id-ID")}) dinilai aman untuk melunasi cicilan Rp ${estCicilan.toLocaleString("id-ID")}/bulan.`,
+                                  `Congratulations! Your DSCR ratio (${dscr.toFixed(2)}x) is above the bank's minimum threshold (> 1.25x) with a readiness score of ${score}/100. Your average monthly net profit (Rp ${avgMonthlyLaba.toLocaleString("id-ID")}) is considered safe to cover the monthly installment of Rp ${estCicilan.toLocaleString("id-ID")}/month.`)
                               )}
                               {creditGrade === "B" && (
-                                `Kapasitas bayar cukup (${dscr.toFixed(2)}x), namun skor kesiapan Anda sedang (${score}/100). Bank mungkin merekomendasikan plafon di bawah Rp ${desiredLoan.toLocaleString("id-ID")}. Lengkapi checklist legalitas NIB untuk memperkuat data!`
+                                t(`Kapasitas bayar cukup (${dscr.toFixed(2)}x), namun skor kesiapan Anda sedang (${score}/100). Bank mungkin merekomendasikan plafon di bawah Rp ${desiredLoan.toLocaleString("id-ID")}. Lengkapi checklist legalitas NIB untuk memperkuat data!`,
+                                  `Repayment capacity is sufficient (${dscr.toFixed(2)}x), but your readiness score is moderate (${score}/100). The bank might recommend a loan limit below Rp ${desiredLoan.toLocaleString("id-ID")}. Complete the Business ID (NIB) checklist to strengthen your profile!`)
                               )}
                               {creditGrade === "C" && (
-                                `Rasio pembayaran (${dscr.toFixed(2)}x) di bawah batas aman bank (< 1.0x). Rata-rata keuntungan Rp ${avgMonthlyLaba.toLocaleString("id-ID")} terlalu kecil untuk menanggung angsuran Rp ${estCicilan.toLocaleString("id-ID")}/bulan. Turunkan plafon pengajuan.`
+                                t(`Rasio pembayaran (${dscr.toFixed(2)}x) di bawah batas aman bank (< 1.0x). Rata-rata keuntungan Rp ${avgMonthlyLaba.toLocaleString("id-ID")} terlalu kecil untuk menanggung angsuran Rp ${estCicilan.toLocaleString("id-ID")}/bulan. Turunkan plafon pengajuan.`,
+                                  `Repayment ratio (${dscr.toFixed(2)}x) is below the bank's safety threshold (< 1.0x). The average profit of Rp ${avgMonthlyLaba.toLocaleString("id-ID")} is too small to cover the installment of Rp ${estCicilan.toLocaleString("id-ID")}/month. Please lower the simulated loan limit.`)
                               )}
                             </p>
                           </div>
 
                           <div className="bg-[#EFFAFE] border border-[#BDEAFB] p-4 rounded-sm text-xs space-y-1">
-                            <h6 className="font-mono font-semibold text-sky-900 uppercase">📢 Interpretasi Bebas Jargon</h6>
+                            <h6 className="font-mono font-semibold text-sky-900 uppercase">{t("📢 Interpretasi Bebas Jargon", "📢 Jargon-Free Interpretation")}</h6>
                             <p className="text-sky-800 text-[11px] leading-relaxed">
-                              "Berdasarkan performa <strong>{historicalPeriods.length} bulan terakhir</strong>, sisa laba bersih bulanan Anda dinilai <strong>{creditGrade === "A" ? "sangat aman" : (creditGrade === "B" ? "cukup memadai" : "kurang memadai")}</strong> untuk menanggung pengajuan kredit sebesar <strong>Rp {desiredLoan.toLocaleString("id-ID")}</strong>."
+                              "{t("Berdasarkan performa", "Based on performance from the last")} <strong>{historicalPeriods.length} {t("bulan terakhir", "months")}</strong>, {t("sisa laba bersih bulanan Anda dinilai", "your average monthly net profit is considered")} <strong>{creditGrade === "A" ? t("sangat aman", "very secure") : (creditGrade === "B" ? t("cukup memadai", "adequate") : t("kurang memadai", "insufficient"))}</strong> {t("untuk menanggung pengajuan kredit sebesar", "to cover a loan application of")} <strong>Rp {desiredLoan.toLocaleString("id-ID")}</strong>."
                             </p>
                           </div>
                         </div>
@@ -2309,24 +2374,24 @@ export default function App() {
                       <div className="space-y-6 pt-2">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
-                            <span className="text-[9px] font-mono text-gray-400 block">1. SLIK / OJK STATUS</span>
-                            <strong className="text-xs text-emerald-700 block">🟢 KOL-1 (LANCAR)</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Nasabah tidak memiliki tunggakan pembiayaan lain.</p>
+                            <span className="text-[9px] font-mono text-gray-400 block">{t("1. STATUS SLIK / OJK", "1. SLIK / OJK STATUS")}</span>
+                            <strong className="text-xs text-emerald-700 block">{t("🟢 KOL-1 (LANCAR)", "🟢 KOL-1 (CURRENT)")}</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Nasabah tidak memiliki tunggakan pembiayaan lain.", "The borrower has no outstanding arrears on other financing.")}</p>
                           </div>
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
-                            <span className="text-[9px] font-mono text-gray-400 block">2. TREN VOLATILITAS</span>
-                            <strong className="text-xs text-blueprint block">📈 BERTUMBUH STABIL</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Rata-rata pertumbuhan: +37.6% per bulan.</p>
+                            <span className="text-[9px] font-mono text-gray-400 block">{t("2. TREN VOLATILITAS", "2. VOLATILITY TREND")}</span>
+                            <strong className="text-xs text-blueprint block">{t("📈 BERTUMBUH STABIL", "📈 STABLE GROWTH")}</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Rata-rata pertumbuhan: +37.6% per bulan.", "Average growth rate: +37.6% per month.")}</p>
                           </div>
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
-                            <span className="text-[9px] font-mono text-gray-400 block">3. DEFAULT PROBABILITY</span>
-                            <strong className="text-xs text-emerald-700 block">🛡️ RISIKO RENDAH ({creditGrade})</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Risiko default tertutup oleh rasio keuntungan &gt; 25%.</p>
+                            <span className="text-[9px] font-mono text-gray-400 block">{t("3. PELUANG GAGAL BAYAR", "3. DEFAULT PROBABILITY")}</span>
+                            <strong className="text-xs text-emerald-700 block">{t(`🛡️ RISIKO RENDAH (${creditGrade})`, `🛡️ LOW RISK (${creditGrade})`)}</strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Risiko default tertutup oleh rasio keuntungan > 25%.", "Default risk mitigated by net profit margin > 25%.")}</p>
                           </div>
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
-                            <span className="text-[9px] font-mono text-gray-400 block">4. LIMIT REKOMENDASI</span>
+                            <span className="text-[9px] font-mono text-gray-400 block">{t("4. LIMIT REKOMENDASI", "4. RECOMMENDED LIMIT")}</span>
                             <strong className="text-xs text-ink block">Rp {Math.round(avgMonthlyLaba * 10).toLocaleString("id-ID")}</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">Estimasi limit aman tanpa agunan tambahan.</p>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Estimasi limit aman tanpa agunan tambahan.", "Estimated safe limit without physical collateral.")}</p>
                           </div>
                         </div>
 
@@ -2334,41 +2399,41 @@ export default function App() {
                         <div className="border-2 border-ink bg-white p-4 space-y-3">
                           <div className="flex justify-between items-center">
                             <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1">
-                              🛡️ Verifikasi OJK SLIK & BI Checking
+                              {t("🛡️ Verifikasi OJK SLIK & BI Checking", "🛡️ OJK SLIK & BI Checking Verification")}
                             </span>
                             <button
                               type="button"
                               onClick={() => setShowSlikDetails(!showSlikDetails)}
                               className="text-xs font-mono font-bold text-blueprint hover:underline uppercase cursor-pointer"
                             >
-                              {showSlikDetails ? "✕ Sembunyikan Detail" : "🔍 Lihat Laporan SLIK Lengkap"}
+                              {showSlikDetails ? t("✕ Sembunyikan Detail", "✕ Hide Details") : t("🔍 Lihat Laporan SLIK Lengkap", "🔍 View Full SLIK Report")}
                             </button>
                           </div>
                           
                           {showSlikDetails ? (
                             <div className="bg-slate-900 text-emerald-400 p-4 font-mono text-[10.5px] border-2 border-ink rounded-sm space-y-3 leading-relaxed shadow-inner max-h-60 overflow-y-auto">
                               <div className="border-b border-emerald-800 pb-2">
-                                <p className="font-bold text-center text-white">REPUBLIK INDONESIA — OTORITAS JASA KEUANGAN (OJK)</p>
-                                <p className="text-center text-[9px] text-emerald-500">SISTEM LAYANAN INFORMASI KEUANGAN (SLIK) | TERCETAK OTOMATIS</p>
+                                <p className="font-bold text-center text-white">{t("REPUBLIK INDONESIA — OTORITAS JASA KEUANGAN (OJK)", "REPUBLIC OF INDONESIA — FINANCIAL SERVICES AUTHORITY (OJK)")}</p>
+                                <p className="text-center text-[9px] text-emerald-500">{t("SISTEM LAYANAN INFORMASI KEUANGAN (SLIK) | TERCETAK OTOMATIS", "FINANCIAL INFORMATION SERVICE SYSTEM (SLIK) | AUTOMATED REPORT")}</p>
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px]">
-                                <p>Nama Debitur: <span className="text-white">{(userProfile.ownerName || "DEBITUR DEMO").toUpperCase()}</span></p>
-                                <p>NIK Verifikasi: <span className="text-white">3174092804****** (TERCOCOKKAN)</span></p>
-                                <p>Status Kelayakan: <span className="text-white">KOL-1 (LANCAR)</span></p>
-                                <p>Skor Kredit BI Checking: <span className="text-white">785 / 900 (SANGAT BAIK)</span></p>
+                                <p>{t("Nama Debitur:", "Debtor Name:")} <span className="text-white">{(userProfile.ownerName || "DEBITUR DEMO").toUpperCase()}</span></p>
+                                <p>{t("NIK Verifikasi:", "Verified National ID (NIK):")} <span className="text-white">3174092804****** {t("(TERCOCOKKAN)", "(MATCHED)")}</span></p>
+                                <p>{t("Status Kelayakan:", "Eligibility Status:")} <span className="text-white">{t("KOL-1 (LANCAR)", "KOL-1 (CURRENT)")}</span></p>
+                                <p>{t("Skor Kredit BI Checking:", "BI Checking Credit Score:")} <span className="text-white">785 / 900 {t("(SANGAT BAIK)", "(EXCELLENT)")}</span></p>
                               </div>
                               <div className="border-t border-emerald-800 pt-2 space-y-1">
-                                <p className="text-white font-bold">FASILITAS KREDIT AKTIF:</p>
-                                <p>1. [BANK RAKYAT INDONESIA] — Kredit Mikro KUR — Kolektibilitas 1 (Lancar) | Plafon Rp 10.000.000 (Outstanding: Rp 2.400.000)</p>
-                                <p>2. [PEGADAIAN] — Gadai Gadai Emas — Kolektibilitas 1 (Lancar) | Plafon Rp 5.000.000 (Lunas)</p>
+                                <p className="text-white font-bold">{t("FASILITAS KREDIT AKTIF:", "ACTIVE CREDIT FACILITIES:")}</p>
+                                <p>1. [BANK RAKYAT INDONESIA] — {t("Kredit Mikro KUR — Kolektibilitas 1 (Lancar)", "Micro KUR Loan — Collectibility 1 (Current)")} | {t("Plafon", "Limit")} Rp 10.000.000 (Outstanding: Rp 2.400.000)</p>
+                                <p>2. [PEGADAIAN] — {t("Gadai Emas — Kolektibilitas 1 (Lancar)", "Gold Pawn — Collectibility 1 (Current)")} | {t("Plafon", "Limit")} Rp 5.000.000 ({t("Lunas", "Settled")})</p>
                               </div>
                               <div className="border-t border-emerald-800 pt-2 text-[9px] text-emerald-500 italic">
-                                PEMBERITAHUAN: Debitur bersih dari catatan hitam perbankan, tuntutan hukum perdata, maupun laporan fraud nasional.
+                                {t("PEMBERITAHUAN: Debitur bersih dari catatan hitam perbankan, tuntutan hukum perdata, maupun laporan fraud nasional.", "NOTICE: Debtor is clean from banking blacklists, civil lawsuits, and national fraud databases.")}
                               </div>
                             </div>
                           ) : (
                             <div className="p-3 bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 rounded-sm flex justify-between items-center">
-                              <p>✓ Debitur berstatus <strong>KOL-1 (LANCAR)</strong>. Tidak ada kredit macet terdeteksi di database OJK.</p>
+                              <p>✓ {t("Debitur berstatus KOL-1 (LANCAR). Tidak ada kredit macet terdeteksi di database OJK.", "Debtor is rated KOL-1 (CURRENT). No bad debts detected in OJK database.")}</p>
                               <span className="text-[9px] bg-emerald-600 text-white font-mono px-2 py-0.5 font-bold">SLIK CLEAR</span>
                             </div>
                           )}
@@ -2378,57 +2443,57 @@ export default function App() {
                         {useAltData && (
                           <div className="border-2 border-ink bg-[#F5FBFF] p-4 space-y-3">
                             <span className="text-[10px] font-mono text-sky-800 uppercase tracking-widest font-bold block">
-                              📊 INTEGRASI ALTERNATIVE CREDIT SCORING (UU P2SK)
+                              {t("📊 INTEGRASI ALTERNATIVE CREDIT SCORING (UU P2SK)", "📊 ALTERNATIVE CREDIT SCORING INTEGRATION (UU P2SK)")}
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
                               <div className="bg-white p-2.5 border border-sky-200">
-                                <span className="text-[9px] text-gray-400 block uppercase font-bold">1. Konsistensi Tagihan PLN</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 100% TEPAT WAKTU (12 BLN)</strong>
-                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Rata-rata tagihan bulanan: Rp 280.000</span>
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("1. Konsistensi Tagihan PLN", "1. Utility Bill Consistency (PLN)")}</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 100% TEPAT WAKTU (12 BLN)", "🟢 100% ON TIME (12 MOS)")}</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Rata-rata tagihan bulanan: Rp 280.000", "Avg monthly bill: Rp 280,000")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
-                                <span className="text-[9px] text-gray-400 block uppercase font-bold">2. Riwayat Pulsa & Paket Data</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 SKOR STABILITAS TINGGI</strong>
-                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Pengisian rutin: Rp 120.000/bln (Telkomsel)</span>
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("2. Riwayat Pulsa & Paket Data", "2. Airtime & Data History")}</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 SKOR STABILITAS TINGGI", "🟢 HIGH STABILITY SCORE")}</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Pengisian rutin: Rp 120.000/bln (Telkomsel)", "Routine top-up: Rp 120,000/mo (Telkomsel)")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
-                                <span className="text-[9px] text-gray-400 block uppercase font-bold">3. Volume e-Wallet (Gopay/OVO)</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 Rp 3.250.000 / BULAN</strong>
-                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">Turnover transaksi penjualan non-tunai</span>
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("3. Volume e-Wallet (Gopay/OVO)", "3. e-Wallet Volume (Gopay/OVO)")}</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 Rp 3.250.000 / BULAN", "🟢 Rp 3,250,000 / MONTH")}</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Turnover transaksi penjualan non-tunai", "Non-cash sales turnover")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
-                                <span className="text-[9px] text-gray-400 block uppercase font-bold">4. Penilaian Seller E-Commerce</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">🟢 4.9/5 RATING TOKO</strong>
-                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">150+ Ulasan Positif (Shopee/Tokopedia)</span>
+                                <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("4. Penilaian Seller E-Commerce", "4. E-Commerce Seller Rating")}</span>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 4.9/5 RATING TOKO", "🟢 4.9/5 STORE RATING")}</strong>
+                                <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("150+ Ulasan Positif (Shopee/Tokopedia)", "150+ Positive Reviews (Shopee/Tokopedia)")}</span>
                               </div>
                             </div>
                             <p className="text-[10px] text-sky-700 leading-normal">
-                              💡 <strong>Efek UU P2SK:</strong> Integrasi telekomunikasi dan riwayat dompet digital memberikan tambahan keyakinan <strong>+10 poin</strong> ke scorecard kesiapan kredit nasabah.
+                              💡 <strong>{t("Efek UU P2SK:", "UU P2SK Impact:")}</strong> {t("Integrasi telekomunikasi dan riwayat dompet digital memberikan tambahan keyakinan", "Integration of telecom and digital wallet history adds an extra")} <strong>+10 {t("poin", "points")}</strong> {t("ke scorecard kesiapan kredit nasabah.", "to the debtor's credit readiness scorecard.")}
                             </p>
                           </div>
                         )}
 
                         <div className="bg-slate-50 border-2 border-ink p-4 space-y-3">
                           <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5">
-                            🔍 KELAYAKAN FINANSIAL KONSOLIDASI (AVERAGE PERFORMANCE)
+                            {t("🔍 KELAYAKAN FINANSIAL KONSOLIDASI (AVERAGE PERFORMANCE)", "🔍 CONSOLIDATED FINANCIAL ELIGIBILITY (AVERAGE PERFORMANCE)")}
                           </h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
                             <div>
-                              <span className="text-gray-400">RATA-RATA OMSET:</span>
+                              <span className="text-gray-400">{t("RATA-RATA OMSET:", "AVERAGE REVENUE (OMSET):")}</span>
                               <p className="font-bold text-ink">Rp {avgMonthlyOmset.toLocaleString("id-ID")}</p>
                             </div>
                             <div>
-                              <span className="text-gray-400">RATA-RATA LABA BERSIH:</span>
+                              <span className="text-gray-400">{t("RATA-RATA LABA BERSIH:", "AVERAGE NET PROFIT:")}</span>
                               <p className="font-bold text-ink">Rp {avgMonthlyLaba.toLocaleString("id-ID")}</p>
                             </div>
                             <div>
-                              <span className="text-gray-400">RASIO DSCR:</span>
+                              <span className="text-gray-400">{t("RASIO DSCR:", "DSCR RATIO:")}</span>
                               <p className={`font-bold ${dscr >= 1.25 ? "text-emerald-700" : "text-red-700"}`}>{dscr.toFixed(2)}x</p>
                             </div>
                           </div>
 
                           <div className="p-3 bg-blue-50 border border-blue-200 text-[11px] text-blue-800 rounded-sm font-sans">
-                            <strong>💡 Evaluasi Underwriter AI:</strong> Usaha <strong>{userProfile.businessName || "UMKM Binaan"}</strong> menunjukkan konsistensi arus kas sehat selama {historicalPeriods.length} bulan terakhir. Sisa rata-rata laba bulanan menutup cicilan simulasi Rp {estCicilan.toLocaleString("id-ID")}/bulan dengan safety margin {dscr.toFixed(1)}x lipat. Kelayakan agunan non-fisik (UU P2SK) dinilai memadai.
+                            <strong>💡 {t("Evaluasi Underwriter AI:", "AI Underwriter Evaluation:")}</strong> {t("Usaha", "The business")} <strong>{userProfile.businessName || t("UMKM Binaan", "Partner MSME")}</strong> {t("menunjukkan konsistensi arus kas sehat selama", "shows a consistent and healthy cash flow over the last")} {historicalPeriods.length} {t("bulan terakhir. Sisa rata-rata laba bulanan menutup cicilan simulasi", "months. The average monthly net profit covers the simulated installment of")} Rp {estCicilan.toLocaleString("id-ID")}/{t("bulan", "month")} {t("dengan safety margin", "with a safety margin of")} {dscr.toFixed(1)}{t("x lipat. Kelayakan agunan non-fisik (UU P2SK) dinilai memadai.", "x. Eligibility based on alternative collateral (UU P2SK) is rated as adequate.")}
                           </div>
 
                           <div className="flex justify-between items-center pt-2 border-t border-ink/10">
@@ -2437,7 +2502,7 @@ export default function App() {
                               onClick={handleExportPDF}
                               className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer"
                             >
-                              ✍️ Terbitkan Surat Rekomendasi & Cetak
+                              {t("✍️ Terbitkan Surat Rekomendasi & Cetak", "✍️ Issue Recommendation Letter & Print")}
                             </button>
                           </div>
                         </div>
@@ -2445,14 +2510,14 @@ export default function App() {
                         {/* Banker Decision Workflow Card */}
                         <div className="border-2 border-ink bg-white p-4 space-y-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                           <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5 flex items-center justify-between">
-                            <span>✍️ WORKFLOW KEPUTUSAN KREDIT ANALIS</span>
-                            <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">BANKER CONTROL PANEL</span>
+                            <span>{t("✍️ WORKFLOW KEPUTUSAN KREDIT ANALIS", "✍️ CREDIT ANALYST DECISION WORKFLOW")}</span>
+                            <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">{t("BANKER CONTROL PANEL", "BANKER CONTROL PANEL")}</span>
                           </h5>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-3">
                               <div>
-                                <label className="block text-xs font-mono text-gray-700 font-bold mb-1">Status Rekomendasi Underwriting:</label>
+                                <label className="block text-xs font-mono text-gray-700 font-bold mb-1">{t("Status Rekomendasi Underwriting:", "Underwriting Recommendation Status:")}</label>
                                 <div className="flex gap-2">
                                   <button
                                     type="button"
@@ -2461,7 +2526,7 @@ export default function App() {
                                       underwriteStatus === "approved" ? "bg-emerald-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
                                     }`}
                                   >
-                                    🟢 Setujui (Approve)
+                                    {t("🟢 Setujui (Approve)", "🟢 Approve")}
                                   </button>
                                   <button
                                     type="button"
@@ -2470,14 +2535,14 @@ export default function App() {
                                       underwriteStatus === "rejected" ? "bg-red-600 text-white shadow-sm" : "bg-paper text-ink hover:bg-slate-50"
                                     }`}
                                   >
-                                    🔴 Tolak (Reject)
+                                    {t("🔴 Tolak (Reject)", "🔴 Reject")}
                                   </button>
                                 </div>
                               </div>
                               
                               <div>
                                 <div className="flex justify-between text-xs font-mono text-gray-700 font-bold mb-1">
-                                  <span>Plafon yang Disetujui (IDR):</span>
+                                  <span>{t("Plafon yang Disetujui (IDR):", "Approved Loan Limit (IDR):")}</span>
                                   <strong className="text-blueprint">Rp {approvedLoanAmount.toLocaleString("id-ID")}</strong>
                                 </div>
                                 <input
@@ -2489,17 +2554,18 @@ export default function App() {
                                   onChange={(e) => setApprovedLoanAmount(Number(e.target.value))}
                                   disabled={underwriteStatus === "rejected"}
                                   className="w-full accent-blueprint mt-1 cursor-pointer h-2 bg-gray-200 border border-ink disabled:opacity-50"
+                                  id="banker-approved-slider"
                                 />
-                                <span className="text-[9px] text-gray-400 font-mono block mt-1">Maksimum disetujui dibatasi sebesar plafon permohonan Rp {desiredLoan.toLocaleString("id-ID")}.</span>
+                                <span className="text-[9px] text-gray-400 font-mono block mt-1">{t(`Maksimum disetujui dibatasi sebesar plafon permohonan Rp ${desiredLoan.toLocaleString("id-ID")}.`, `Maximum approved amount is capped at the requested limit of Rp ${desiredLoan.toLocaleString("id-ID")}.`)}</span>
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <label className="block text-xs font-mono text-gray-700 font-bold">Catatan Keputusan / Memo Underwriter:</label>
+                              <label className="block text-xs font-mono text-gray-700 font-bold">{t("Catatan Keputusan / Memo Underwriter:", "Decision Notes / Underwriter Memo:")}</label>
                               <textarea
                                 value={underwriterNotes}
                                 onChange={(e) => setUnderwriterNotes(e.target.value)}
-                                placeholder="Masukkan catatan pertimbangan kredit (contoh: Arus kas stabil, didukung data PLN, agunan berupa prospek usaha nastar Lebaran dinilai aman)."
+                                placeholder={t("Masukkan catatan pertimbangan kredit (contoh: Arus kas stabil, didukung data PLN, agunan berupa prospek usaha nastar Lebaran dinilai aman).", "Enter credit consideration notes (e.g., Stable cash flow, supported by utility bills, micro-business prospect is rated safe).")}
                                 className="w-full h-[95px] text-xs font-sans p-2 border-2 border-ink focus:outline-none bg-paper focus:bg-white resize-none"
                               />
                             </div>
@@ -2513,16 +2579,16 @@ export default function App() {
                                 <div className={`w-14 h-14 flex items-center justify-center font-bold font-display border-2 uppercase rotate-[-6deg] text-[10px] tracking-tight ${
                                   underwriteStatus === "approved" ? "border-emerald-600 text-emerald-600 bg-white" : "border-red-600 text-red-600 bg-white"
                                 }`}>
-                                  {underwriteStatus === "approved" ? "APPROVED" : "REJECTED"}
+                                  {underwriteStatus === "approved" ? t("DISETUJUI", "APPROVED") : t("DITOLAK", "REJECTED")}
                                 </div>
                                 <div>
                                   <h6 className="text-xs font-bold uppercase font-mono">
-                                    {underwriteStatus === "approved" ? "Kredit Lolos Underwriting Otorisasi" : "Permohonan Kredit Tidak Disetujui"}
+                                    {underwriteStatus === "approved" ? t("Kredit Lolos Underwriting Otorisasi", "Credit Request Approved") : t("Permohonan Kredit Tidak Disetujui", "Credit Request Rejected")}
                                   </h6>
                                   <p className="text-[10px] font-sans mt-0.5 leading-snug">
                                     {underwriteStatus === "approved" 
-                                      ? `Plafon Rp ${approvedLoanAmount.toLocaleString("id-ID")} disetujui dengan tenor ${loanTenor} bulan. Memo underwriting tersimpan.`
-                                      : "Arus kas dinilai terlalu berisiko atau DSCR berada di bawah batas aman (1.0x). Memerlukan perbaikan omset."
+                                      ? t(`Plafon Rp ${approvedLoanAmount.toLocaleString("id-ID")} disetujui dengan tenor ${loanTenor} bulan. Memo underwriting tersimpan.`, `Approved limit of Rp ${approvedLoanAmount.toLocaleString("id-ID")} with a ${loanTenor}-month tenor. Underwriter memo saved.`)
+                                      : t("Arus kas dinilai terlalu berisiko atau DSCR berada di bawah batas aman (1.0x). Memerlukan perbaikan omset.", "Cash flow is too risky or DSCR is below safety threshold (1.0x). Revenue improvement is required.")
                                     }
                                   </p>
                                 </div>
@@ -2534,7 +2600,7 @@ export default function App() {
                                   underwriteStatus === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
                                 }`}
                               >
-                                🖨️ Cetak Rekomendasi Resmi
+                                {t("🖨️ Cetak Rekomendasi Resmi", "🖨️ Print Official Recommendation")}
                               </button>
                             </div>
                           )}
@@ -2547,7 +2613,7 @@ export default function App() {
                     {!isViewingScan && historicalPeriods.length > 0 && (
                       <div className="border border-ink bg-slate-50 p-4 space-y-3">
                         <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold block">
-                          📈 TREN KINERJA KEUANGAN USAHA ({historicalPeriods.length} BULAN TERAKHIR)
+                          {t(`📈 TREN KINERJA KEUANGAN USAHA (${historicalPeriods.length} BULAN TERAKHIR)`, `📈 BUSINESS FINANCIAL PERFORMANCE TREND (LAST ${historicalPeriods.length} MONTHS)`)}
                         </span>
                         
                         <div className="h-48 pt-2">
@@ -2566,9 +2632,9 @@ export default function App() {
                               <YAxis tick={{ fontSize: 9, fontFamily: "monospace" }} />
                               <Tooltip formatter={(value) => `Rp ${Number(value).toLocaleString("id-ID")}`} labelStyle={{ fontSize: 10, fontFamily: "monospace" }} />
                               <Legend wrapperStyle={{ fontSize: 10, fontFamily: "monospace" }} />
-                              <Bar dataKey="Omset" fill="#0e7490" name="Omset" />
-                              <Bar dataKey="Beban" fill="#ef4444" name="Beban" />
-                              <Line type="monotone" dataKey="Laba" stroke="#16a34a" strokeWidth={3} name="Laba Bersih" />
+                              <Bar dataKey="Omset" fill="#0e7490" name={t("Omset", "Revenue")} />
+                              <Bar dataKey="Beban" fill="#ef4444" name={t("Beban", "Expenses")} />
+                              <Line type="monotone" dataKey="Laba" stroke="#16a34a" strokeWidth={3} name={t("Laba Bersih", "Net Profit")} />
                             </ComposedChart>
                           </ResponsiveContainer>
                         </div>
@@ -2578,7 +2644,7 @@ export default function App() {
                     {/* Official Banking Law Disclaimer */}
                     <div className="border-t border-gray-200 pt-4 mt-6">
                       <p className="text-[9px] text-gray-400 font-mono italic leading-relaxed text-center bg-gray-50 p-2.5 border border-gray-200">
-                        📄 <strong>Pemberitahuan Kelayakan Hukum:</strong> Laporan konsolidasi ini disusun secara otomatis oleh AI berdasarkan data buku kas harian yang diinput pemohon. Bukan dokumen teraudit akuntan publik. Dipergunakan murni untuk kebutuhan pre-screening pengajuan pembiayaan mikro.
+                        📄 <strong>{t("Pemberitahuan Kelayakan Hukum:", "Legal Eligibility Notice:")}</strong> {t("Laporan konsolidasi ini disusun secara otomatis oleh AI berdasarkan data buku kas harian yang diinput pemohon. Bukan dokumen teraudit akuntan publik. Dipergunakan murni untuk kebutuhan pre-screening pengajuan pembiayaan mikro.", "This consolidated report is compiled automatically by AI based on daily ledger data entered by the applicant. It is not an audited document by a certified public accountant and is used purely for pre-screening micro-financing applications.")}
                       </p>
                     </div>
 
@@ -2598,10 +2664,10 @@ export default function App() {
             
             {/* Citations Dashboard Headline */}
             <div className="tectonic-card bg-white p-6 border-2 border-ink shadow-[4px_4px_0px_0px_#111827]">
-              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">UMKM LENS RESEARCH METHODOLOGY</span>
-              <h2 className="text-3xl font-display font-bold text-ink mt-1">Daftar Pustaka & Sourcing Data</h2>
+              <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">{t("UMKM LENS RESEARCH METHODOLOGY", "UMKM LENS RESEARCH METHODOLOGY")}</span>
+              <h2 className="text-3xl font-display font-bold text-ink mt-1">{t("Daftar Pustaka & Sourcing Data", "Bibliography & Data Sourcing")}</h2>
               <p className="text-xs text-gray-500 mt-2 max-w-3xl leading-relaxed">
-                Kami membangun aplikasi ini berdasarkan dedikasi akademik dan pengumpulan riset primer keuangan mikro nasional. Semua data, kegagalan kredit, dan margin kekeliruan didukung oleh sumber terpercaya.
+                {t("Kami membangun aplikasi ini berdasarkan dedikasi akademik dan pengumpulan riset primer keuangan mikro nasional. Semua data, kegagalan kredit, dan margin kekeliruan didukung oleh sumber terpercaya.", "We built this application based on academic dedication and primary research data collection on national micro-finance. All data, credit failures, and error margins are supported by trusted sources.")}
               </p>
             </div>
 
@@ -2610,23 +2676,23 @@ export default function App() {
               
               <div className="bg-white border border-ink p-5 space-y-4 shadow-sm">
                 <span className="bg-marker-yellow text-ink text-[10px] uppercase font-mono px-2 py-0.5 font-bold inline-block border border-ink">
-                  Layer 1 & 2: Gap Akses Pembiayaan
+                  {t("Layer 1 & 2: Gap Akses Pembiayaan", "Layer 1 & 2: Financing Access Gap")}
                 </span>
                 
                 <div className="space-y-4">
                   <div className="border-l-2 border-ink pl-3">
                     <p className="text-xs text-gray-500 font-mono">BI REPORT SUM (2023)</p>
-                    <p className="text-sm font-semibold text-ink leading-snug">Hanya 30% UMKM Tersentuh Kredit Formal</p>
+                    <p className="text-sm font-semibold text-ink leading-snug">{t("Hanya 30% UMKM Tersentuh Kredit Formal", "Only 30% of MSMEs Have Access to Formal Credit")}</p>
                     <p className="text-xs text-gray-600 mt-1 font-sans">
-                      Diperkuat oleh World Bank (2024), 30% pengusaha mikro baru mengandalkan teknologi neo-fintech setelah ditolak oleh validasi Laporan Keuangan perbankan konvensional.
+                      {t("Diperkuat oleh World Bank (2024), 30% pengusaha mikro baru mengandalkan teknologi neo-fintech setelah ditolak oleh validasi Laporan Keuangan perbankan konvensional.", "Supported by World Bank (2024), 30% of new micro-entrepreneurs rely on neo-fintech technology after being rejected by conventional banking financial statement validation.")}
                     </p>
                   </div>
 
                   <div className="border-l-2 border-ink pl-3">
                     <p className="text-xs text-gray-500 font-mono">SURVEI NASIONAL LITERASI OJK (2024)</p>
-                    <p className="text-sm font-semibold text-ink leading-snug">Tingkat Literasi Finansial Pengusaha Mikro Hanya 65.43%</p>
+                    <p className="text-sm font-semibold text-ink leading-snug">{t("Tingkat Literasi Finansial Pengusaha Mikro Hanya 65.43%", "Financial Literacy Rate of Micro-Entrepreneurs is Only 65.43%")}</p>
                     <p className="text-xs text-gray-600 mt-1 font-sans">
-                      Eksklusi terjadi murni karena fobia formulir perbankan berkas yang berlapis-lapis dan keharusan menguasai software akuntansi manual.
+                      {t("Eksklusi terjadi murni karena fobia formulir perbankan berkas yang berlapis-lapis dan keharusan menguasai software akuntansi manual.", "Exclusion occurs purely due to phobia of multi-layered banking forms and the requirement to master manual accounting software.")}
                     </p>
                   </div>
                 </div>
@@ -2634,23 +2700,23 @@ export default function App() {
 
               <div className="bg-white border border-ink p-5 space-y-4 shadow-sm">
                 <span className="bg-marker-orange text-ink text-[10px] uppercase font-mono px-2 py-0.5 font-bold inline-block border border-ink">
-                  Layer 3 & 4: Kerangka Hukum & UU P2SK
+                  {t("Layer 3 & 4: Kerangka Hukum & UU P2SK", "Layer 3 & 4: Legal Framework & UU P2SK")}
                 </span>
 
                 <div className="space-y-4">
                   <div className="border-l-2 border-ink pl-3">
                     <p className="text-xs text-gray-500 font-mono">REFORMASI FINANSIAL: UU NO. 4 TAHUN 2023</p>
-                    <p className="text-sm font-semibold text-ink leading-snug">Sinergi UU P2SK Pasal Komite Regulasi Finansial</p>
+                    <p className="text-sm font-semibold text-ink leading-snug">{t("Sinergi UU P2SK Pasal Komite Regulasi Finansial", "Synergy of UU P2SK Financial Regulation Committee Article")}</p>
                     <p className="text-xs text-gray-600 mt-1 font-sans">
-                      Mendirikan kerangka regulasi inklusif di mana teknologi diwajibkan memberikan kontribusi konkret sebagai perpanjangan tangan edukasi ke masyarakat terbawah.
+                      {t("Mendirikan kerangka regulasi inklusif di mana teknologi diwajibkan memberikan kontribusi konkret sebagai perpanjangan tangan edukasi ke masyarakat terbawah.", "Establishing an inclusive regulatory framework where technology is required to make concrete contributions as an extension of education to the grassroots.")}
                     </p>
                   </div>
 
                   <div className="border-l-2 border-ink pl-3">
                     <p className="text-xs text-gray-500 font-mono">KEMENTERIAN KOPERASI & UKM (2024)</p>
-                    <p className="text-sm font-semibold text-ink leading-snug">Target UMKM Credit Ratio 30%</p>
+                    <p className="text-sm font-semibold text-ink leading-snug">{t("Target UMKM Credit Ratio 30%", "Target MSME Credit Ratio 30%")}</p>
                     <p className="text-xs text-gray-600 mt-1 font-sans">
-                      Pemerintah mengandalkan alternatif data (Alternative Credit Scoring) seperti riwayat pembayaran telco dan tagihan listrik untuk mengatasi ketiadaan buku tabungan penjamin.
+                      {t("Pemerintah mengandalkan alternatif data (Alternative Credit Scoring) seperti riwayat pembayaran telco dan tagihan listrik untuk mengatasi ketiadaan buku tabungan penjamin.", "The government relies on alternative data (Alternative Credit Scoring) such as telco payment histories and electricity bills to overcome the lack of collateral/passbooks.")}
                     </p>
                   </div>
                 </div>
@@ -2661,10 +2727,10 @@ export default function App() {
             {/* Clear Disclaimer regarding peer review */}
             <div className="p-4 bg-amber-50 border border-amber-300 rounded-sm">
               <h4 className="text-xs font-mono font-bold text-amber-800 uppercase flex items-center gap-1.5">
-                <Info className="w-4 h-4 text-amber-600" /> Catatan Reviewer Penelitian
+                <Info className="w-4 h-4 text-amber-600" /> {t("Catatan Reviewer Penelitian", "Research Reviewer Notes")}
               </h4>
               <p className="text-xs text-amber-700 leading-relaxed font-sans mt-1">
-                Data penolakan perbankan 60% s.d 70% dikutip lewat tinjauan literatur jurnal sekunder (JOUMI, 2025). Jika didayagunakan untuk pengajuan riset akademik formal, diwajibkan merujuk kembali secara komparatif pada dokumen asli Laporan Tahunan Departemen Pengembangan UMKM Bank Indonesia untuk presisi taktis maksimal.
+                {t("Data penolakan perbankan 60% s.d 70% dikutip lewat tinjauan literatur jurnal sekunder (JOUMI, 2025). Jika didayagunakan untuk pengajuan riset akademik formal, diwajibkan merujuk kembali secara komparatif pada dokumen asli Laporan Tahunan Departemen Pengembangan UMKM Bank Indonesia untuk presisi taktis maksimal.", "The banking rejection data of 60% to 70% is cited from a secondary journal literature review (JOUMI, 2025). If used for formal academic research submissions, it is required to refer back comparatively to the original Annual Report of the MSME Development Department of Bank Indonesia for maximum tactical precision.")}
               </p>
             </div>
 
@@ -2712,11 +2778,11 @@ export default function App() {
       <footer className="bg-ink text-zinc-400 border-t-4 border-black py-8 mt-12 text-xs font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="space-y-1 text-center md:text-left">
-            <p className="text-paper font-bold tracking-tight">UMKM LENS LITERASI PREDIKTIF</p>
-            <p className="text-[10px] text-zinc-500 text-zinc-500">Kecerdasan Buatan Terbuka Untuk Akselerasi Finansial Desa Mandiri Indonesia</p>
+            <p className="text-paper font-bold tracking-tight">{t("UMKM LENS LITERASI PREDIKTIF", "UMKM LENS PREDICTIVE LITERACY")}</p>
+            <p className="text-[10px] text-zinc-500">{t("Kecerdasan Buatan Terbuka Untuk Akselerasi Finansial Desa Mandiri Indonesia", "Open Artificial Intelligence for Financial Acceleration of Self-Reliant Indonesian Villages")}</p>
           </div>
           <p className="text-[10px] text-zinc-500 text-center md:text-right">
-            © 2026 UMKM Lens Project. Hak Cipta Dilindungi Undang-Undang. Sesuai Kebijakan Literasi Nasional OJK & Kemenkop UKM.
+            {t("© 2026 UMKM Lens Project. Hak Cipta Dilindungi Undang-Undang. Sesuai Kebijakan Literasi Nasional OJK & Kemenkop UKM.", "© 2026 UMKM Lens Project. All Rights Reserved. In accordance with OJK & Kemenkop UKM National Literacy Policies.")}
           </p>
         </div>
       </footer>
