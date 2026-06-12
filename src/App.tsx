@@ -45,9 +45,41 @@ import { jsPDF } from "jspdf";
 
 export default function App() {
   // Current view management: "about" | "blog" | "trial" | "citations"
-  const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("trial");
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [lang, setLang] = useState<"id" | "en">("en");
   const t = (idText: string, enText: string) => lang === "id" ? idText : enText;
+
+  const InfoTooltip = ({ term, textId, textEn }: { term: string; textId: string; textEn: string }) => {
+    return (
+      <span className="relative inline-block ml-1 align-middle">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveTooltip(activeTooltip === term ? null : term);
+          }}
+          className="text-gray-400 hover:text-ink inline-flex items-center cursor-pointer p-0.5 focus:outline-none"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+        </button>
+        {activeTooltip === term && (
+          <span className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-60 p-2.5 bg-slate-900 text-white text-[10px] leading-relaxed border-2 border-ink shadow-[2px_2px_0px_0px_#111827] font-sans rounded-sm text-left block">
+            <span className="flex justify-between items-center mb-1 border-b border-gray-700 pb-0.5">
+              <span className="font-mono font-bold text-amber-400 text-[9px] uppercase tracking-wider">🔍 {t("Arti Istilah", "Definition")}</span>
+              <span 
+                onClick={(e) => { e.stopPropagation(); setActiveTooltip(null); }}
+                className="text-white hover:text-gray-300 font-bold font-mono text-[9px] cursor-pointer px-1 block"
+              >
+                ✕
+              </span>
+            </span>
+            <span className="font-sans normal-case text-gray-200 block font-normal leading-normal">{t(textId, textEn)}</span>
+          </span>
+        )}
+      </span>
+    );
+  };
   
   // Blog detailed post state (null means list view)
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
@@ -1415,6 +1447,18 @@ export default function App() {
           {/* Navigation Links with Raw Architectural Slashes */}
           <nav className="flex items-center gap-1.5 font-mono text-xs text-gray-700">
             <button
+              id="nav-try-app"
+              onClick={() => { setActiveTab("trial"); }}
+              className={`px-3 py-1.5 transition-all uppercase tracking-wider flex items-center gap-1 ${
+                activeTab === "trial" 
+                  ? "bg-blueprint text-white font-semibold" 
+                  : "hover:bg-gray-100 text-ink"
+              }`}
+            >
+              ⚡ {t("Coba Aplikasi", "Try APP Free")}
+            </button>
+            <span className="text-gray-300">/</span>
+            <button
               onClick={() => { setActiveTab("about"); }}
               className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
                 activeTab === "about" 
@@ -1434,18 +1478,6 @@ export default function App() {
               }`}
             >
               📖 {t("Riset Masalah", "Problem Research")}
-            </button>
-            <span className="text-gray-300">/</span>
-            <button
-              id="nav-try-app"
-              onClick={() => { setActiveTab("trial"); }}
-              className={`px-3 py-1.5 transition-all uppercase tracking-wider flex items-center gap-1 ${
-                activeTab === "trial" 
-                  ? "bg-blueprint text-white font-semibold" 
-                  : "hover:bg-gray-100 text-ink"
-              }`}
-            >
-              ⚡ {t("Coba Aplikasi", "Try APP Free")}
             </button>
             <span className="text-gray-300">/</span>
             <button
@@ -1703,105 +1735,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Financial Glossary Section */}
-            <div className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] space-y-6">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-blueprint" />
-                <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold">
-                  {t("KAMUS ISTILAH KEUANGAN UMKM", "SMART FINANCIAL GLOSSARY FOR MSME")}
-                </span>
-              </div>
-              <h3 className="text-2xl font-display font-bold text-ink mt-1">
-                {t("Memahami Istilah Perbankan dengan Mudah", "Demystifying Banking Jargons for Everyone")}
-              </h3>
-              <p className="text-xs text-gray-600 leading-relaxed font-sans">
-                {t("Jangan biarkan istilah perbankan yang rumit menghalangi langkah Anda memohon Kredit Usaha Rakyat (KUR). Berikut penjelasan sederhana mengenai konsep finansial utama:",
-                  "Don't let complex banking terminology discourage you from applying for loans. Here are simple explanations of core financial concepts:")}
-              </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 font-sans text-xs">
-                {/* Term 1 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    🪙 {t("Plafon", "Plafon (Limit)")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Batas jumlah total uang pinjaman maksimal yang disetujui bank untuk dapat Anda gunakan.",
-                      "The maximum total loan principal amount approved by the bank for your business use.")}
-                  </p>
-                </div>
-                {/* Term 2 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    📅 {t("Tenor", "Tenor (Duration)")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Jangka waktu atau lamanya periode mencicil yang diberikan bank untuk melunasi hutang Anda (dalam bulan).",
-                      "The total duration or length of the repayment period allocated to pay off the loan in full (in months).")}
-                  </p>
-                </div>
-                {/* Term 3 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    📊 {t("DSCR (Rasio Cicilan)", "DSCR (Repayment Capacity)")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Kapasitas bayar. Menilai apakah laba bersih usaha bulanan Anda cukup untuk membayar cicilan bank bulanan secara aman. Bank menyukai rasio di atas 1.25x.",
-                      "Repayment capacity ratio. Measures if your business net profit is sufficient to cover monthly loan installments. Banks look for a safe threshold of > 1.25x.")}
-                  </p>
-                </div>
-                {/* Term 4 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    🟢 {t("KOL-1 (Kolektibilitas 1)", "KOL-1 (Collectibility 1)")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Peringkat skor kredit terbaik dari OJK. Menandakan Anda selalu membayar cicilan hutang tepat waktu tanpa terlambat satu hari pun.",
-                      "The highest credit rating from OJK indicating the borrower pays all installments on time with zero days in arrears.")}
-                  </p>
-                </div>
-                {/* Term 5 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    🛡️ {t("SLIK OJK / BI Checking", "SLIK OJK / BI Checking")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Sistem database nasional yang melacak riwayat kelancaran pinjaman atau riwayat kredit macet Anda di masa lalu.",
-                      "The national database that tracks your loan history, payment schedules, and any historical bad debt incidents across banks.")}
-                  </p>
-                </div>
-                {/* Term 6 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    📲 {t("Data Alternatif (ACS)", "Alternative Data (ACS)")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Penilaian kelayakan kredit alternatif menggunakan data non-fisik seperti tagihan listrik PLN, pulsa, dan e-wallet sebagai pengganti jaminan fisik.",
-                      "An alternative credit assessment utilizing non-physical data (utility logs, airtime history, e-wallet transactions) in place of physical assets.")}
-                  </p>
-                </div>
-                {/* Term 7 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    💧 {t("Cash Leakage (Bocor Kas)", "Cash Leakage")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Terbuangnya uang usaha karena tercampurnya uang dapur pribadi dengan uang kas toko, sehingga mengaburkan profit bersih riil.",
-                      "Hidden financial leakage caused by mixing personal expenses with business funds, resulting in inaccurate or artificially low net profit reports.")}
-                  </p>
-                </div>
-                {/* Term 8 */}
-                <div className="border border-ink p-4 space-y-2 bg-[#FAF9F6]">
-                  <h4 className="font-bold text-ink uppercase text-[11px] font-mono flex items-center gap-1.5">
-                    📈 {t("Laba Bersih (Net Profit)", "Net Profit")}
-                  </h4>
-                  <p className="text-[10px] text-gray-600 leading-relaxed">
-                    {t("Uang bersih yang tersisa setelah seluruh pemasukan omset dikurangi total biaya operasional dan belanja bahan baku.",
-                      "The actual profit left over after subtracting all operational costs, raw materials, and salaries from total sales revenue.")}
-                  </p>
-                </div>
-              </div>
-            </div>
 
           </div>
         )}
@@ -3273,7 +3207,10 @@ export default function App() {
                             
                             <div>
                               <div className="flex justify-between text-xs font-mono text-gray-700">
-                                <span>{t("Plafon Pinjaman:", "Loan Limit (Plafon):")}</span>
+                                <span className="flex items-center">
+                                  {t("Plafon Pinjaman:", "Loan Limit (Plafon):")}
+                                  <InfoTooltip term="plafon" textId="Batas jumlah total uang pinjaman maksimal yang disetujui bank untuk dapat Anda gunakan." textEn="The maximum total loan principal amount approved by the bank for your business use." />
+                                </span>
                                 <strong className="text-blueprint">Rp {desiredLoan.toLocaleString("id-ID")}</strong>
                               </div>
                               <input 
@@ -3289,7 +3226,10 @@ export default function App() {
                             </div>
 
                             <div>
-                              <span className="block text-xs font-mono text-gray-700 mb-1">{t("Tenor Pengembalian (Bulan):", "Repayment Tenor (Months):")}</span>
+                              <span className="block text-xs font-mono text-gray-700 mb-1">
+                                {t("Tenor Pengembalian (Bulan):", "Repayment Tenor (Months):")}
+                                <InfoTooltip term="tenor" textId="Jangka waktu atau lamanya periode mencicil yang diberikan bank untuk melunasi hutang Anda (dalam bulan)." textEn="The total duration or length of the repayment period allocated to pay off the loan in full (in months)." />
+                              </span>
                               <div className="flex gap-2">
                                 {[12, 18, 24].map((tenor) => (
                                   <button
@@ -3308,7 +3248,10 @@ export default function App() {
 
                             <div className="text-[10px] font-mono text-gray-500 bg-white p-2 border border-dashed border-gray-300 rounded-sm">
                               <div className="flex justify-between">
-                                <span>{t("Estimasi Cicilan:", "Est. Installment:")}</span>
+                                <span className="flex items-center">
+                                  {t("Estimasi Cicilan:", "Est. Installment:")}
+                                  <InfoTooltip term="cicilan" textId="Jumlah pembayaran bulanan (pokok + bunga) yang diperkirakan harus dibayar ke bank." textEn="Estimated monthly installment (principal + interest) to be paid to the bank." />
+                                </span>
                                 <strong>Rp {estCicilan.toLocaleString("id-ID")} / {t("bulan", "month")}</strong>
                               </div>
                             </div>
@@ -3327,7 +3270,10 @@ export default function App() {
                                   id="chk-rekening-terpisah"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">{t("Memisahkan Uang Pribadi & Usaha (+5 Poin)", "Separate Personal & Business Funds (+5 Pts)")}</strong>
+                                  <strong className="text-ink block font-semibold flex items-center">
+                                    {t("Memisahkan Uang Pribadi & Usaha (+5 Poin)", "Separate Personal & Business Funds (+5 Pts)")}
+                                    <InfoTooltip term="rekeningTerpisah" textId="Memisahkan rekening pribadi dan usaha mencegah bocornya kas bisnis untuk keperluan rumah tangga." textEn="Separating personal and business accounts prevents business cash leakage for household expenses." />
+                                  </strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
@@ -3339,7 +3285,10 @@ export default function App() {
                                   id="chk-nib-terdaftar"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">{t("Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)", "Business ID (NIB) Registered (+5 Pts)")}</strong>
+                                  <strong className="text-ink block font-semibold flex items-center">
+                                    {t("Sudah Memiliki NIB (Nomor Induk Berusaha) (+5 Poin)", "Business ID (NIB) Registered (+5 Pts)")}
+                                    <InfoTooltip term="nib" textId="Nomor Induk Berusaha. Identitas resmi usaha mikro dari pemerintah RI yang menjamin status legalitas usaha Anda." textEn="Business ID (NIB). Official identity for micro-enterprises from the Indonesian government ensuring legal status." />
+                                  </strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
@@ -3351,7 +3300,10 @@ export default function App() {
                                   id="chk-catatan-konsisten"
                                 />
                                 <div>
-                                  <strong className="text-ink block font-semibold">{t("Konsistensi Catatan >= 3 Bulan (+5 Poin)", "Consistent Record Keeping >= 3 Months (+5 Pts)")}</strong>
+                                  <strong className="text-ink block font-semibold flex items-center">
+                                    {t("Konsistensi Catatan >= 3 Bulan (+5 Poin)", "Consistent Record Keeping >= 3 Months (+5 Pts)")}
+                                    <InfoTooltip term="catatanKonsisten" textId="Mempertahankan catatan transaksi harian secara konsisten membuktikan kestabilan omset Anda ke bank." textEn="Maintaining consistent daily transaction records proves the stability of your turnover to the bank." />
+                                  </strong>
                                 </div>
                               </label>
                               <label className="flex items-start gap-2 p-2 bg-sky-50 border border-sky-200 hover:bg-sky-100/70 cursor-pointer">
@@ -3363,7 +3315,10 @@ export default function App() {
                                   id="chk-alt-data"
                                 />
                                 <div>
-                                  <strong className="text-sky-900 block font-semibold">{t("Gunakan Data Alternatif (UU P2SK) (+10 Poin)", "Use Alternative Data (UU P2SK) (+10 Pts)")}</strong>
+                                  <strong className="text-sky-900 block font-semibold flex items-center">
+                                    {t("Gunakan Data Alternatif (UU P2SK) (+10 Poin)", "Use Alternative Data (UU P2SK) (+10 Pts)")}
+                                    <InfoTooltip term="altData" textId="Menggunakan data pembayaran listrik PLN, BPJS, e-wallet, atau tagihan HP sebagai pengganti agunan/jaminan fisik." textEn="Using alternative utility records (electricity, BPJS, e-wallet turnover) to assess creditworthiness without physical collateral." />
+                                  </strong>
                                 </div>
                               </label>
                             </div>
@@ -3515,15 +3470,24 @@ export default function App() {
                           </h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
                             <div>
-                              <span className="text-gray-400">{t("RATA-RATA OMSET:", "AVERAGE REVENUE (OMSET):")}</span>
+                              <span className="text-gray-400 flex items-center">
+                                {t("RATA-RATA OMSET:", "AVERAGE REVENUE (OMSET):")}
+                                <InfoTooltip term="omset" textId="Omset: Total seluruh uang hasil penjualan kotor dari pembeli sebelum dipotong biaya apa pun." textEn="Turnover: The total gross revenue from sales before any deductions." />
+                              </span>
                               <p className="font-bold text-ink">Rp {avgMonthlyOmset.toLocaleString("id-ID")}</p>
                             </div>
                             <div>
-                              <span className="text-gray-400">{t("RATA-RATA LABA BERSIH:", "AVERAGE NET PROFIT:")}</span>
+                              <span className="text-gray-400 flex items-center">
+                                {t("RATA-RATA LABA BERSIH:", "AVERAGE NET PROFIT:")}
+                                <InfoTooltip term="laba" textId="Laba Bersih: Sisa keuntungan bersih bulanan Anda setelah seluruh pendapatan dikurangi semua biaya bahan baku, operasional, dan beban usaha lainnya." textEn="Net Profit: Your actual monthly profit left after subtracting all ingredient costs, utility bills, and business expenses from total revenue." />
+                              </span>
                               <p className="font-bold text-ink">Rp {avgMonthlyLaba.toLocaleString("id-ID")}</p>
                             </div>
                             <div>
-                              <span className="text-gray-400">{t("RASIO DSCR:", "DSCR RATIO:")}</span>
+                              <span className="text-gray-400 flex items-center">
+                                {t("RASIO DSCR:", "DSCR RATIO:")}
+                                <InfoTooltip term="dscr" textId="DSCR: Kapasitas Bayar. Perbandingan laba bersih bulanan dengan cicilan bulanan. Bank mencari rasio di atas 1.25x agar aman." textEn="DSCR: Repayment capacity ratio. Ratio of monthly net profit to monthly installment. Banks look for a ratio above 1.25x for safety." />
+                              </span>
                               <p className={`font-bold ${dscr >= 1.25 ? "text-emerald-700" : "text-red-700"}`}>{dscr.toFixed(2)}x</p>
                             </div>
                           </div>
