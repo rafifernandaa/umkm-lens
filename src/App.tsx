@@ -22,7 +22,9 @@ import {
   BarChart2,
   BadgeAlert,
   ArrowUpRight,
-  Percent
+  Percent,
+  X,
+  Video
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -70,6 +72,84 @@ export default function App() {
   const [processingStep, setProcessingStep] = useState<string>("");
   const [scanResult, setScanResult] = useState<AnalysisResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Camera Integration States
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Stop camera helper
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  // Start camera helper
+  const startCamera = async () => {
+    setCameraError(null);
+    setSelectedPreset(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setIsCameraActive(true);
+      }
+    } catch (err: any) {
+      console.error("Gagal membuka kamera:", err);
+      let errMsg = t(
+        "Gagal mengakses kamera. Silakan periksa izin atau gunakan opsi unggah file.",
+        "Unable to access camera. Please check permissions or use the file upload option."
+      );
+      if (err.name === "NotAllowedError") {
+        errMsg = t(
+          "Izin kamera ditolak. Silakan aktifkan izin kamera di pengaturan browser Anda.",
+          "Camera permission denied. Please enable camera access in your browser settings."
+        );
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        errMsg = t(
+          "Kamera tidak ditemukan di perangkat ini.",
+          "Camera not found on this device."
+        );
+      }
+      setCameraError(errMsg);
+      setIsCameraActive(false);
+    }
+  };
+
+  // Capture photo from stream
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video && canvas) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        setUploadedImage(dataUrl);
+        setUploadedFileName(`Camera_Capture_${new Date().toLocaleDateString()}.jpg`);
+        stopCamera();
+      }
+    }
+  };
+
+  // Cleanup camera stream on tab change
+  useEffect(() => {
+    stopCamera();
+  }, [activeTab]);
 
   // Credit Readiness States
   const [desiredLoan, setDesiredLoan] = useState<number>(15000000);
@@ -266,6 +346,7 @@ export default function App() {
 
   // Handle preset selection
   const handleSelectPreset = (preset: SampleNote) => {
+    stopCamera();
     setSelectedPreset(preset);
     setUploadedImage(null);
     setUploadedFileName("");
@@ -276,6 +357,7 @@ export default function App() {
 
   // Handle manual file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    stopCamera();
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -2192,35 +2274,109 @@ export default function App() {
                           {t("Langkah 2: Ambil Foto Buku Kas Fisik", "Step 2: Capture or Upload Physical Ledger Photo")}
                         </span>
 
-                        <div 
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-sm p-6 text-center cursor-pointer transition-colors ${
-                            uploadedImage ? "bg-slate-50 border-blueprint" : "bg-paper border-gray-400 hover:bg-slate-50 hover:border-ink"
-                          }`}
-                        >
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                          {uploadedImage ? (
-                            <div className="space-y-2">
-                              <CheckCircle className="w-8 h-8 text-blueprint mx-auto" />
-                              <p className="text-xs text-ink font-semibold">{t("Tergugah: ", "Uploaded: ")}{uploadedFileName}</p>
-                              <p className="text-[10px] text-gray-400 font-mono">{t("Ketuk untuk mengganti foto", "Tap to change photo")}</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                              <div className="space-y-1">
-                                <p className="text-xs font-bold text-ink hover:underline">{t("Ketuk untuk mengambil foto catatan harian", "Tap to capture/upload ledger photo")}</p>
-                                <p className="text-[10px] text-gray-400 font-mono">{t("Jpg, Png, Heic maksimal 10MB", "Jpg, Png, Heic max 10MB")}</p>
+                        {isCameraActive ? (
+                          <div className="border-2 border-ink p-4 bg-slate-900 text-white rounded-sm space-y-4 shadow-[3px_3px_0px_0px_#111827]">
+                            <div className="relative w-full aspect-video bg-black border-2 border-white overflow-hidden max-w-md mx-auto">
+                              <video 
+                                ref={videoRef} 
+                                playsInline 
+                                muted 
+                                className="w-full h-full object-cover" 
+                              />
+                              <canvas ref={canvasRef} className="hidden" />
+                              
+                              {/* Viewfinder guideline overlay */}
+                              <div className="absolute inset-4 border-2 border-dashed border-emerald-400 pointer-events-none flex flex-col justify-between p-2">
+                                <span className="text-[8px] bg-emerald-500/80 text-white px-1.5 py-0.5 self-center uppercase font-mono font-bold">
+                                  {t("KAMERA AKTIF: POSISIKAN KERTAS", "ACTIVE CAMERA: ALIGN PAPER")}
+                                </span>
+                                <span className="text-[8px] bg-emerald-500/80 text-white px-1.5 py-0.5 self-center uppercase font-mono text-center">
+                                  {t("Sejajarkan teks mendatar agar terbaca jelas", "Keep text horizontal & well-lit")}
+                                </span>
                               </div>
+
+                              {/* Simulated Laser Scanning Line */}
+                              <div className="absolute left-0 right-0 h-[2px] bg-emerald-400 shadow-[0_0_8px_#34d399] animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
                             </div>
-                          )}
-                        </div>
+
+                            <div className="flex gap-2 justify-center max-w-md mx-auto">
+                              <button
+                                type="button"
+                                onClick={capturePhoto}
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-ink py-2 px-4 font-mono text-xs font-extrabold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] active:translate-y-px text-center cursor-pointer"
+                              >
+                                📸 {t("Ambil Foto", "Capture Photo")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 font-mono text-xs font-bold uppercase border-2 border-white active:translate-y-px text-center cursor-pointer flex items-center justify-center"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <button
+                                type="button"
+                                onClick={startCamera}
+                                className="flex-1 bg-blueprint text-white py-2.5 px-4 font-mono text-xs font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:bg-blue-700 active:translate-y-px cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Camera className="w-4 h-4" /> {t("Buka Kamera Live (Ambil Foto)", "Open Live Camera (Capture)")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="bg-paper text-ink py-2.5 px-4 font-mono text-xs font-bold uppercase border-2 border-ink hover:bg-gray-100 active:translate-y-px cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Upload className="w-4 h-4" /> {t("Pilih File Foto", "Choose Photo File")}
+                              </button>
+                            </div>
+
+                            {cameraError && (
+                              <div className="p-2.5 bg-red-50 border border-red-300 text-[10px] text-red-700 font-mono">
+                                {cameraError}
+                              </div>
+                            )}
+
+                            {/* Upload Drag area box */}
+                            <div 
+                              onClick={() => fileInputRef.current?.click()}
+                              className={`border-2 border-dashed rounded-sm p-5 text-center cursor-pointer transition-colors ${
+                                uploadedImage ? "bg-slate-50 border-blueprint" : "bg-paper border-gray-400 hover:bg-slate-50 hover:border-ink"
+                              }`}
+                            >
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                              />
+                              {uploadedImage ? (
+                                <div className="space-y-2">
+                                  <CheckCircle className="w-8 h-8 text-blueprint mx-auto" />
+                                  <p className="text-xs text-ink font-semibold">{t("Gambar Siap: ", "Ready: ")}{uploadedFileName}</p>
+                                  {uploadedImage.startsWith("data:image/") && (
+                                    <img 
+                                      src={uploadedImage} 
+                                      alt="Upload preview" 
+                                      className="max-h-24 mx-auto border border-ink object-contain rounded-sm"
+                                    />
+                                  )}
+                                  <p className="text-[10px] text-gray-400 font-mono">{t("Ketuk untuk mengganti file foto", "Tap to change photo file")}</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-2 text-gray-500">
+                                  <p className="text-xs font-semibold">{t("Belum ada foto yang dipilih / diambil", "No photo captured / selected yet")}</p>
+                                  <p className="text-[10px] font-mono">{t("Jpg, Png, Heic maksimal 10MB", "Jpg, Png, Heic max 10MB")}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                     </div>
@@ -2321,7 +2477,7 @@ export default function App() {
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto">
+                      <div className="hidden md:block overflow-x-auto">
                         <table className="w-full border-2 border-ink text-left font-mono text-xs">
                           <thead className="bg-slate-50 border-b-2 border-ink">
                             <tr>
@@ -2348,6 +2504,12 @@ export default function App() {
                                     }}
                                     className="w-full bg-transparent font-medium text-ink border-b border-transparent focus:border-blueprint focus:outline-none p-1 text-xs"
                                   />
+                                  {item.flag && (
+                                    <div className="text-[9px] text-amber-700 bg-amber-50 px-1.5 py-0.5 mt-1 border border-amber-200 flex items-center gap-1 font-sans rounded-sm">
+                                      <AlertTriangle className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                                      <span>{item.flag}</span>
+                                    </div>
+                                  )}
                                 </td>
 
                                 {/* Cat */}
@@ -2491,6 +2653,176 @@ export default function App() {
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Mobile Card List View (hidden on Desktop) */}
+                      <div className="block md:hidden space-y-4">
+                        {activeResult.items.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            className="bg-paper border-2 border-ink p-3 rounded-sm space-y-3 relative shadow-[2.5px_2.5px_0px_0px_#111827]"
+                          >
+                            {/* Card Header: Index badge + Accuracy badge + Trash button */}
+                            <div className="flex justify-between items-center border-b border-ink/10 pb-2">
+                              <span className="font-mono text-xs font-extrabold text-ink bg-gray-150 px-2 py-0.5 border border-ink/20">
+                                #{idx + 1}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {item.confidence === "high" ? (
+                                  <span className="bg-marker-green border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase">
+                                    {t("Tinggi (98%)", "High (98%)")}
+                                  </span>
+                                ) : (
+                                  <span className="bg-marker-orange border border-ink/40 text-ink text-[9px] px-1.5 py-0.5 font-bold uppercase animate-pulse">
+                                    {t("Periksa (45%)", "Verify (45%)")}
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const items = activeResult.items.filter((_, i) => i !== idx);
+                                    let pemasukan = 0;
+                                    let pengeluaran = 0;
+                                    items.forEach(it => {
+                                      if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                      else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                    });
+                                    updateActiveData({
+                                      ...activeResult,
+                                      items,
+                                      totals: {
+                                        pemasukan,
+                                        pengeluaran,
+                                        laba_bersih: pemasukan - pengeluaran
+                                      }
+                                    });
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-1 border border-transparent hover:border-red-300 rounded-sm transition-all"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Card Body: Description Input */}
+                            <div className="space-y-1">
+                              <label className="block text-[9px] font-mono text-gray-500 uppercase font-bold">
+                                {t("KETERANGAN / TRANSAKSI", "DESCRIPTION / TRANSACTION")}
+                              </label>
+                              <input
+                                type="text"
+                                value={item.description}
+                                onChange={(e) => {
+                                  const items = [...activeResult.items];
+                                  items[idx].description = e.target.value;
+                                  updateActiveData({ ...activeResult, items });
+                                }}
+                                className="w-full bg-white text-ink border-2 border-ink p-1.5 text-xs font-mono focus:outline-none focus:border-blueprint"
+                              />
+                              {item.flag && (
+                                <div className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 mt-1 border border-amber-200 flex items-center gap-1 font-sans rounded-sm">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                                  <span>{item.flag}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Card Body: Category and Amount Grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <label className="block text-[9px] font-mono text-gray-500 uppercase font-bold">
+                                  {t("KATEGORI", "CATEGORY")}
+                                </label>
+                                <select
+                                  value={item.category}
+                                  onChange={(e) => {
+                                    const items = [...activeResult.items];
+                                    items[idx].category = e.target.value as any;
+                                    let pemasukan = 0;
+                                    let pengeluaran = 0;
+                                    items.forEach(it => {
+                                      if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                      else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                    });
+                                    updateActiveData({
+                                      ...activeResult,
+                                      items,
+                                      totals: {
+                                        pemasukan,
+                                        pengeluaran,
+                                        laba_bersih: pemasukan - pengeluaran
+                                      }
+                                    });
+                                  }}
+                                  className="w-full bg-white border-2 border-ink text-[11px] p-1.5 font-mono focus:outline-none"
+                                >
+                                  <option value="pemasukan">{t("PEMASUKAN", "INCOME")}</option>
+                                  <option value="pengeluaran">{t("PENGELUARAN", "EXPENSE")}</option>
+                                  <option value="unknown">{t("BURAM", "UNCLEAR")}</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[9px] font-mono text-gray-500 uppercase font-bold text-right">
+                                  {t("NOMINAL (RP)", "AMOUNT (IDR)")}
+                                </label>
+                                <div className="flex items-center border-2 border-ink bg-white p-1 text-xs">
+                                  <span className="text-gray-400 font-normal mr-1">Rp</span>
+                                  <input
+                                    type="number"
+                                    value={item.amount || 0}
+                                    onChange={(e) => {
+                                      const items = [...activeResult.items];
+                                      items[idx].amount = Number(e.target.value);
+                                      let pemasukan = 0;
+                                      let pengeluaran = 0;
+                                      items.forEach(it => {
+                                        if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                                        else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                                      });
+                                      updateActiveData({
+                                        ...activeResult,
+                                        items,
+                                        totals: {
+                                          pemasukan,
+                                          pengeluaran,
+                                          laba_bersih: pemasukan - pengeluaran
+                                        }
+                                      });
+                                    }}
+                                    className="w-full bg-transparent text-right font-mono font-bold focus:outline-none p-0.5 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Add empty row button on Mobile */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const items = [...activeResult.items, { description: t("Baris Baru (Koreksi)", "New Line (Correction)"), category: "pemasukan", amount: 50000, confidence: "high" } as any];
+                            let pemasukan = 0;
+                            let pengeluaran = 0;
+                            items.forEach(it => {
+                              if (it.category === "pemasukan") pemasukan += it.amount || 0;
+                              else if (it.category === "pengeluaran") pengeluaran += it.amount || 0;
+                            });
+                            updateActiveData({
+                              ...activeResult,
+                              items,
+                              totals: {
+                                pemasukan,
+                                pengeluaran,
+                                laba_bersih: pemasukan - pengeluaran
+                              }
+                            });
+                          }}
+                          className="w-full bg-white text-blueprint py-3 font-mono text-xs font-bold uppercase border-2 border-dashed border-blueprint hover:bg-blue-50 text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> {t("Tambah Transaksi Baru (Manual)", "Add Transaction Row (Manual)")}
+                        </button>
                       </div>
                     </div>
 
