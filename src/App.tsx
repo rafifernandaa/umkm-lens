@@ -24,7 +24,26 @@ import {
   ArrowUpRight,
   Percent,
   X,
-  Video
+  Video,
+  Zap,
+  MapPin,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Rocket,
+  Settings,
+  ClipboardList,
+  Cpu,
+  Package,
+  Home,
+  Save,
+  Search,
+  User,
+  TrendingDown,
+  Lightbulb,
+  Target,
+  Folder,
+  Megaphone
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -1649,40 +1668,40 @@ export default function App() {
                   : "hover:bg-gray-100 text-ink"
               }`}
             >
-              ⚡ {t("Coba Aplikasi", "Try APP Free")}
+              <Zap className="w-3.5 h-3.5" /> {t("Coba Aplikasi", "Try APP Free")}
             </button>
             <span className="text-gray-300">/</span>
             <button
               onClick={() => { setActiveTab("about"); }}
-              className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
+              className={`px-3 py-1.5 transition-all uppercase tracking-wider flex items-center gap-1 ${
                 activeTab === "about" 
                   ? "bg-ink text-paper font-semibold shadow-inner" 
                   : "hover:bg-gray-100"
               }`}
             >
-              ℹ️ {t("Tentang", "About")}
+              <Info className="w-3.5 h-3.5" /> {t("Tentang", "About")}
             </button>
             <span className="text-gray-300">/</span>
             <button
               onClick={() => { setActiveTab("blog"); setSelectedPostSlug(null); }}
-              className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
+              className={`px-3 py-1.5 transition-all uppercase tracking-wider flex items-center gap-1 ${
                 activeTab === "blog" 
                   ? "bg-ink text-paper font-semibold shadow-inner" 
                   : "hover:bg-gray-100"
               }`}
             >
-              📖 {t("Riset Masalah", "Problem Research")}
+              <BookOpen className="w-3.5 h-3.5" /> {t("Riset Masalah", "Problem Research")}
             </button>
             <span className="text-gray-300">/</span>
             <button
               onClick={() => { setActiveTab("citations"); }}
-              className={`px-3 py-1.5 transition-all uppercase tracking-wider ${
+              className={`px-3 py-1.5 transition-all uppercase tracking-wider flex items-center gap-1 ${
                 activeTab === "citations" 
                   ? "bg-ink text-paper font-semibold shadow-inner" 
                   : "hover:bg-gray-100"
               }`}
             >
-              📍 {t("Pusat Sitasi", "Citations Hub")}
+              <MapPin className="w-3.5 h-3.5" /> {t("Pusat Sitasi", "Citations Hub")}
             </button>
           </nav>
 
@@ -1792,21 +1811,30 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs pt-2">
                 <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">🤖 {t("Model Layer", "Model Layer")}</h4>
+                  <h4 className="font-bold text-blueprint uppercase flex items-center gap-1">
+                    <Cpu className="w-3.5 h-3.5" />
+                    {t("Model Layer", "Model Layer")}
+                  </h4>
                   <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
                     {t("Menggunakan Gemini 3.5 Flash untuk analisis multimodal OCR. Mampu mengekstrak tulisan tangan bebas dari foto buku kas kumal, memilah kategori kas, dan menerjemahkan istilah/singkatan lokal secara cerdas.",
                       "Powered by Gemini 3.5 Flash for multimodal OCR analysis. It extracts freeform handwriting from ledger photos, classifies transaction categories, and intelligently resolves local shorthand.")}
                   </p>
                 </div>
                 <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">📦 {t("SDK & Structured Output", "SDK & Structured Output")}</h4>
+                  <h4 className="font-bold text-blueprint uppercase flex items-center gap-1">
+                    <Package className="w-3.5 h-3.5" />
+                    {t("SDK & Structured Output", "SDK & Structured Output")}
+                  </h4>
                   <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
                     {t("Diimplementasikan menggunakan library @google/genai Node.js SDK terbaru dengan konfigurasi responseSchema (Structured Output). Menjamin output data terstruktur dalam JSON format 100% konsisten demi menghindari halusinasi angka.",
                       "Implemented via the new @google/genai Node.js SDK with responseSchema (Structured Output) configuration. This guarantees 100% consistent structured JSON outputs, eliminating numerical hallucinations.")}
                   </p>
                 </div>
                 <div className="border border-ink p-4 space-y-2 bg-slate-50">
-                  <h4 className="font-bold text-blueprint uppercase">📊 {t("Analisis & Laporan", "Analysis & Reporting")}</h4>
+                  <h4 className="font-bold text-blueprint uppercase flex items-center gap-1">
+                    <BarChart2 className="w-3.5 h-3.5" />
+                    {t("Analisis & Laporan", "Analysis & Reporting")}
+                  </h4>
                   <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
                     {t("Hasil pemindaian dipetakan secara dinamis menggunakan Recharts untuk grafik tren harian, serta jsPDF untuk menghasilkan laporan kesiapan kredit terstandarisasi perbankan.",
                       "Scan results are dynamically rendered using Recharts for daily trends, and jsPDF to generate bank-standardized credit readiness reports.")}
@@ -1978,9 +2006,9 @@ export default function App() {
                       const simulatorEl = document.getElementById("analytics-simulator");
                       if (simulatorEl) simulatorEl.scrollIntoView({ behavior: "smooth" });
                     }}
-                    className="bg-paper text-ink px-6 py-4 font-mono text-xs tracking-wide border-2 border-ink hover:bg-gray-50 shadow-[4px_4px_0px_0px_#111827] uppercase text-center active:translate-x-0.5 active:translate-y-0.5"
+                    className="bg-paper text-ink px-6 py-4 font-mono text-xs tracking-wide border-2 border-ink hover:bg-gray-50 shadow-[4px_4px_0px_0px_#111827] uppercase text-center active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-1.5"
                   >
-                    {t("📊 Loloskan Kredit Anda (Simulator)", "📊 Qualify Your Credit (Simulator)")}
+                    <BarChart2 className="w-4 h-4" /> {t("Loloskan Kredit Anda (Simulator)", "Qualify Your Credit (Simulator)")}
                   </button>
                 </div>
               </div>
@@ -2014,8 +2042,9 @@ export default function App() {
                 {/* Blog Header bar with Tectonic Styling */}
                 {/* Blog Header bar with Tectonic Styling */}
                 <div className="border-b-2 border-ink pb-3 flex justify-between items-center bg-gray-50 px-3 py-2 border-2 border-ink">
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink block">
-                    {t(`📁 ARSIP ANALISIS MASALAH (${blogPosts.length} ARTIKEL)`, `📁 PROBLEM ANALYSIS ARCHIVE (${blogPosts.length} ARTICLES)`)}
+                  <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-1.5">
+                    <Folder className="w-3.5 h-3.5" />
+                    {t(`ARSIP ANALISIS MASALAH (${blogPosts.length} ARTIKEL)`, `PROBLEM ANALYSIS ARCHIVE (${blogPosts.length} ARTICLES)`)}
                   </h3>
                   <span className="font-mono text-[10px] text-gray-500">
                     {t("PILIH JUDUL UNTUK MEMBACA", "SELECT A TITLE TO READ")}
@@ -2273,9 +2302,9 @@ export default function App() {
                 <div className="pt-3 flex flex-col sm:flex-row justify-center gap-4">
                   <button
                     onClick={handleQuickOnboard}
-                    className="bg-marker-yellow hover:bg-yellow-300 text-ink px-6 py-3 font-display font-extrabold text-xs md:text-sm uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_rgba(0,0,0,0.8)] active:translate-y-px transition-all"
+                    className="bg-marker-yellow hover:bg-yellow-300 text-ink px-6 py-3 font-display font-extrabold text-xs md:text-sm uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_rgba(0,0,0,0.8)] active:translate-y-px transition-all flex items-center justify-center gap-1.5"
                   >
-                    {t("🚀 Coba Demo Instan (Pakai Preset)", "🚀 Try Instant Demo (Use Preset)")}
+                    <Rocket className="w-4 h-4" /> {t("Coba Demo Instan (Pakai Preset)", "Try Instant Demo (Use Preset)")}
                   </button>
                   <button
                     onClick={() => {
@@ -2285,9 +2314,9 @@ export default function App() {
                         if (target) target.scrollIntoView({ behavior: "smooth" });
                       }, 150);
                     }}
-                    className="bg-black hover:bg-zinc-900 text-paper px-6 py-3 font-mono text-xs md:text-sm uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,0.2)] active:translate-y-px transition-all"
+                    className="bg-black hover:bg-zinc-900 text-paper px-6 py-3 font-mono text-xs md:text-sm uppercase tracking-wider border-2 border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,0.2)] active:translate-y-px transition-all flex items-center justify-center gap-1.5"
                   >
-                    ✍️ Daftar Manual UMKM Baru
+                    <FileText className="w-4 h-4" /> {t("Daftar Manual UMKM Baru", "Register MSME Manually")}
                   </button>
                 </div>
               </div>
@@ -2471,9 +2500,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleQuickOnboard}
-                      className="bg-marker-yellow hover:bg-yellow-300 text-ink py-3.5 px-4 font-mono font-bold text-xs uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_#111827] cursor-pointer"
+                      className="bg-marker-yellow hover:bg-yellow-300 text-ink py-3.5 px-4 font-mono font-bold text-xs uppercase tracking-wider border-2 border-ink shadow-[3px_3px_0px_0px_#111827] cursor-pointer flex items-center gap-1.5"
                     >
-                      {t("🚀 Lewati & Isi Data Demo Instan", "🚀 Skip & Fill Demo Data")}
+                      <Rocket className="w-3.5 h-3.5" />
+                      {t("Lewati & Isi Data Demo Instan", "Skip & Fill Demo Data")}
                     </button>
                   </div>
                 </form>
@@ -2514,7 +2544,7 @@ export default function App() {
                 <div className="tectonic-card bg-white p-5 border-2 border-ink shadow-[4px_4px_0px_0px_#111827] space-y-4">
                   <div className="border-b-2 border-ink pb-2 flex justify-between items-center">
                     <h3 className="font-display font-bold text-sm text-ink uppercase flex items-center gap-1.5">
-                      📖 {t("Buku Kas Sejarah", "Historical Ledger")}
+                      <BookOpen className="w-4 h-4 text-ink" /> {t("Buku Kas Sejarah", "Historical Ledger")}
                     </h3>
                     <span className="bg-ink text-paper text-[9px] px-1.5 py-0.5 font-mono">
                       {historicalPeriods.length} {t("Bulan", "Months")}
@@ -2700,9 +2730,9 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={capturePhoto}
-                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-ink py-2 px-4 font-mono text-xs font-extrabold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] active:translate-y-px text-center cursor-pointer"
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-ink py-2 px-4 font-mono text-xs font-extrabold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] active:translate-y-px text-center cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                📸 {t("Ambil Foto", "Capture Photo")}
+                                <Camera className="w-4 h-4 text-ink" /> {t("Ambil Foto", "Capture Photo")}
                               </button>
                               <button
                                 type="button"
@@ -2815,8 +2845,8 @@ export default function App() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="space-y-1 py-1">
-                                <span className="text-lg block">🏡</span>
+                              <div className="space-y-1.5 py-1 flex flex-col items-center">
+                                <Home className="w-5 h-5 text-gray-500" />
                                 <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO LOKASI USAHA", "BUSINESS SITE PHOTO")}</span>
                                 <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
                               </div>
@@ -2852,8 +2882,8 @@ export default function App() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="space-y-1 py-1">
-                                <span className="text-lg block">📦</span>
+                              <div className="space-y-1.5 py-1 flex flex-col items-center">
+                                <Package className="w-5 h-5 text-gray-500" />
                                 <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO STOK & BAHAN", "INVENTORY & STOCK")}</span>
                                 <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
                               </div>
@@ -2889,8 +2919,8 @@ export default function App() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="space-y-1 py-1">
-                                <span className="text-lg block">📄</span>
+                              <div className="space-y-1.5 py-1 flex flex-col items-center">
+                                <FileText className="w-5 h-5 text-gray-500" />
                                 <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO DOKUMEN NIB/SKU", "NIB/SKU FILE PHOTO")}</span>
                                 <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
                               </div>
@@ -2971,9 +3001,10 @@ export default function App() {
                         {isViewingScan ? (
                           <button
                             onClick={handleSaveToHistory}
-                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:shadow-[1px_1px_0px_0px_#111827] transition-all active:translate-y-px cursor-pointer"
+                            className="bg-marker-teal text-ink px-4 py-2 text-xs font-mono font-bold uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:shadow-[1px_1px_0px_0px_#111827] transition-all active:translate-y-px cursor-pointer flex items-center gap-1.5"
                           >
-                            {t("💾 Simpan Ke Riwayat Kas", "💾 Save to Ledger History")}
+                            <Save className="w-3.5 h-3.5" />
+                            {t("Simpan Ke Riwayat Kas", "Save to Ledger History")}
                           </button>
                         ) : (
                           <button
@@ -2989,8 +3020,9 @@ export default function App() {
                     {/* Interactive Table Editor */}
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-mono font-bold text-gray-500 uppercase">
-                          {t("📋 Rincian Transaksi Catatan Harian", "📋 Transaction Details Log")}
+                        <span className="text-[11px] font-mono font-bold text-gray-500 uppercase flex items-center gap-1">
+                          <ClipboardList className="w-3.5 h-3.5 text-gray-500" />
+                          {t("Rincian Transaksi Catatan Harian", "Transaction Details Log")}
                         </span>
                         <span className="text-[10px] text-gray-400 font-sans italic">
                           {t("(Ketuk teks/angka di bawah untuk mengoreksi kesalahan AI secara langsung)", "(Tap text or value below to manually edit and correct AI parsing error)")}
@@ -3373,19 +3405,21 @@ export default function App() {
                       <div className="flex bg-slate-100 p-0.5 border border-ink rounded-sm">
                         <button
                           onClick={() => setUserRole("merchant")}
-                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                             userRole === "merchant" ? "bg-ink text-paper" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          {t("👤 Buku Kas & Laba Rugi", "👤 P&L & Cash Flow Mode")}
+                          <User className="w-3.5 h-3.5" />
+                          {t("Buku Kas & Laba Rugi", "P&L & Cash Flow Mode")}
                         </button>
                         <button
                           onClick={() => setUserRole("banker")}
-                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                          className={`flex-1 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                             userRole === "banker" ? "bg-blueprint text-white" : "hover:bg-slate-200 text-ink"
                           }`}
                         >
-                          {t("💡 Optimasi & Panduan Kredit", "💡 Loan Optimizer & AI Advisor")}
+                          <Lightbulb className="w-3.5 h-3.5" />
+                          {t("Optimasi & Panduan Kredit", "Loan Optimizer & AI Advisor")}
                         </button>
                       </div>
                     )}
@@ -3397,7 +3431,10 @@ export default function App() {
                         {/* Sliders and checklists */}
                         <div className="lg:col-span-7 space-y-4">
                           <div className="bg-slate-50 border border-ink p-4 space-y-3">
-                            <h5 className="text-xs font-mono font-bold text-ink uppercase">{t("⚙️ Simulasi Plafon KUR Mikro", "⚙️ Micro Loan Limit Simulation")}</h5>
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase flex items-center gap-1.5">
+                              <Settings className="w-3.5 h-3.5" />
+                              {t("Simulasi Plafon KUR Mikro", "Micro Loan Limit Simulation")}
+                            </h5>
                             
                             <div>
                               <div className="flex justify-between text-xs font-mono text-gray-700">
@@ -3453,7 +3490,10 @@ export default function App() {
 
                           {/* Checklists */}
                           <div className="space-y-2">
-                            <h5 className="text-xs font-mono font-bold text-ink uppercase">{t("📋 Tindakan Penguatan Kesiapan Kredit", "📋 Credit Readiness Action Items")}</h5>
+                            <h5 className="text-xs font-mono font-bold text-ink uppercase flex items-center gap-1.5">
+                              <ClipboardList className="w-3.5 h-3.5" />
+                              {t("Tindakan Penguatan Kesiapan Kredit", "Credit Readiness Action Items")}
+                            </h5>
                             <div className="space-y-2 text-[11px]">
                               <label className="flex items-start gap-2 p-2 bg-paper border border-gray-200 hover:bg-slate-50 cursor-pointer">
                                 <input 
@@ -3522,10 +3562,25 @@ export default function App() {
                         {/* Visual Diagnostics */}
                         <div className="lg:col-span-5 space-y-4">
                           <div className={`p-4 border-2 border-ink rounded-sm space-y-2 text-xs ${gradeColor}`}>
-                            <h6 className="font-mono font-bold uppercase">
-                              {creditGrade === "A" && t("✅ Rekomendasi: Layak Pengajuan KUR", "✅ Recommendation: Eligible for Micro Loan")}
-                              {creditGrade === "B" && t("⚠️ Rekomendasi: Kelayakan Bersyarat", "⚠️ Recommendation: Conditional Eligibility")}
-                              {creditGrade === "C" && t("🚨 Rekomendasi: Perlu Perbaikan Arus Kas", "🚨 Recommendation: Cash Flow Improvement Needed")}
+                            <h6 className="font-mono font-bold uppercase flex items-center gap-1.5">
+                              {creditGrade === "A" && (
+                                <>
+                                  <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                                  {t("Rekomendasi: Layak Pengajuan KUR", "Recommendation: Eligible for Micro Loan")}
+                                </>
+                              )}
+                              {creditGrade === "B" && (
+                                <>
+                                  <ShieldAlert className="w-4 h-4 text-amber-700" />
+                                  {t("Rekomendasi: Kelayakan Bersyarat", "Recommendation: Conditional Eligibility")}
+                                </>
+                              )}
+                              {creditGrade === "C" && (
+                                <>
+                                  <ShieldAlert className="w-4 h-4 text-red-700" />
+                                  {t("Rekomendasi: Perlu Perbaikan Arus Kas", "Recommendation: Cash Flow Improvement Needed")}
+                                </>
+                              )}
                             </h6>
                             <p className="leading-relaxed font-sans font-medium text-[11px]">
                               {creditGrade === "A" && (
@@ -3544,7 +3599,10 @@ export default function App() {
                           </div>
 
                           <div className="bg-[#EFFAFE] border border-[#BDEAFB] p-4 rounded-sm text-xs space-y-1">
-                            <h6 className="font-mono font-semibold text-sky-900 uppercase">{t("📢 Interpretasi Bebas Jargon", "📢 Jargon-Free Interpretation")}</h6>
+                            <h6 className="font-mono font-semibold text-sky-900 uppercase flex items-center gap-1.5">
+                              <Megaphone className="w-3.5 h-3.5" />
+                              {t("Interpretasi Bebas Jargon", "Jargon-Free Interpretation")}
+                            </h6>
                             <p className="text-sky-800 text-[11px] leading-relaxed">
                               "{t("Berdasarkan performa", "Based on performance from the last")} <strong>{historicalPeriods.length} {t("bulan terakhir", "months")}</strong>, {t("sisa laba bersih bulanan Anda dinilai", "your average monthly net profit is considered")} <strong>{creditGrade === "A" ? t("sangat aman", "very secure") : (creditGrade === "B" ? t("cukup memadai", "adequate") : t("kurang memadai", "insufficient"))}</strong> {t("untuk menanggung pengajuan kredit sebesar", "to cover a loan application of")} <strong>Rp {desiredLoan.toLocaleString("id-ID")}</strong>."
                             </p>
@@ -3598,15 +3656,26 @@ export default function App() {
                         {/* SLIK OJK Section */}
                         <div className="border-2 border-ink bg-white p-4 space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1">
-                              {t("🛡️ Verifikasi OJK SLIK & BI Checking", "🛡️ OJK SLIK & BI Checking Verification")}
+                            <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1.5">
+                              <Shield className="w-3.5 h-3.5" />
+                              {t("Verifikasi OJK SLIK & BI Checking", "OJK SLIK & BI Checking Verification")}
                             </span>
                             <button
                               type="button"
                               onClick={() => setShowSlikDetails(!showSlikDetails)}
                               className="text-xs font-mono font-bold text-blueprint hover:underline uppercase cursor-pointer"
                             >
-                              {showSlikDetails ? t("✕ Sembunyikan Detail", "✕ Hide Details") : t("🔍 Lihat Laporan SLIK Lengkap", "🔍 View Full SLIK Report")}
+                              {showSlikDetails ? (
+                                <span className="flex items-center gap-1">
+                                  <X className="w-3 h-3" />
+                                  {t("Sembunyikan Detail", "Hide Details")}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Search className="w-3 h-3" />
+                                  {t("Lihat Laporan SLIK Lengkap", "View Full SLIK Report")}
+                                </span>
+                              )}
                             </button>
                           </div>
                           
@@ -3642,33 +3711,49 @@ export default function App() {
                         {/* Alternative Scoring Visualizer */}
                         {useAltData && (
                           <div className="border-2 border-ink bg-[#F5FBFF] p-4 space-y-3">
-                            <span className="text-[10px] font-mono text-sky-800 uppercase tracking-widest font-bold block">
-                              {t("📊 INTEGRASI ALTERNATIVE CREDIT SCORING (UU P2SK)", "📊 ALTERNATIVE CREDIT SCORING INTEGRATION (UU P2SK)")}
+                            <span className="text-[10px] font-mono text-sky-800 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                              <BarChart2 className="w-4 h-4 text-sky-800" />
+                              {t("INTEGRASI ALTERNATIVE CREDIT SCORING (UU P2SK)", "ALTERNATIVE CREDIT SCORING INTEGRATION (UU P2SK)")}
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
                               <div className="bg-white p-2.5 border border-sky-200">
                                 <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("1. Konsistensi Tagihan PLN", "1. Utility Bill Consistency (PLN)")}</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 100% TEPAT WAKTU (12 BLN)", "🟢 100% ON TIME (12 MOS)")}</strong>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5 flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-sky-700" />
+                                  {t("100% TEPAT WAKTU (12 BLN)", "100% ON TIME (12 MOS)")}
+                                </strong>
                                 <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Rata-rata tagihan bulanan: Rp 280.000", "Avg monthly bill: Rp 280,000")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
                                 <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("2. Riwayat Pulsa & Paket Data", "2. Airtime & Data History")}</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 SKOR STABILITAS TINGGI", "🟢 HIGH STABILITY SCORE")}</strong>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5 flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-sky-700" />
+                                  {t("SKOR STABILITAS TINGGI", "HIGH STABILITY SCORE")}
+                                </strong>
                                 <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Pengisian rutin: Rp 120.000/bln (Telkomsel)", "Routine top-up: Rp 120,000/mo (Telkomsel)")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
                                 <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("3. Volume e-Wallet (Gopay/OVO)", "3. e-Wallet Volume (Gopay/OVO)")}</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 Rp 3.250.000 / BULAN", "🟢 Rp 3,250,000 / MONTH")}</strong>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5 flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-sky-700" />
+                                  {t("Rp 3.250.000 / BULAN", "Rp 3,250,000 / MONTH")}
+                                </strong>
                                 <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("Turnover transaksi penjualan non-tunai", "Non-cash sales turnover")}</span>
                               </div>
                               <div className="bg-white p-2.5 border border-sky-200">
                                 <span className="text-[9px] text-gray-400 block uppercase font-bold">{t("4. Penilaian Seller E-Commerce", "4. E-Commerce Seller Rating")}</span>
-                                <strong className="text-sky-900 text-[11px] block mt-0.5">{t("🟢 4.9/5 RATING TOKO", "🟢 4.9/5 STORE RATING")}</strong>
+                                <strong className="text-sky-900 text-[11px] block mt-0.5 flex items-center gap-1">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-sky-700" />
+                                  {t("4.9/5 RATING TOKO", "4.9/5 STORE RATING")}
+                                </strong>
                                 <span className="text-[9px] text-gray-500 block leading-tight mt-0.5">{t("150+ Ulasan Positif (Shopee/Tokopedia)", "150+ Positive Reviews (Shopee/Tokopedia)")}</span>
                               </div>
                             </div>
-                            <p className="text-[10px] text-sky-700 leading-normal">
-                              💡 <strong>{t("Efek UU P2SK:", "UU P2SK Impact:")}</strong> {t("Integrasi telekomunikasi dan riwayat dompet digital memberikan tambahan keyakinan", "Integration of telecom and digital wallet history adds an extra")} <strong>+10 {t("poin", "points")}</strong> {t("ke scorecard kesiapan kredit nasabah.", "to the debtor's credit readiness scorecard.")}
+                            <p className="text-[10px] text-sky-700 leading-normal flex items-start gap-1">
+                              <Lightbulb className="w-3.5 h-3.5 text-sky-700 flex-shrink-0 mt-0.5" />
+                              <span>
+                                <strong>{t("Efek UU P2SK:", "UU P2SK Impact:")}</strong> {t("Integrasi telekomunikasi dan riwayat dompet digital memberikan tambahan keyakinan", "Integration of telecom and digital wallet history adds an extra")} <strong>+10 {t("poin", "points")}</strong> {t("ke scorecard kesiapan kredit nasabah.", "to the debtor's credit readiness scorecard.")}
+                              </span>
                             </p>
                           </div>
                         )}
