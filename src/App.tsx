@@ -59,6 +59,9 @@ export default function App() {
     businessType: "makanan",
     phone: "",
     location: "",
+    nibNumber: "",
+    skuNumber: "",
+    householdExpense: 1500000,
     isOnboarded: false,
   });
 
@@ -72,6 +75,11 @@ export default function App() {
   const [processingStep, setProcessingStep] = useState<string>("");
   const [scanResult, setScanResult] = useState<AnalysisResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Verification Photos
+  const [photoUsaha, setPhotoUsaha] = useState<string | null>(null);
+  const [photoStok, setPhotoStok] = useState<string | null>(null);
+  const [photoDokumen, setPhotoDokumen] = useState<string | null>(null);
 
   // Camera Integration States
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -181,6 +189,71 @@ export default function App() {
     }
     return [
       {
+        period: "November 2025",
+        business_type: "makanan",
+        items: [
+          { description: "Penjualan Nastar (8 toples)", category: "pemasukan", amount: 600000, confidence: "high" },
+          { description: "Penjualan Kue Sus (Katering Arisan)", category: "pemasukan", amount: 1200000, confidence: "high" },
+          { description: "Beli Margarin, Tepung Terigu, Gula", category: "pengeluaran", amount: 500000, confidence: "high" },
+          { description: "Upah Harian Asisten Kue", category: "pengeluaran", amount: 200000, confidence: "high" },
+          { description: "Uang Listrik Dapur & Oven", category: "pengeluaran", amount: 150000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 1800000,
+          pengeluaran: 850000,
+          laba_bersih: 950000
+        } as any
+      },
+      {
+        period: "Desember 2025",
+        business_type: "makanan",
+        items: [
+          { description: "Hampers Kue Kering Natal (15 box)", category: "pemasukan", amount: 2250000, confidence: "high" },
+          { description: "Pesanan Kue Nastar & Kastangel", category: "pemasukan", amount: 950000, confidence: "high" },
+          { description: "Beli Dus Box Hampers & Pita Hias", category: "pengeluaran", amount: 350000, confidence: "high" },
+          { description: "Bahan Kue Basah & Kering (Mentega)", category: "pengeluaran", amount: 800000, confidence: "high" },
+          { description: "Upah Harian Asisten Kue", category: "pengeluaran", amount: 300000, confidence: "high" },
+          { description: "Biaya Gas LPG & Listrik", category: "pengeluaran", amount: 150000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 3200000,
+          pengeluaran: 1600000,
+          laba_bersih: 1600000
+        } as any
+      },
+      {
+        period: "Januari 2026",
+        business_type: "makanan",
+        items: [
+          { description: "Penjualan Kue Harian", category: "pemasukan", amount: 1450000, confidence: "high" },
+          { description: "Pesanan Katering Kue RT", category: "pemasukan", amount: 1050000, confidence: "high" },
+          { description: "Belanja Bahan Pokok Terigu & Gula", category: "pengeluaran", amount: 600000, confidence: "high" },
+          { description: "Upah Asisten Dapur", category: "pengeluaran", amount: 250000, confidence: "high" },
+          { description: "Biaya Gas & Listrik Dapur", category: "pengeluaran", amount: 150000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 2500000,
+          pengeluaran: 1000000,
+          laba_bersih: 1500000
+        } as any
+      },
+      {
+        period: "Februari 2026",
+        business_type: "makanan",
+        items: [
+          { description: "Pesanan Kue Coklat Valentine (20 box)", category: "pemasukan", amount: 1600000, confidence: "high" },
+          { description: "Penjualan Nastar Kue Kering", category: "pemasukan", amount: 1300000, confidence: "high" },
+          { description: "Belanja Cokelat, Mentega & Kemasan", category: "pengeluaran", amount: 750000, confidence: "high" },
+          { description: "Upah Harian Asisten Kue", category: "pengeluaran", amount: 250000, confidence: "high" },
+          { description: "Biaya Listrik Oven & Gas", category: "pengeluaran", amount: 150000, confidence: "high" }
+        ],
+        totals: {
+          pemasukan: 2900000,
+          pengeluaran: 1150000,
+          laba_bersih: 1750000
+        } as any
+      },
+      {
         period: "Maret 2026",
         business_type: "makanan",
         items: [
@@ -195,7 +268,6 @@ export default function App() {
         totals: {
           pemasukan: 3100000,
           pengeluaran: 1500000,
-          laba_status: "ok", // custom placeholder
           laba_bersih: 1600000
         } as any
       },
@@ -216,7 +288,7 @@ export default function App() {
           pemasukan: 4500000,
           pengeluaran: 2100000,
           laba_bersih: 2400000
-        }
+        } as any
       }
     ];
   });
@@ -248,7 +320,9 @@ export default function App() {
 
   // Recalculate credit metrics based on averages (which is what a bank actually evaluates!)
   const estCicilan = Math.round((desiredLoan / loanTenor) + (desiredLoan * 0.005));
-  const dscr = estCicilan > 0 ? (avgMonthlyLaba / estCicilan) : 0;
+  const adjustedMonthlyLaba = Math.max(0, avgMonthlyLaba - (userProfile.householdExpense || 0));
+  const rawDscr = estCicilan > 0 ? (avgMonthlyLaba / estCicilan) : 0;
+  const dscr = estCicilan > 0 ? (adjustedMonthlyLaba / estCicilan) : 0;
   const margin = avgMonthlyOmset > 0 ? (avgMonthlyLaba / avgMonthlyOmset) : 0;
 
   // Composite Score (0-100) based on historical performance
@@ -587,8 +661,16 @@ export default function App() {
       businessType: "makanan",
       phone: "081234567890",
       location: "Jagakarsa, Jakarta Selatan",
+      nibNumber: "1209230048123",
+      skuNumber: "503/12/Kel.Jgk/2026",
+      householdExpense: 1500000,
       isOnboarded: true
     });
+
+    // Populate mock photos for demo/testing credibility
+    setPhotoUsaha("data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==");
+    setPhotoStok("data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==");
+    setPhotoDokumen("data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==");
 
     // Pick the first default handwritten workbook preset
     const preset = sampleNotes[0];
@@ -695,10 +777,10 @@ export default function App() {
       // 2. Metadata Profile Information Block (Two Columns)
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.4);
-      doc.rect(marginX, posY, 180, 28); // Outline box
+      doc.rect(marginX, posY, 180, 38); // Outline box
 
       // Inner divider line
-      doc.line(marginX + 90, posY, marginX + 90, posY + 28);
+      doc.line(marginX + 90, posY, marginX + 90, posY + 38);
 
       // Metadata Text
       doc.setTextColor(17, 24, 39);
@@ -717,20 +799,23 @@ export default function App() {
       const sectorName = lang === "id" ? sectorObj.id : sectorObj.en;
 
       doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.text(`${lang === "id" ? "Nama Pemilik" : "Owner Name"}: ${userProfile.ownerName || (lang === "id" ? "Sobat UMKM" : "MSME Owner")}`, marginX + 5, posY + 10);
-      doc.text(`${lang === "id" ? "Nama Toko" : "Business Name"}: ${userProfile.businessName || (lang === "id" ? "Toko Kelontong Handal" : "Trusted Merchant")}`, marginX + 5, posY + 14.5);
-      doc.text(`${lang === "id" ? "Sektor Bisnis" : "Business Sector"}: ${lang === "id" ? "Usaha" : ""} ${sectorName}`, marginX + 5, posY + 19);
-      doc.text(`${lang === "id" ? "Lokasi Usaha" : "Business Location"}: ${userProfile.location || (lang === "id" ? "[belum diisi]" : "[not specified]")}`, marginX + 5, posY + 23.5);
+      doc.text(`${lang === "id" ? "Nama Toko" : "Business Name"}: ${userProfile.businessName || (lang === "id" ? "Toko Kelontong Handal" : "Trusted Merchant")}`, marginX + 5, posY + 15);
+      doc.text(`${lang === "id" ? "Sektor Bisnis" : "Business Sector"}: ${lang === "id" ? "Usaha" : ""} ${sectorName}`, marginX + 5, posY + 20);
+      doc.text(`${lang === "id" ? "Lokasi Usaha" : "Business Location"}: ${userProfile.location || (lang === "id" ? "[belum diisi]" : "[not specified]")}`, marginX + 5, posY + 25);
+      doc.text(`${lang === "id" ? "Pengeluaran RT" : "Household Exp"}: Rp ${(userProfile.householdExpense || 0).toLocaleString("id-ID")}/${lang === "id" ? "bln" : "mo"}`, marginX + 5, posY + 30);
 
       doc.setFont("Helvetica", "bold");
-      doc.text(lang === "id" ? "INFORMASI DOKUMEN" : "DOCUMENT INFORMATION", marginX + 95, posY + 5);
+      doc.text(lang === "id" ? "INFORMASI DOKUMEN & LEGAL" : "DOCUMENT & LEGAL INFO", marginX + 95, posY + 5);
       doc.setFont("Helvetica", "normal");
-      doc.text(`${lang === "id" ? "Tujuan Laporan: Ringkasan Catatan Keuangan Pribadi" : "Document Purpose: Personal Financial Summary"}`, marginX + 95, posY + 10);
-      doc.text(`${lang === "id" ? "Tanggal Cetak" : "Date Printed"}: ${new Date().toLocaleDateString(lang === "id" ? "id-ID" : "en-US")}`, marginX + 95, posY + 16);
-      doc.text(`${lang === "id" ? "Periode Laporan" : "Report Period"}: ${scanResult.period}`, marginX + 95, posY + 22);
+      doc.text(`${lang === "id" ? "Tujuan Laporan" : "Document Purpose"}: ${lang === "id" ? "Rekapitulasi Kredit" : "Credit Recapitulation"}`, marginX + 95, posY + 10);
+      doc.text(`${lang === "id" ? "Tanggal Cetak" : "Date Printed"}: ${new Date().toLocaleDateString(lang === "id" ? "id-ID" : "en-US")}`, marginX + 95, posY + 15);
+      doc.text(`NIB: ${userProfile.nibNumber || "-"}`, marginX + 95, posY + 20);
+      doc.text(`SKU: ${userProfile.skuNumber || "-"}`, marginX + 95, posY + 25);
+      doc.text(`${lang === "id" ? "Status Bukti" : "Evidence Status"}: ${photoUsaha && photoStok ? (lang === "id" ? "TERLAMPIR" : "ATTACHED") : (lang === "id" ? "SEPIHAK" : "SELF-REPORTED")}`, marginX + 95, posY + 30);
 
-      posY += 36;
+      posY += 46;
 
       // 3. Transactions List Table Headers
       doc.setFillColor(243, 244, 246); // Table header bg
@@ -1019,17 +1104,21 @@ export default function App() {
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
       
-      doc.text(`1. ${lang === "id" ? "Total Pendapatan Bulanan Terpindai (Omset)" : "Total Scanned Monthly Revenue (Omset)"}: Rp ${avgMonthlyOmset.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`1. ${lang === "id" ? "Total Pendapatan Bulanan (Omset Rata-rata)" : "Total Monthly Revenue (Average Omset)"}: Rp ${avgMonthlyOmset.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`2. ${lang === "id" ? "Total Pengeluaran Bulanan Terpindai (Beban)" : "Total Scanned Monthly Expenses (Beban)"}: Rp ${(avgMonthlyLaba >= 0 ? (avgMonthlyOmset - avgMonthlyLaba) : (avgMonthlyOmset + Math.abs(avgMonthlyLaba))).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`2. ${lang === "id" ? "Total Pengeluaran Bulanan (Beban Rata-rata)" : "Total Monthly Expenses (Average Beban)"}: Rp ${(avgMonthlyOmset - avgMonthlyLaba).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`3. ${lang === "id" ? "Sisa Bersih Bulanan (Laba Bersih Riil)" : "Net Monthly Balance (Real Net Profit)"}: Rp ${avgMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
+      doc.text(`3. ${lang === "id" ? "Laba Bersih Bulanan Rata-rata" : "Average Monthly Net Profit"}: Rp ${avgMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`4. ${lang === "id" ? "Margin Laba Bersih Usaha" : "Business Net Profit Margin"}: ${(margin * 100).toFixed(1)}% ${lang === "id" ? "(Standard bank untuk pinjaman produktif > 10%)" : "(Bank standard for productive loans > 10%)"}`, marginX + 4, pg2Y);
+      doc.text(`4. ${lang === "id" ? "Pengeluaran Rumah Tangga (Sesuai Pengakuan)" : "Household Expenses (Self-Reported)"}: Rp ${(userProfile.householdExpense || 0).toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`5. Debt Service Coverage Ratio (DSCR): ${dscr.toFixed(2)}x ${lang === "id" ? "(Batas aman kelayakan pelunasan bank > 1.25x)" : "(Bank safety repayment threshold > 1.25x)"}`, marginX + 4, pg2Y);
+      doc.text(`5. ${lang === "id" ? "Kapasitas Bayar Bersih (Adjusted Net Profit / RPC)" : "Net Repayment Capacity (Adjusted Net Profit / RPC)"}: Rp ${adjustedMonthlyLaba.toLocaleString("id-ID")}`, marginX + 4, pg2Y);
       pg2Y += 5;
-      doc.text(`6. ${lang === "id" ? "Plafon Pengajuan Simulasi" : "Simulated Loan Limit"}: Rp ${desiredLoan.toLocaleString("id-ID")} (${lang === "id" ? "Tenor" : "Tenor"} ${loanTenor} ${lang === "id" ? "bulan" : "months"})`, marginX + 4, pg2Y);
+      doc.text(`6. ${lang === "id" ? "Margin Laba Bersih Usaha" : "Business Net Profit Margin"}: ${(margin * 100).toFixed(1)}% ${lang === "id" ? "(Standard bank untuk pinjaman produktif > 10%)" : "(Bank standard for productive loans > 10%)"}`, marginX + 4, pg2Y);
+      pg2Y += 5;
+      doc.text(`7. Debt Service Coverage Ratio (DSCR) Disesuaikan: ${dscr.toFixed(2)}x ${lang === "id" ? "(Batas aman kelayakan bank > 1.25x, dengan raw DSCR: " + rawDscr.toFixed(2) + "x)" : "(Bank safety repayment threshold > 1.25x, raw DSCR: " + rawDscr.toFixed(2) + "x)"}`, marginX + 4, pg2Y);
+      pg2Y += 5;
+      doc.text(`8. ${lang === "id" ? "Plafon Pengajuan Simulasi" : "Simulated Loan Limit"}: Rp ${desiredLoan.toLocaleString("id-ID")} (${lang === "id" ? "Tenor" : "Tenor"} ${loanTenor} ${lang === "id" ? "bulan" : "months"})`, marginX + 4, pg2Y);
 
       pg2Y += 12;
 
@@ -1146,6 +1235,146 @@ export default function App() {
       doc.text(legalText3, marginX, pg2Y + 11.5);
 
       // Trigger standard local action to download the beautifully designed PDF report
+      // Trigger standard local action to download the beautifully designed PDF report
+      // --- PAGE 3: LAMPIRAN VISUAL VERIFIKASI (ON-THE-SPOT) ---
+      doc.addPage();
+      let pg3Y = 20;
+
+      // Header for Page 3
+      doc.setFillColor(17, 24, 39); // Solid dark back
+      doc.rect(marginX, pg3Y, 180, 14, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(lang === "id" ? "LAMPIRAN C: VERIFIKASI VISUAL LAPANGAN (ON-THE-SPOT / OTS)" : "ANNEX C: VISUAL FIELD VERIFICATION & PHYSICAL EVIDENCE (OTS)", marginX + 5, pg3Y + 9);
+
+      pg3Y += 24;
+
+      // Grid of Photos (2x2 grid)
+      // Slot 1: Foto Lokasi Usaha
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(17, 24, 39);
+      doc.setLineWidth(0.4);
+      doc.rect(marginX, pg3Y, 85, 80, "F");
+      doc.rect(marginX, pg3Y, 85, 80, "S");
+
+      if (photoUsaha) {
+        doc.addImage(photoUsaha, "JPEG", marginX + 5, pg3Y + 5, 75, 56.25);
+      } else {
+        doc.setFillColor(229, 231, 235);
+        doc.rect(marginX + 5, pg3Y + 5, 75, 56.25, "F");
+        doc.setTextColor(107, 114, 128);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text(lang === "id" ? "🏡 BELUM DILAMPIRKAN" : "🏡 PHOTO NOT ATTACHED", marginX + 22, pg3Y + 33);
+      }
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(lang === "id" ? "FOTO LOKASI USAHA / DAPUR" : "BUSINESS SITE / KITCHEN PHOTO", marginX + 5, pg3Y + 68);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(lang === "id" ? "Status: Terverifikasi oleh Pemilik" : "Status: Self-verified by Merchant", marginX + 5, pg3Y + 73);
+
+      // Slot 2: Foto Stok Barang
+      doc.setFillColor(249, 250, 251);
+      doc.setTextColor(17, 24, 39);
+      doc.rect(marginX + 95, pg3Y, 85, 80, "F");
+      doc.rect(marginX + 95, pg3Y, 85, 80, "S");
+
+      if (photoStok) {
+        doc.addImage(photoStok, "JPEG", marginX + 100, pg3Y + 5, 75, 56.25);
+      } else {
+        doc.setFillColor(229, 231, 235);
+        doc.rect(marginX + 100, pg3Y + 5, 75, 56.25, "F");
+        doc.setTextColor(107, 114, 128);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text(lang === "id" ? "📦 BELUM DILAMPIRKAN" : "📦 PHOTO NOT ATTACHED", marginX + 117, pg3Y + 33);
+      }
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(lang === "id" ? "FOTO STOK & BAHAN BAKU" : "INVENTORY & INGREDIENTS PHOTO", marginX + 100, pg3Y + 68);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(lang === "id" ? "Status: Terverifikasi oleh Pemilik" : "Status: Self-verified by Merchant", marginX + 100, pg3Y + 73);
+
+      pg3Y += 88;
+
+      // Slot 3: Foto Dokumen NIB/SKU
+      doc.setFillColor(249, 250, 251);
+      doc.setTextColor(17, 24, 39);
+      doc.rect(marginX, pg3Y, 85, 80, "F");
+      doc.rect(marginX, pg3Y, 85, 80, "S");
+
+      if (photoDokumen) {
+        doc.addImage(photoDokumen, "JPEG", marginX + 5, pg3Y + 5, 75, 56.25);
+      } else {
+        doc.setFillColor(229, 231, 235);
+        doc.rect(marginX + 5, pg3Y + 5, 75, 56.25, "F");
+        doc.setTextColor(107, 114, 128);
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text(lang === "id" ? "📄 BELUM DILAMPIRKAN" : "📄 PHOTO NOT ATTACHED", marginX + 22, pg3Y + 33);
+      }
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(lang === "id" ? "BERKAS LEGALITAS (NIB / SKU)" : "LEGAL DOCUMENTS (NIB / SKU)", marginX + 5, pg3Y + 68);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(`${lang === "id" ? "NIB" : "NIB"}: ${userProfile.nibNumber || "-"} | SKU: ${userProfile.skuNumber || "-"}`, marginX + 5, pg3Y + 73);
+
+      // Slot 4: Validation Seal / QR code
+      doc.setFillColor(249, 250, 251);
+      doc.setTextColor(17, 24, 39);
+      doc.rect(marginX + 95, pg3Y, 85, 80, "F");
+      doc.rect(marginX + 95, pg3Y, 85, 80, "S");
+
+      // Draw custom QR / seal box representation
+      doc.setFillColor(255, 255, 255);
+      doc.rect(marginX + 115, pg3Y + 10, 45, 45, "F");
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(marginX + 115, pg3Y + 10, 45, 45, "S");
+      
+      // Draw simulated QR anchors
+      doc.setFillColor(0, 0, 0);
+      doc.rect(marginX + 117, pg3Y + 12, 10, 10, "F");
+      doc.rect(marginX + 148, pg3Y + 12, 10, 10, "F");
+      doc.rect(marginX + 117, pg3Y + 43, 10, 10, "F");
+      // Draw random QR code dots
+      doc.rect(marginX + 130, pg3Y + 15, 6, 2, "F");
+      doc.rect(marginX + 140, pg3Y + 25, 4, 8, "F");
+      doc.rect(marginX + 125, pg3Y + 30, 8, 4, "F");
+      doc.rect(marginX + 135, pg3Y + 40, 10, 3, "F");
+
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(lang === "id" ? "QR VERIFIKASI BERKAS" : "DOCUMENT QR VERIFICATION", marginX + 100, pg3Y + 68);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(lang === "id" ? "Scan untuk validasi catatan di database" : "Scan to validate record in database", marginX + 100, pg3Y + 73);
+
+      // Page 3 Footer
+      pg3Y = 265;
+      doc.setDrawColor(209, 213, 219);
+      doc.setLineWidth(0.2);
+      doc.line(marginX, pg3Y, marginX + 180, pg3Y);
+
+      doc.setTextColor(156, 163, 175);
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(6.5);
+      doc.text(legalText1, marginX, pg3Y + 4.5);
+      doc.text(legalText2, marginX, pg3Y + 8);
+      doc.text(legalText3, marginX, pg3Y + 11.5);
+
       doc.save(`${lang === "id" ? "Laporan_Finansial" : "Financial_Report"}_${(userProfile.businessName || "UMKM").replace(/\s+/g, "_")}.pdf`);
 
     } catch (error) {
@@ -2046,15 +2275,55 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Lokasi Usaha (Kabupaten / Kota)", "Business Location (Regency / City)")}</label>
-                    <input
-                      type="text"
-                      placeholder={t("Contoh: Jagakarsa, Jakarta Selatan atau Bogor, Jawa Barat", "Example: Jagakarsa, South Jakarta")}
-                      value={userProfile.location}
-                      onChange={(e) => setUserProfile({ ...userProfile, location: e.target.value })}
-                      className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Nomor NIB (Jika ada)", "NIB Number (If any)")}</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: 120923004xxxx"
+                        value={userProfile.nibNumber || ""}
+                        onChange={(e) => setUserProfile({ ...userProfile, nibNumber: e.target.value })}
+                        className="w-full text-sm font-mono border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Nomor SKU (Surat Keterangan Usaha)", "SKU Document Number")}</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: 503/12/Kel.Jgk/2026"
+                        value={userProfile.skuNumber || ""}
+                        onChange={(e) => setUserProfile({ ...userProfile, skuNumber: e.target.value })}
+                        className="w-full text-sm font-mono border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">{t("Lokasi Usaha (Kabupaten / Kota)", "Business Location (Regency / City)")}</label>
+                      <input
+                        type="text"
+                        placeholder={t("Contoh: Jagakarsa, Jakarta Selatan atau Bogor, Jawa Barat", "Example: Jagakarsa, South Jakarta")}
+                        value={userProfile.location}
+                        onChange={(e) => setUserProfile({ ...userProfile, location: e.target.value })}
+                        className="w-full text-sm font-sans border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono font-bold text-gray-700 uppercase mb-1">
+                        {t("Pengeluaran Rumah Tangga Bulanan (Rp)", "Monthly Household Expenses (IDR)")}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Contoh: 1500000"
+                        value={userProfile.householdExpense || ""}
+                        onChange={(e) => setUserProfile({ ...userProfile, householdExpense: Number(e.target.value) })}
+                        className="w-full text-sm font-mono border-2 border-ink p-2.5 bg-paper focus:bg-white focus:outline-none"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div className="bg-yellow-50 border border-yellow-200 p-3 flex gap-2 rounded-sm mt-2">
@@ -2377,6 +2646,129 @@ export default function App() {
                             </div>
                           </div>
                         )}
+                      </div>
+
+                      {/* Step 3: Verification Photos */}
+                      <div className="space-y-2 pt-2.5 border-t border-gray-100">
+                        <span className="block text-xs font-mono font-bold text-gray-700 uppercase">
+                          {t("Langkah 3: Lampiran Foto Fisik & Verifikasi Lapangan (Opsional)", "Step 3: Attach Physical Site & Inventory Photos (Optional)")}
+                        </span>
+                        <p className="text-[10px] text-gray-400 font-sans leading-relaxed">
+                          {t("Unggah bukti visual untuk menaikkan skor kredibilitas dokumen di mata analis kredit (Mantri BRI).", "Upload visual proofs to boost document credibility for the loan officer (Mantri).")}
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {/* Photo Usaha */}
+                          <div className="border-2 border-dashed border-gray-300 p-3 text-center bg-paper rounded-sm space-y-2 relative">
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const r = new FileReader();
+                                  r.onload = () => setPhotoUsaha(r.result as string);
+                                  r.readAsDataURL(file);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            />
+                            {photoUsaha ? (
+                              <div className="space-y-1 relative z-20">
+                                <img src={photoUsaha} className="max-h-16 mx-auto object-contain border border-ink" alt="Usaha" />
+                                <span className="text-[9px] font-mono text-emerald-700 block font-bold">✓ {t("TEMPAT USAHA", "BUSINESS SITE")}</span>
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); setPhotoUsaha(null); }}
+                                  className="text-[9px] text-red-500 hover:underline font-mono"
+                                >
+                                  {t("Hapus", "Delete")}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1 py-1">
+                                <span className="text-lg block">🏡</span>
+                                <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO LOKASI USAHA", "BUSINESS SITE PHOTO")}</span>
+                                <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Photo Stok */}
+                          <div className="border-2 border-dashed border-gray-300 p-3 text-center bg-paper rounded-sm space-y-2 relative">
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const r = new FileReader();
+                                  r.onload = () => setPhotoStok(r.result as string);
+                                  r.readAsDataURL(file);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            />
+                            {photoStok ? (
+                              <div className="space-y-1 relative z-20">
+                                <img src={photoStok} className="max-h-16 mx-auto object-contain border border-ink" alt="Stok" />
+                                <span className="text-[9px] font-mono text-emerald-700 block font-bold">✓ {t("STOK BARANG", "INVENTORY STOCK")}</span>
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); setPhotoStok(null); }}
+                                  className="text-[9px] text-red-500 hover:underline font-mono"
+                                >
+                                  {t("Hapus", "Delete")}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1 py-1">
+                                <span className="text-lg block">📦</span>
+                                <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO STOK & BAHAN", "INVENTORY & STOCK")}</span>
+                                <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Photo Dokumen */}
+                          <div className="border-2 border-dashed border-gray-300 p-3 text-center bg-paper rounded-sm space-y-2 relative">
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const r = new FileReader();
+                                  r.onload = () => setPhotoDokumen(r.result as string);
+                                  r.readAsDataURL(file);
+                                }
+                              }}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            />
+                            {photoDokumen ? (
+                              <div className="space-y-1 relative z-20">
+                                <img src={photoDokumen} className="max-h-16 mx-auto object-contain border border-ink" alt="Dokumen" />
+                                <span className="text-[9px] font-mono text-emerald-700 block font-bold">✓ {t("BERKAS NIB/SKU", "LEGAL DOCUMENT")}</span>
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); setPhotoDokumen(null); }}
+                                  className="text-[9px] text-red-500 hover:underline font-mono"
+                                >
+                                  {t("Hapus", "Delete")}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1 py-1">
+                                <span className="text-lg block">📄</span>
+                                <span className="text-[10px] font-mono text-gray-600 block leading-tight font-bold">{t("FOTO DOKUMEN NIB/SKU", "NIB/SKU FILE PHOTO")}</span>
+                                <span className="text-[8px] text-gray-400 block font-mono">{t("Ketuk untuk memotret", "Tap to capture")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                     </div>
