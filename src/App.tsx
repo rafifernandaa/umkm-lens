@@ -64,7 +64,7 @@ import { jsPDF } from "jspdf";
 
 export default function App() {
   // Current view management: "about" | "blog" | "trial" | "citations"
-  const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("trial");
+  const [activeTab, setActiveTab] = useState<"about" | "blog" | "trial" | "citations">("blog");
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [lang, setLang] = useState<"id" | "en">("en");
   const t = (idText: string, enText: string) => lang === "id" ? idText : enText;
@@ -1963,32 +1963,260 @@ export default function App() {
         )}
 
         {/* ==================== SCREEN 1: THE RESEARCH & PROBLEM PITCH BLOG ==================== */}
+        {/* ==================== SCREEN 1: THE RESEARCH & PROBLEM PITCH BLOG ==================== */}
         {activeTab === "blog" && (
           <div className="space-y-12">
-            
-            {/* Architectural Pitch Hero */}
-            <section className="relative overflow-hidden bg-white border-4 border-ink p-6 md:p-12 shadow-[8px_8px_0px_0px_#111827] rounded-sm">
-              <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-5 flex items-center justify-center font-display font-bold text-[180px] text-ink select-none overflow-hidden">
-                61%
-              </div>
 
-              <div className="max-w-4xl space-y-6">
-                <span className="bg-marker-yellow text-ink text-xs px-2.5 py-1 font-mono tracking-widest uppercase font-bold border border-ink shadow-[1.5px_1.5px_0px_0px_#111827]">
-                  UMKM Lens Problem Foundation Vol. 01
-                </span>
+            {/* Core Two-Column Blog and Insights layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* Left Column: Premium Medium-style Blog Article */}
+              <div className="lg:col-span-8 space-y-8 bg-white border-4 border-ink p-6 md:p-10 shadow-[8px_8px_0px_0px_#111827] rounded-sm">
                 
-                <h1 className="text-3x md:text-5xl lg:text-6xl font-display font-bold text-ink leading-[1.1] tracking-tight">
-                  {t("Menembus Dinding Dokumentasi:", "Breaching the Documentation Wall:")} <br className="hidden md:inline" />
-                  <span className="marker-highlight">{t("Jaminan Kredit", "Credit Guarantee")}</span> {t("untuk Pengusaha Rumah Tangga Indonesia.", "for Indonesian Household Businesses.")}
-                </h1>
-                
-                <p className="text-base md:text-lg text-gray-700 font-sans max-w-3xl leading-relaxed">
-                  {t("Usaha mikro menyumbang 61% PDB nasional, namun 60-70% pengajuan modal perbankan ditolak sia-sia. Jembatani eksklusi finansial ini dengan konversi berkas informal berbasis AI instan.", "Micro-merchants contribute 61% of national GDP, but 60-70% of bank capital applications are rejected in vain. Bridge this financial exclusion with instant AI-driven informal ledger conversion.")}
-                </p>
+                {/* Medium Publication Header */}
+                <div className="flex items-center justify-between border-b border-ink/10 pb-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-blueprint text-white text-xs font-mono font-bold px-2 py-1 uppercase border border-ink shadow-[1px_1px_0px_0px_#111827]">
+                      {t("PERSPEKTIF KEUANGAN MIKRO", "MICROFINANCE PERSPECTIVES")}
+                    </span>
+                    <span className="text-gray-300 font-mono">/</span>
+                    <span className="text-xs font-mono text-gray-500">{t("Edisi Riset 2026", "2026 Research Issue")}</span>
+                  </div>
+                  <span className="text-xs font-mono text-gray-400 flex items-center gap-1">
+                    <BookOpen className="w-3.5 h-3.5" /> 12 Min Read
+                  </span>
+                </div>
 
-                {/* Instant Action CTA Row */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4">
-                  <button 
+                {/* Title & Subtitle */}
+                <div className="space-y-4">
+                  <h1 className="text-3xl md:text-5xl font-display font-bold text-ink leading-tight">
+                    {t("Mengikis Dinding Dokumentasi: Bagaimana UMKM Lens Membuka Akses KUR Bagi Juta Pengusaha Rumah Tangga", "Breaching the Documentation Wall: How UMKM Lens Unlocks KUR Financing for Millions of Household Businesses")}
+                  </h1>
+                  <p className="text-base md:text-lg text-gray-600 font-sans italic leading-relaxed border-l-4 border-blueprint pl-4">
+                    {t("Mengapa pembukuan informal menyumbat akses modal, dan bagaimana kecerdasan buatan (AI) & alternative credit scoring dapat menjembatani jurang inklusi finansial.", "Why informal bookkeeping blocks capital access, and how Artificial Intelligence (AI) & alternative credit scoring can bridge the financial inclusion gap.")}
+                  </p>
+                </div>
+
+                {/* Author Meta */}
+                <div className="flex items-center justify-between border-y border-ink/10 py-4 my-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blueprint flex items-center justify-center font-mono font-bold text-white border border-ink shadow-[1.5px_1.5px_0px_0px_#111827]">
+                      UL
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-ink font-mono">UMKM Lens Research Lab</span>
+                        <span className="text-[10px] bg-sky-100 text-sky-800 border border-sky-300 font-mono px-1 py-0.2 rounded font-bold uppercase">{t("Verifikasi", "Verified")}</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-mono">{t("Kolaborasi Riset Keuangan Mikro & Kecerdasan Buatan", "Microfinance & AI Research Collaborative")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {
+                        setActiveTab("trial");
+                        setTimeout(() => {
+                          const target = document.getElementById("onboarding-form");
+                          if (target) target.scrollIntoView({ behavior: "smooth" });
+                        }, 200);
+                      }}
+                      className="bg-blueprint hover:bg-blue-700 text-white text-xs font-mono font-bold px-3 py-1.5 border border-ink active:translate-y-px transition-all shadow-[1.5px_1.5px_0px_0px_#111827] cursor-pointer uppercase tracking-wider"
+                    >
+                      {t("Buka Aplikasi →", "Open App →")}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Article Content */}
+                <div className="space-y-6 text-gray-700 leading-relaxed font-sans text-sm md:text-base">
+                  
+                  {/* Section 1: Introduction */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("1. Catatan di Atas Meja Dapur: Realitas Keuangan Informal", "1. The Notebook on the Kitchen Counter: The Reality of Informal Finance")}
+                    </h3>
+                    <p>
+                      {t(
+                        "Bayangkan Ibu Wati, seorang pengrajin kue kering berusia 42 tahun di Jagakarsa, Jakarta Selatan. Setiap harinya, dia mengaduk adonan, memanggang nastar, dan melayani pelanggan setianya lewat pesan singkat WhatsApp. Bisnisnya stabil dan menguntungkan. Namun, saat dia membutuhkan modal tambahan untuk membeli oven baru agar bisa melayani pesanan lebaran yang melonjak, dia terbentur dinding yang tidak terlihat: Dinding Dokumentasi.",
+                        "Imagine Ibu Wati, a 42-year-old home baker in Jagakarsa, South Jakarta. Every day, she mixes dough, bakes cookies, and services her loyal customers through WhatsApp. Her business is stable and profitable. Yet, when she needs extra capital to buy a larger oven for the Eid rush, she runs into an invisible barrier: The Documentation Wall."
+                      )}
+                    </p>
+                    <p>
+                      {t(
+                        "Bagi Ibu Wati, seluruh catatan keuangannya disimpan dalam sebuah buku tulis bersampul lusuh di samping kompornya. Halaman-halamannya berisi coretan tangan sederhana: tanggal, nama pelanggan, harga bahan baku, dan sisa laba harian. Ketika dia melangkah ke bank terdekat untuk mengajukan Kredit Usaha Rakyat (KUR), analis kredit menggelengkan kepala. Tanpa laporan laba rugi terstruktur, tanpa rekening koran yang rapi, dan tanpa legalitas resmi, catatan Ibu Wati dianggap 'tidak dapat dinilai' (un-assessable). Ini bukan cerita Ibu Wati sendiri; ini adalah kenyataan pahit bagi lebih dari 64 juta pelaku usaha mikro di Indonesia.",
+                        "For Ibu Wati, her entire financial ledger is kept in a worn-out notebook next to her stove. Its pages contain simple handwritten entries: dates, customer names, ingredient costs, and daily profit balances. When she steps into the local bank to apply for a subsidized micro-loan (KUR), the loan officer shakes their head. Without structured profit-and-loss statements, bank statements, or official registration, Ibu Wati's records are 'un-assessable'. This is not just Ibu Wati's story; it is the harsh reality for over 64 million micro-entrepreneurs in Indonesia."
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Section 2: The Core Gap */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("2. Mengapa 70% Pengajuan Kredit Mikro Ditolak?", "2. Why 70% of Micro-Loans are Rejected?")}
+                    </h3>
+                    <p>
+                      {t(
+                        "Meskipun menyumbang 61% terhadap PDB nasional dan menyerap 97% tenaga kerja, kesenjangan akses pembiayaan UMKM Indonesia masih sangat lebar. Berdasarkan data Bank Indonesia, lebih dari 60% hingga 70% pengajuan modal pelaku usaha mikro ditolak oleh lembaga perbankan formal. Mengapa hal ini terus terjadi di era digital?",
+                        "Despite contributing 61% to the national GDP and absorbing 97% of the workforce, the financing gap for Indonesian MSMEs remains vast. According to Bank Indonesia data, between 60% and 70% of micro-loan applications are rejected by formal banks. Why does this persist in the digital age?"
+                      )}
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>
+                        <strong>{t("Ketiadaan Pembukuan Standar (No Standard Bookkeeping): ", "Lack of Standard Bookkeeping: ")}</strong>
+                        {t("Bank membutuhkan laporan keuangan terstruktur untuk menghitung kapasitas bayar (DSCR). Coretan buku harian informal tidak memenuhi kriteria penilaian risiko bank.", "Banks require structured financial statements to calculate repayment capacity (DSCR). Informal diary scribbles do not meet risk underwriting criteria.")}
+                      </li>
+                      <li>
+                        <strong>{t("Kekacauan Arus Kas (Cash Leakage): ", "Cash Leakage & Account Mixing: ")}</strong>
+                        {t("Umumnya pengusaha rumah tangga mencampuradukkan rekening pribadi untuk kebutuhan keluarga dengan kas usaha, menyulitkan bank menghitung margin laba bersih yang sesungguhnya.", "Micro-merchants frequently mix family expenses with business revenue, making it difficult for banks to verify actual net business profit margins.")}
+                      </li>
+                      <li>
+                        <strong>{t("Ketiadaan Agunan Fisik (No Physical Collateral): ", "No Physical Collateral: ")}</strong>
+                        {t("Pinjaman tradisional bergantung pada sertifikat tanah atau BPKB kendaraan. Pengusaha rumah tangga jarang memiliki aset tersebut atas nama bisnis mereka.", "Traditional lending relies heavily on land deeds or vehicle titles. Household businesses rarely hold such formal assets in their business name.")}
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Blockquote Callout */}
+                  <blockquote className="border-l-4 border-blueprint bg-slate-50 p-4 font-mono italic text-sm text-ink leading-relaxed">
+                    {t(
+                      "\"Tantangan terbesar kita bukanlah kelayakan bisnis pelaku usaha mikro, melainkan bahasa keuangan yang mereka gunakan. Mereka berbicara bahasa transaksi harian informal; perbankan berbicara bahasa laporan keuangan formal. UMKM Lens adalah penerjemah digital di antara kedua dunia ini.\"",
+                      "\"Our greatest challenge is not the actual viability of micro-businesses, but the financial language they speak. They talk in informal daily transactions; banks talk in formal financial statements. UMKM Lens acts as the digital translator between these two worlds.\""
+                    )}
+                  </blockquote>
+
+                  {/* Section 3: The Solution */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("3. Menjembatani Jurang: Bagaimana UMKM Lens Bekerja", "3. Bridging the Gap: How UMKM Lens Works")}
+                    </h3>
+                    <p>
+                      {t(
+                        "UMKM Lens dirancang khusus sebagai jembatan teknologi. Aplikasi ini memungkinkan pelaku usaha mikro atau pendamping koperasi untuk memotret buku catatan transaksi manual harian menggunakan kamera ponsel. Di balik layar, mesin kecerdasan buatan (AI) memproses gambar tersebut melalui alur kerja terotomatisasi:",
+                        "UMKM Lens is engineered to bridge this technological gap. The app allows micro-merchants or cooperative field officers to capture photos of handwritten daily ledger pages using their smartphone cameras. Behind the scenes, an artificial intelligence (AI) engine processes the images through a highly automated pipeline:"
+                      )}
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-2">
+                      <li>
+                        <strong>{t("Deteksi Teks & Parsing Cerdas (Intelligent OCR): ", "Intelligent Text Detection & OCR: ")}</strong>
+                        {t("AI membaca tulisan tangan pada foto, mengekstrak teks, mengidentifikasi tanggal, deskripsi produk, jenis transaksi (pemasukan/pengeluaran), serta nominal uang.", "The AI reads handwritten notes, extracts details, categorizes transaction types (inflows/outflows), and captures transaction amounts.")}
+                      </li>
+                      <li>
+                        <strong>{t("Strukturisasi Laba Rugi Otomatis (Auto Statement Generation): ", "Auto Profit & Loss Compilation: ")}</strong>
+                        {t("Data kas yang terpindai secara instan dikompilasi menjadi rekapitulasi nominal total pemasukan, total pengeluaran, dan estimasi laba bersih bersih bulanan.", "The raw transaction items are instantly structured into total revenue, total expenses, and estimated net profit metrics.")}
+                      </li>
+                      <li>
+                        <strong>{t("Simulasi Kelayakan Kredit Instan (Pre-Assessment Scoring): ", "Instant Pre-Assessment Scoring: ")}</strong>
+                        {t("Sistem menghitung metrik kelayakan bank seperti rasio Debt Service Coverage Ratio (DSCR) dan kesiapan kredit berbasis skor data alternatif.", "The system evaluates bank eligibility metrics such as the Debt Service Coverage Ratio (DSCR) and alternative credit readiness scores.")}
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* Section 4: Deep Dive Features */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("4. Anatomi Empat Pilar Utama Hasil Analisis", "4. Anatomy of the Four Core Analytical Pillars")}
+                    </h3>
+                    <p>
+                      {t(
+                        "Setelah proses pemindaian berkas selesai, UMKM Lens menampilkan dasbor analisis komprehensif yang dirancang khusus untuk memenuhi standar penilaian risiko analis kredit perbankan:",
+                        "Once the document scanning is complete, UMKM Lens presents a comprehensive assessment dashboard designed to meet standard banking risk-underwriting criteria:"
+                      )}
+                    </p>
+                    
+                    <div className="space-y-3 font-mono text-xs border-2 border-ink p-4 bg-slate-50">
+                      <div className="flex items-start gap-2 border-b border-ink/10 pb-2.5">
+                        <Search className="w-4 h-4 text-blueprint flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-ink text-xs uppercase block">{t("A. Kelayakan Finansial Konsolidasi (Consolidated Financial Eligibility)", "A. Consolidated Financial Eligibility")}</strong>
+                          <p className="text-gray-500 text-[11px] leading-relaxed mt-0.5 font-sans">
+                            {t("Menampilkan metrik agregat performa rata-rata omset, rata-rata laba bersih bulanan, serta perhitungan Rasio DSCR (Kapasitas Bayar Cicilan). Memberikan bankir bukti rasional kemampuan membayar debitur.",
+                              "Displays aggregate metrics of average turnover, net profit, and DSCR (Debt Service Coverage Ratio) to prove repayment capability to bank underwriters.")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 border-b border-ink/10 py-2.5">
+                        <Lightbulb className="w-4 h-4 text-blueprint flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-ink text-xs uppercase block">{t("B. Pengoptimal Plafon Kredit Target (Target Loan Limit Optimizer)", "B. Target Loan Limit Optimizer")}</strong>
+                          <p className="text-gray-500 text-[11px] leading-relaxed mt-0.5 font-sans">
+                            {t("Slider interaktif yang membantu pelaku usaha mensimulasikan plafon kredit pinjaman dan tenor cicilan secara real-time. Memvisualisasikan probabilitas persetujuan bank (Tinggi/Sedang/Rendah) secara instan.",
+                              "An interactive slider that allows merchants to simulate target loan limits and tenors, showing bank approval probabilities (High/Medium/Low) in real-time.")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 border-b border-ink/10 py-2.5">
+                        <TrendingUp className="w-4 h-4 text-blueprint flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-ink text-xs uppercase block">{t("C. Tren Kinerja Keuangan Usaha (Business Financial Performance Trend)", "C. Business Financial Performance Trend")}</strong>
+                          <p className="text-gray-500 text-[11px] leading-relaxed mt-0.5 font-sans">
+                            {t("Bagan visual tren bulanan yang menggambarkan perbandingan pendapatan kotor (Omset), beban usaha, dan pergerakan laba bersih harian untuk mendeteksi konsistensi arus kas.",
+                              "A visual monthly trend chart mapping gross revenue, expenses, and net profit trajectories to check historical cash flow consistency.")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 pt-2.5">
+                        <BarChart2 className="w-4 h-4 text-blueprint flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-ink text-xs uppercase block">{t("D. Analisis Statistik & Prediksi Risiko (Statistical Analytics & Risk Prediction)", "D. Statistical Analytics & Risk Prediction")}</strong>
+                          <p className="text-gray-500 text-[11px] leading-relaxed mt-0.5 font-sans">
+                            {t("Dasbor tingkat lanjut yang menghitung Volatilitas Laba (Koefisien Variasi), Tren Garis Regresi Linier (Trayektori Pertumbuhan), Konsentrasi Risiko Transaksi terbesar, serta Simulasi Risiko Gagal Bayar (Probability of Default Basel II) secara kuantitatif.",
+                              "An advanced statistical dashboard calculating net profit volatility (CV), regression growth slopes, order concentration, and Basel-inspired Probability of Default (PD).")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 5: Legal Frame */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("5. Regulasi Baru: Era Alternative Credit Scoring (UU P2SK)", "5. The Regulatory Shift: Alternative Credit Scoring & UU P2SK")}
+                    </h3>
+                    <p>
+                      {t(
+                        "Peluang emas bagi inklusi finansial di Indonesia semakin terbuka lebar sejak disahkannya Undang-Undang Pengembangan dan Penguatan Sektor Keuangan (UU No. 4 Tahun 2023 - P2SK). Regulasi ini secara eksplisit mendorong perbankan memanfaatkan inovasi teknologi data alternatif (Alternative Credit Scoring) untuk mengevaluasi kelayakan kredit pengusaha yang tidak tersentuh pembiayaan konvensional.",
+                        "The landscape for microfinance in Indonesia shifted dramatically with the enactment of the Law on Development and Strengthening of the Financial Sector (UU No. 4 of 2023 - P2SK). This law formally mandates banks to adopt innovative Alternative Credit Scoring systems using alternative data footprints to evaluate underserved entrepreneurs."
+                      )}
+                    </p>
+                    <p>
+                      {t(
+                        "Dengan mengintegrasikan mutasi dompet digital (e-wallet), riwayat pembayaran listrik (PLN), pulsa telepon seluler, dan rekam penjualan e-commerce, UMKM Lens membantu melengkapi berkas fisik pelaku usaha. Data alternatif ini memberikan tambahan keyakinan bagi analis kredit bank untuk meloloskan pembiayaan meskipun debitur tidak memiliki agunan fisik formal.",
+                        "By integrating digital wallet transactions, utility bill payments (PLN), telecom top-ups, and e-commerce records, UMKM Lens supplements physical business ledgers. This alternative data footprint provides bank underwriters with the extra validation needed to approve credit in the absence of physical collateral."
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Section 6: Closing */}
+                  <div className="space-y-3 pt-4 border-t border-ink/10">
+                    <h3 className="text-lg md:text-xl font-display font-bold text-ink uppercase tracking-tight">
+                      {t("6. Langkah Kecil, Dampak Besar Bagi Ekonomi Nasional", "6. Small Notebooks, Huge National Economic Impact")}
+                    </h3>
+                    <p>
+                      {t(
+                        "Memberdayakan usaha mikro bukan hanya tentang menyalurkan uang; ini adalah tentang membangun martabat finansial. Melalui alat bantu sederhana seperti UMKM Lens, coretan tinta di buku harian Ibu Wati tidak lagi berakhir sebagai tumpukan kertas sampah kompor, melainkan bertransformasi menjadi dokumen kesiapan kredit terstandar yang diakui sistem hukum perbankan.",
+                        "Empowering micro-entrepreneurs is not just about distributing credit; it is about establishing financial dignity. Through accessible tools like UMKM Lens, handwritten notes in Ibu Wati's kitchen ledger are no longer dismissed as unorganized scrap paper. Instead, they transform into structured credit-readiness assets recognized by bank systems."
+                      )}
+                    </p>
+                    <p>
+                      {t(
+                        "Saat teknologi berhasil menerjemahkan kegigihan ekonomi informal menjadi bahasa finansial formal yang diakui bank, kita tidak hanya menolong satu bisnis kue kering berkembang—kita sedang memperkuat sendi utama fondasi ekonomi bangsa Indonesia.",
+                        "When technology bridges the gap between informal hustle and formal finance, we do not just help a home bakery expand—we are strengthening the core foundation of Indonesia's national economy."
+                      )}
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Blog Footer Action */}
+                <div className="border-t-2 border-dashed border-ink/20 pt-8 mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-slate-50 p-6 border-2 border-ink">
+                  <div className="space-y-1">
+                    <h4 className="font-display font-bold text-lg text-ink uppercase tracking-tight">{t("Siap Mengubah Buku Kas Anda Menjadi Berkas Bank?", "Ready to Turn Your Paper Ledger into a Bankable Document?")}</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-sans">{t("Gunakan kamera ponsel Anda untuk memindai transaksi harian sekarang secara gratis. Tanpa pendaftaran rumit.", "Use your phone camera to scan your daily transaction logs now for free. No complicated registration required.")}</p>
+                  </div>
+                  <button
                     onClick={() => {
                       setActiveTab("trial");
                       setTimeout(() => {
@@ -1996,163 +2224,11 @@ export default function App() {
                         if (target) target.scrollIntoView({ behavior: "smooth" });
                       }, 200);
                     }}
-                    className="bg-blueprint text-white px-7 py-4 font-display font-bold text-base transition-all hover:bg-blue-700 text-center uppercase tracking-wider shadow-[4px_4px_0px_0px_#111827] active:translate-x-0.5 active:translate-y-0.5 border-2 border-ink flex items-center justify-center gap-2 cursor-pointer"
+                    className="bg-blueprint hover:bg-blue-700 text-white font-display font-bold text-sm py-3 px-6 shadow-[3px_3px_0px_0px_#111827] border-2 border-ink active:translate-y-px transition-all uppercase tracking-wide cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                   >
-                    {t("Buka Aplikasi Sekarang", "Open Application Now")} <Sparkles className="w-4.5 h-4.5 text-marker-yellow fill-marker-yellow" />
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const simulatorEl = document.getElementById("analytics-simulator");
-                      if (simulatorEl) simulatorEl.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="bg-paper text-ink px-6 py-4 font-mono text-xs tracking-wide border-2 border-ink hover:bg-gray-50 shadow-[4px_4px_0px_0px_#111827] uppercase text-center active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-1.5"
-                  >
-                    <BarChart2 className="w-4 h-4" /> {t("Loloskan Kredit Anda (Simulator)", "Qualify Your Credit (Simulator)")}
+                    {t("Mulai Pindai Sekarang", "Start Scanning Now")} <Sparkles className="w-4 h-4 text-marker-yellow fill-marker-yellow" />
                   </button>
                 </div>
-              </div>
-              
-              {/* Tectonic Stat Boxes Bar */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-8 border-t-2 border-ink/10">
-                <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Prosi Kontribusi PDB", "GDP Contribution Share")}</p>
-                  <p className="text-3xl md:text-4xl font-display font-bold text-ink mt-1">61%</p>
-                  <p className="text-[11px] text-gray-500 font-mono mt-1 mt-1 font-semibold">{t("Menggerakkan 97% Tenaga Kerja", "Powers 97% of the Workforce")}</p>
-                </div>
-                <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Rejection Rate Bank", "Bank Rejection Rate")}</p>
-                  <p className="text-3xl md:text-4xl font-display font-bold text-red-600 mt-1">60% - 70%</p>
-                  <p className="text-[11px] text-gray-400 font-mono mt-1">{t("Gagal akibat validasi berkas formal", "Fails due to formal document validation")}</p>
-                </div>
-                <div className="border border-ink p-4 bg-paper shadow-[3px_3px_0px_0px_#111827]">
-                  <p className="text-sm font-mono text-gray-500 uppercase">{t("Unbanked Adults", "Unbanked Adults")}</p>
-                  <p className="text-3xl md:text-4xl font-display font-bold text-blueprint mt-1">{t("91 Juta", "91 Million")}</p>
-                  <p className="text-[11px] text-gray-500 font-mono mt-1">{t("Kesenjangan akses modal terdalam", "The deepest capital access gap")}</p>
-                </div>
-              </div>
-            </section>
-
-            {/* Core Two-Column Blog and Insights layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              {/* Left Column: Multipage Blog Navigator */}
-              <div className="lg:col-span-8 space-y-8">
-                
-                {/* Blog Header bar with Tectonic Styling */}
-                {/* Blog Header bar with Tectonic Styling */}
-                <div className="border-b-2 border-ink pb-3 flex justify-between items-center bg-gray-50 px-3 py-2 border-2 border-ink">
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-1.5">
-                    <Folder className="w-3.5 h-3.5" />
-                    {t(`ARSIP ANALISIS MASALAH (${blogPosts.length} ARTIKEL)`, `PROBLEM ANALYSIS ARCHIVE (${blogPosts.length} ARTICLES)`)}
-                  </h3>
-                  <span className="font-mono text-[10px] text-gray-500">
-                    {t("PILIH JUDUL UNTUK MEMBACA", "SELECT A TITLE TO READ")}
-                  </span>
-                </div>
-
-                {/* Selected Post Detail Viewer */}
-                {selectedPostSlug ? (
-                  (() => {
-                    const currentPost = blogPosts.find(p => p.slug === selectedPostSlug);
-                    if (!currentPost) return null;
-                    return (
-                      <article className="bg-white border-2 border-ink p-6 md:p-8 shadow-[4px_4px_0px_0px_#111827] space-y-6">
-                        <button
-                          onClick={() => setSelectedPostSlug(null)}
-                          className="font-mono text-xs text-blueprint hover:underline flex items-center gap-1.5 uppercase tracking-wider mb-4"
-                        >
-                          {t("← Kembali ke Semua Artikel", "← Back to All Articles")}
-                        </button>
-                        
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="bg-ink text-paper text-[10px] uppercase font-mono px-2 py-0.5 font-bold">
-                              {lang === "id" ? currentPost.category : (currentPost.categoryEn || currentPost.category)}
-                            </span>
-                            <span className="text-xs text-gray-400 font-mono">
-                              {t("Diterbitkan: ", "Published: ")} {lang === "id" ? currentPost.date : (currentPost.dateEn || currentPost.date)}
-                            </span>
-                          </div>
-                          
-                          <h2 className="text-2xl md:text-3xl font-display font-bold text-ink leading-snug">
-                            {lang === "id" ? currentPost.title : (currentPost.titleEn || currentPost.title)}
-                          </h2>
-                          
-                          <p className="text-xs text-gray-500 font-mono bg-amber-50 border-l-4 border-amber-300 p-2.5 rounded-sm">
-                            {t(`🎯 Dasar Riset: Dilansir dari ${currentPost.citation}.`, `🎯 Research Foundation: Sourced from ${currentPost.citation}.`)}
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-4 text-gray-700 leading-relaxed font-sans text-sm md:text-base border-t border-gray-100 pt-6">
-                          {(lang === "id" ? currentPost.content : (currentPost.contentEn || currentPost.content)).map((para, i) => {
-                            // Render raw markdown-like bold parameters gracefully
-                            const parsedText = para.split("**").map((text, idx) => {
-                              return idx % 2 === 1 ? <strong key={idx} className="marker-highlight text-ink px-1 font-bold">{text}</strong> : text;
-                            });
-                            return <p key={i}>{parsedText}</p>;
-                          })}
-                        </div>
-
-                        <div className="border-t-2 border-dashed border-gray-200 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 p-4 border border-ink">
-                          <div>
-                            <p className="text-xs text-gray-500 font-mono uppercase">{t("Langkah Rekomendasi Selanjutnya:", "Next Recommended Step:")}</p>
-                            <p className="text-sm font-semibold text-ink mt-0.5">{t("Uji kesiapan laporan keuangan Anda sekarang secara gratis!", "Test your financial report readiness now for free!")}</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setActiveTab("trial"); 
-                              setTimeout(() => {
-                                const onboardingSec = document.getElementById("onboarding-form");
-                                if (onboardingSec) onboardingSec.scrollIntoView({ behavior: "smooth" });
-                              }, 150);
-                            }}
-                            className="bg-blueprint text-white text-xs font-mono py-2 px-4 shadow-[2px_2px_0px_0px_#111827] border-2 border-ink hover:translate-y-[-1px] uppercase transition-all"
-                          >
-                            {t("Coba UMKM Lens →", "Try UMKM Lens →")}
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })()
-                ) : (
-                  /* Blog List Layout */
-                  <div className="space-y-6">
-                    {blogPosts.map((post) => (
-                      <div 
-                        key={post.id}
-                        className="bg-white border-2 border-ink p-6 shadow-[4px_4px_0px_0px_#111827] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#111827] transition-all cursor-pointer group"
-                        onClick={() => setSelectedPostSlug(post.slug)}
-                      >
-                        <div className="flex justify-between items-start gap-4">
-                          <span className="bg-gray-100 border border-ink/40 text-[10px] text-ink font-mono uppercase px-2 py-0.5 tracking-wider font-semibold">
-                            {lang === "id" ? post.category : (post.categoryEn || post.category)}
-                          </span>
-                          <span className="text-[11px] text-gray-400 font-mono flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-gray-300" /> {lang === "id" ? `${post.readTime} Baca` : `${post.readTimeEn || post.readTime} Read`}
-                          </span>
-                        </div>
-
-                        <h3 className="text-xl font-display font-bold text-ink group-hover:text-blueprint transition-colors mt-3 mb-2 leading-tight">
-                          {lang === "id" ? post.title : (post.titleEn || post.title)}
-                        </h3>
-
-                        <p className="text-xs text-gray-600 font-sans line-clamp-3 leading-relaxed mb-4">
-                          {lang === "id" ? post.summary : (post.summaryEn || post.summary)}
-                        </p>
-
-                        <div className="flex gap-2 items-center justify-between border-t border-gray-100 pt-3">
-                          <span className="text-[10px] text-gray-400 font-mono italic">
-                            {t(`Dasar Riset: ${post.citation}`, `Research Foundation: ${post.citation}`)}
-                          </span>
-                          <span className="text-xs text-blueprint font-mono font-bold flex items-center gap-1 group-hover:underline">
-                            {t("Baca Selengkapnya", "Read More")} <ArrowUpRight className="w-3.5 h-3.5" />
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
 
               </div>
 
@@ -2242,7 +2318,7 @@ export default function App() {
                         if (target) target.scrollIntoView({ behavior: "smooth" });
                       }, 200);
                     }}
-                    className="w-full bg-ink text-paper py-2.5 font-bold font-mono text-xs uppercase tracking-wider text-center border-2 border-ink active:translate-y-px hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 shadow-sm"
+                    className="w-full bg-ink text-paper py-2.5 font-bold font-mono text-xs uppercase tracking-wider text-center border-2 border-ink active:translate-y-px hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 shadow-sm cursor-pointer"
                   >
                     {t("Dapatkan Analitik Real-Time Gratis", "Get Free Real-Time Analytics")} <ArrowRight className="w-3.5 h-3.5" />
                   </button>
