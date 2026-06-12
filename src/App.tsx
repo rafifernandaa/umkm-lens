@@ -357,6 +357,75 @@ export default function App() {
   const dscr = estCicilan > 0 ? (adjustedMonthlyLaba / estCicilan) : 0;
   const margin = avgMonthlyOmset > 0 ? (avgMonthlyLaba / avgMonthlyOmset) : 0;
 
+  // ==================== STATISTICAL CALCULATIONS FOR DATA ANALYTICS ====================
+  // 1. Volatility (Coefficient of Variation for Laba Bersih)
+  let labaValues = historicalPeriods.map(p => p.totals.laba_bersih);
+  let labaMean = avgMonthlyLaba;
+  let labaStdDev = 0;
+  let labaCV = 0; // Coefficient of Variation
+  if (labaValues.length > 0) {
+    const sumSqDiff = labaValues.reduce((sum, val) => sum + Math.pow(val - labaMean, 2), 0);
+    labaStdDev = Math.sqrt(sumSqDiff / labaValues.length);
+    labaCV = labaMean > 0 ? (labaStdDev / labaMean) : 0;
+  }
+
+  // 2. Growth Trajectory (Simple Linear Regression Slope on Revenue / Omset)
+  let growthRate = 0; // Monthly percentage growth
+  if (historicalPeriods.length >= 2) {
+    const xVals = historicalPeriods.map((_, i) => i + 1);
+    const yVals = historicalPeriods.map(p => p.totals.pemasukan);
+    const n = historicalPeriods.length;
+    const sumX = xVals.reduce((a, b) => a + b, 0);
+    const sumY = yVals.reduce((a, b) => a + b, 0);
+    const sumXY = xVals.reduce((sum, x_i, i) => sum + x_i * yVals[i], 0);
+    const sumXX = xVals.reduce((sum, x_i) => sum + x_i * x_i, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const meanY = sumY / n;
+    growthRate = meanY > 0 ? (slope / meanY) * 100 : 0;
+  }
+
+  // 3. Scan-level items analysis (if a scan result exists)
+  let scanItems = scanResult ? scanResult.items : (historicalPeriods.length > 0 ? historicalPeriods[historicalPeriods.length - 1].items : []);
+  let incomeItems = scanItems.filter(item => item.category === "pemasukan");
+  
+  let avgTicketSize = 0;
+  let concentrationRiskPct = 0;
+  let anomalyCount = 0;
+
+  if (incomeItems.length > 0) {
+    const amounts = incomeItems.map(item => item.amount);
+    const totalIncome = amounts.reduce((a, b) => a + b, 0);
+    avgTicketSize = Math.round(totalIncome / incomeItems.length);
+    
+    // Sort descending for concentration analysis
+    const sortedAmounts = [...amounts].sort((a, b) => b - a);
+    const top10PercentCount = Math.max(1, Math.round(amounts.length * 0.1));
+    const top10PercentSum = sortedAmounts.slice(0, top10PercentCount).reduce((a, b) => a + b, 0);
+    concentrationRiskPct = totalIncome > 0 ? (top10PercentSum / totalIncome) * 100 : 0;
+
+    // Outlier / Anomaly detection: transactions > 2.5 SD from average
+    const meanAmount = totalIncome / amounts.length;
+    const sqDiffs = amounts.map(val => Math.pow(val - meanAmount, 2));
+    const stdDev = Math.sqrt(sqDiffs.reduce((a, b) => a + b, 0) / amounts.length);
+    anomalyCount = amounts.filter(val => val > meanAmount + 2.5 * stdDev).length;
+  }
+
+  // 4. Simulated Credit Default Probability (Logit Score)
+  // DSCR contributes negatively to risk, Volatility (CV) contributes positively.
+  let defaultRiskPct = 0;
+  if (historicalPeriods.length > 0) {
+    // Logit index z: lower DSCR, higher CV, and not having checklists increases risk
+    let checklistBonus = (completedChecklist.rekeningTerpisah ? 0.4 : 0) + 
+                         (completedChecklist.nibTerdaftar ? 0.4 : 0) + 
+                         (completedChecklist.catatanKonsisten ? 0.6 : 0) +
+                         (useAltData ? 0.8 : 0);
+    let z = 1.8 - (1.6 * dscr) + (1.5 * labaCV) - checklistBonus;
+    defaultRiskPct = (1 / (1 + Math.exp(-z))) * 100;
+    // Cap risk between 0.5% and 99.5% for statistical realism
+    defaultRiskPct = Math.min(99.5, Math.max(0.5, defaultRiskPct));
+  }
+
   // Composite Score (0-100) based on historical performance
   let score = 0;
   if (historicalPeriods.length > 0) {
@@ -1268,17 +1337,142 @@ export default function App() {
 
       // Trigger standard local action to download the beautifully designed PDF report
       // Trigger standard local action to download the beautifully designed PDF report
-      // --- PAGE 3: LAMPIRAN VISUAL VERIFIKASI (ON-THE-SPOT) ---
+      // --- PAGE 3: ADVANCED STATISTICAL & RISK ANALYTICS ---
+      doc.addPage();
+      let pgStatsY = 20;
+
+      // Header for Page 3
+      doc.setFillColor(17, 24, 39); // Solid dark back
+      doc.rect(marginX, pgStatsY, 180, 14, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(lang === "id" ? "LAMPIRAN C: LAPORAN ANALISIS STATISTIK & PROBABILITAS RISIKO" : "ANNEX C: STATISTICAL ANALYSIS & RISK PROBABILITY REPORT", marginX + 5, pgStatsY + 9);
+
+      pgStatsY += 22;
+
+      // Card 1: Time-series parameters
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.4);
+      doc.rect(marginX, pgStatsY, 180, 50);
+      doc.setFillColor(249, 250, 251);
+      doc.rect(marginX, pgStatsY, 180, 7, "F");
+      doc.line(marginX, pgStatsY + 7, marginX + 180, pgStatsY + 7);
+      
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.text(lang === "id" ? "1. ANALISIS RUN TUN WAKTU & VOLATILITAS (TIME-SERIES)" : "1. TIME-SERIES & VOLATILITY ANALYSIS", marginX + 4, pgStatsY + 5);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(17, 24, 39);
+      doc.text(`${lang === "id" ? "Rata-rata Laba Bersih (Mean)" : "Average Net Profit (Mean)"}: Rp ${labaMean.toLocaleString("id-ID")}`, marginX + 6, pgStatsY + 14);
+      doc.text(`${lang === "id" ? "Standar Deviasi Laba (Sigma)" : "Net Profit Std Deviation (Sigma)"}: Rp ${Math.round(labaStdDev).toLocaleString("id-ID")}`, marginX + 6, pgStatsY + 20);
+      doc.text(`${lang === "id" ? "Koefisien Variasi Laba (CV)" : "Profit Coefficient of Variation (CV)"}: ${(labaCV * 100).toFixed(2)}%`, marginX + 6, pgStatsY + 26);
+      
+      // Volatility evaluation text
+      let volEval = labaCV < 0.15 
+        ? (lang === "id" ? "Evaluasi: Stabilitas keuangan SANGAT TINGGI. Variabilitas pendapatan bulanan berada di bawah batas kritis perbankan 15%." : "Evaluation: HIGH stability. Monthly profit variance is well below the banking threshold of 15%.")
+        : labaCV <= 0.30 
+          ? (lang === "id" ? "Evaluasi: Stabilitas keuangan SEDANG. Pola fluktuasi masih tergolong normal untuk usaha mikro." : "Evaluation: MODERATE stability. Cash flow fluctuation pattern is normal for micro-enterprises.")
+          : (lang === "id" ? "Evaluasi: Volatilitas kas TINGGI. Risiko gagal bayar akibat fluktuasi pendapatan bulanan dinilai signifikan." : "Evaluation: HIGH volatility. Significant risk of repayment stress due to profit fluctuations.");
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(7.5);
+      doc.setTextColor(75, 85, 99);
+      const splitVolEval = doc.splitTextToSize(volEval, 168);
+      doc.text(splitVolEval, marginX + 6, pgStatsY + 34);
+
+      pgStatsY += 58;
+
+      // Card 2: Growth Trajectory Regression
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.4);
+      doc.rect(marginX, pgStatsY, 180, 50);
+      doc.setFillColor(249, 250, 251);
+      doc.rect(marginX, pgStatsY, 180, 7, "F");
+      doc.line(marginX, pgStatsY + 7, marginX + 180, pgStatsY + 7);
+      
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.text(lang === "id" ? "2. TREN & ESTIMASI TRAYEKTORI PERTUMBUHAN (REGRESI LINIER)" : "2. GROWTH TRAJECTORY & TREND ESTIMATION (LINEAR REGRESSION)", marginX + 4, pgStatsY + 5);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(17, 24, 39);
+      doc.text(`${lang === "id" ? "Jumlah Periode Kas Evaluasi" : "Number of Cash Periods Evaluated"}: ${historicalPeriods.length} ${lang === "id" ? "bulan" : "months"}`, marginX + 6, pgStatsY + 14);
+      doc.text(`${lang === "id" ? "Rata-rata Pertumbuhan Bulanan" : "Average Monthly Growth Rate"}: ${growthRate >= 0 ? "+" : ""}${growthRate.toFixed(2)}%`, marginX + 6, pgStatsY + 20);
+      
+      let growthEval = growthRate >= 5
+        ? (lang === "id" ? "Trayektori: EKSPANSI CEPAT. Kemiringan garis regresi menunjukkan ekspansi omset bulanan yang progresif." : "Trajectory: RAPID EXPANSION. Regression slope indicates a progressive expansion of monthly revenue.")
+        : growthRate >= 0
+          ? (lang === "id" ? "Trayektori: PERTUMBUHAN STABIL. Bisnis menunjukkan tren pemulihan dan penambahan omset yang konsisten." : "Trajectory: STABLE GROWTH. Business demonstrates a positive trend in market demand and revenue.")
+          : (lang === "id" ? "Trayektori: KONTRAKSI PASAR. Tren regresi linier negatif mengindikasikan penurunan volume penjualan atau pelemahan daya beli lokal." : "Trajectory: CONTRACTING MARKET. Negative regression slope indicates declining sales volume or local demand.");
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(7.5);
+      doc.setTextColor(75, 85, 99);
+      const splitGrowthEval = doc.splitTextToSize(growthEval, 168);
+      doc.text(splitGrowthEval, marginX + 6, pgStatsY + 28);
+
+      pgStatsY += 58;
+
+      // Card 3: Transaction dispersion & risk probability (Logit / Basel Model)
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.4);
+      doc.rect(marginX, pgStatsY, 180, 56);
+      doc.setFillColor(249, 250, 251);
+      doc.rect(marginX, pgStatsY, 180, 7, "F");
+      doc.line(marginX, pgStatsY + 7, marginX + 180, pgStatsY + 7);
+      
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.text(lang === "id" ? "3. METRIK DISTRIBUSI TRANSAKSI & ESTIMASI PROBABILITAS DEFAULT" : "3. TRANSACTION DISTRIBUTION & PROBABILITY OF DEFAULT ESTIMATE", marginX + 4, pgStatsY + 5);
+
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(17, 24, 39);
+      doc.text(`${lang === "id" ? "Rata-rata Nilai per Transaksi (AOV)" : "Average Order Value (AOV)"}: Rp ${avgTicketSize.toLocaleString("id-ID")}`, marginX + 6, pgStatsY + 14);
+      doc.text(`${lang === "id" ? "Rasio Konsentrasi Omset (Top 10%)" : "Revenue Concentration Ratio (Top 10%)"}: ${concentrationRiskPct.toFixed(2)}%`, marginX + 6, pgStatsY + 20);
+      doc.text(`${lang === "id" ? "Probabilitas Gagal Bayar (PD Basel II)" : "Simulated Probability of Default (PD)"}: ${defaultRiskPct.toFixed(2)}%`, marginX + 6, pgStatsY + 26);
+      
+      let creditRiskEval = defaultRiskPct > 15
+        ? (lang === "id" ? "Rekomendasi Risiko: PORTFOLIO RISIKO TINGGI. Deviasi arus kas melampaui toleransi perbankan umum. Disarankan membatasi plafon pinjaman." : "Risk Recommendation: HIGH RISK PORTFOLIO. Cash flow deviation exceeds standard limits. Recommending lower loan limit.")
+        : defaultRiskPct > 5
+          ? (lang === "id" ? "Rekomendasi Risiko: PORTFOLIO RISIKO SEDANG. Layak dengan syarat perapian administrasi kas dan agunan alternatif." : "Risk Recommendation: MEDIUM RISK PORTFOLIO. Eligible with cash administration optimization and alternative data verification.")
+          : (lang === "id" ? "Rekomendasi Risiko: PORTFOLIO SEHAT (RISIKO RENDAH). Risiko gagal bayar minimum. Sangat direkomendasikan untuk persetujuan kredit cepat." : "Risk Recommendation: HEALTHY PORTFOLIO (LOW RISK). Minimal default probability. Recommended for fast-track credit approval.");
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(7.5);
+      doc.setTextColor(75, 85, 99);
+      const splitCreditRiskEval = doc.splitTextToSize(creditRiskEval, 168);
+      doc.text(splitCreditRiskEval, marginX + 6, pgStatsY + 34);
+
+      // Page 3 Footer
+      pgStatsY = 265;
+      doc.setDrawColor(209, 213, 219);
+      doc.setLineWidth(0.2);
+      doc.line(marginX, pgStatsY, marginX + 180, pgStatsY);
+
+      doc.setTextColor(156, 163, 175);
+      doc.setFont("Helvetica", "oblique");
+      doc.setFontSize(6.5);
+      doc.text(legalText1, marginX, pgStatsY + 4.5);
+      doc.text(legalText2, marginX, pgStatsY + 8);
+      doc.text(legalText3, marginX, pgStatsY + 11.5);
+
+
+      // --- PAGE 4: LAMPIRAN VISUAL VERIFIKASI (ON-THE-SPOT) ---
       doc.addPage();
       let pg3Y = 20;
 
-      // Header for Page 3
+      // Header for Page 4
       doc.setFillColor(17, 24, 39); // Solid dark back
       doc.rect(marginX, pg3Y, 180, 14, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("Helvetica", "bold");
       doc.setFontSize(10);
-      doc.text(lang === "id" ? "LAMPIRAN C: VERIFIKASI VISUAL LAPANGAN (ON-THE-SPOT / OTS)" : "ANNEX C: VISUAL FIELD VERIFICATION & PHYSICAL EVIDENCE (OTS)", marginX + 5, pg3Y + 9);
+      doc.text(lang === "id" ? "LAMPIRAN D: VERIFIKASI VISUAL LAPANGAN (ON-THE-SPOT / OTS)" : "ANNEX D: VISUAL FIELD VERIFICATION & PHYSICAL EVIDENCE (OTS)", marginX + 5, pg3Y + 9);
 
       pg3Y += 24;
 
@@ -3369,15 +3563,30 @@ export default function App() {
                             <strong className="text-xs text-emerald-700 block">{t("🟢 KOL-1 (LANCAR)", "🟢 KOL-1 (CURRENT)")}</strong>
                             <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Nasabah tidak memiliki tunggakan pembiayaan lain.", "The borrower has no outstanding arrears on other financing.")}</p>
                           </div>
+
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
                             <span className="text-[9px] font-mono text-gray-400 block">{t("2. TREN VOLATILITAS", "2. VOLATILITY TREND")}</span>
-                            <strong className="text-xs text-blueprint block">{t("📈 BERTUMBUH STABIL", "📈 STABLE GROWTH")}</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Rata-rata pertumbuhan: +37.6% per bulan.", "Average growth rate: +37.6% per month.")}</p>
+                            <strong className="text-xs text-blueprint block">
+                              {labaCV < 0.15 
+                                ? t("📈 STABILITAS TINGGI", "📈 HIGH STABILITY") 
+                                : labaCV <= 0.30 
+                                  ? t("📈 VOLATILITAS SEDANG", "📈 MODERATE VOLATILITY") 
+                                  : t("📉 FLUKTUASI TINGGI", "📉 HIGH VOLATILITY")}
+                            </strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">
+                              {t(`Rata-rata pertumbuhan: ${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%/bln.`, 
+                                 `Average growth: ${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%/mo.`)}
+                            </p>
                           </div>
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
-                            <span className="text-[9px] font-mono text-gray-400 block">{t("3. PELUANG GAGAL BAYAR", "3. DEFAULT PROBABILITY")}</span>
-                            <strong className="text-xs text-emerald-700 block">{t(`🛡️ RISIKO RENDAH (${creditGrade})`, `🛡️ LOW RISK (${creditGrade})`)}</strong>
-                            <p className="text-[9px] text-gray-500 font-sans leading-tight">{t("Risiko default tertutup oleh rasio keuntungan > 25%.", "Default risk mitigated by net profit margin > 25%.")}</p>
+                            <span className="text-[9px] font-mono text-gray-400 block">{t("3. PROBABILITAS DEFAULT", "3. DEFAULT PROBABILITY")}</span>
+                            <strong className={`text-xs block ${defaultRiskPct > 15 ? "text-red-700" : (defaultRiskPct > 5 ? "text-amber-700" : "text-emerald-700")}`}>
+                              {defaultRiskPct.toFixed(1)}% {t(`(${creditGrade})`, `(${creditGrade})`)}
+                            </strong>
+                            <p className="text-[9px] text-gray-500 font-sans leading-tight">
+                              {t(`Simulasi risiko Basel II berdasarkan deviasi laba kas.`, 
+                                 `Basel II risk simulation based on profit deviation.`)}
+                            </p>
                           </div>
                           <div className="border-2 border-ink p-3 bg-slate-50 space-y-1">
                             <span className="text-[9px] font-mono text-gray-400 block">{t("4. LIMIT REKOMENDASI", "4. RECOMMENDED LIMIT")}</span>
@@ -3646,6 +3855,165 @@ export default function App() {
                               <Line type="monotone" dataKey="Laba" stroke="#16a34a" strokeWidth={3} name={t("Laba Bersih", "Net Profit")} />
                             </ComposedChart>
                           </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Statistician's Advanced Analytics Dashboard */}
+                    {!isViewingScan && historicalPeriods.length > 0 && (
+                      <div className="border-2 border-ink bg-white p-5 shadow-[4px_4px_0px_0px_#111827] space-y-4">
+                        <div className="flex justify-between items-center border-b border-ink/10 pb-2">
+                          <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1.5">
+                            📊 {t("ANALISIS STATISTIK & PREDIKSI RISIKO KREDIT (EXPERT ANALYTICS)", "STATISTICAL ANALYTICS & CREDIT RISK PREDICTION (EXPERT)")}
+                          </span>
+                          <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 font-mono border border-amber-300 font-bold uppercase">
+                            {t("Mode Auditor & Risiko", "Risk & Audit Mode")}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-gray-600 font-sans leading-relaxed">
+                          {t("Model penilaian kuantitatif berbasis riwayat data runtun waktu (time-series) dan distribusi nominal transaksi. Memberikan bankir/evaluator gambaran ilmiah mengenai stabilitas operasional pelaku usaha.",
+                            "Quantitative rating model based on time-series historical records and transaction amount distribution. Provides bankers/evaluators with a scientific overview of the merchant's operational stability.")}
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {/* 1. Volatility */}
+                          <div className="border border-ink p-3 bg-slate-50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-[9px] font-mono text-gray-400 block uppercase font-bold">{t("1. Volatilitas Laba Bersih", "1. Net Profit Volatility")}</span>
+                              <strong className="text-lg font-display text-ink block mt-1">{(labaCV * 100).toFixed(1)}%</strong>
+                              <span className="text-[9px] font-mono text-gray-500 block leading-tight mt-1">
+                                {t("Koefisien Variasi (CV) kas bulanan.", "Coefficient of Variation (CV) of monthly cash.")}
+                              </span>
+                            </div>
+                            <div className="mt-3">
+                              {labaCV < 0.15 ? (
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🟢 {t("Sangat Stabil", "Highly Stable")}
+                                </span>
+                              ) : labaCV <= 0.30 ? (
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🟡 {t("Volatilitas Sedang", "Moderate Volatility")}
+                                </span>
+                              ) : (
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🔴 {t("Fluktuasi Tinggi", "High Volatility")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 2. Trajectory */}
+                          <div className="border border-ink p-3 bg-slate-50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-[9px] font-mono text-gray-400 block uppercase font-bold">{t("2. Tren Pertumbuhan Omset", "2. Revenue Growth Trend")}</span>
+                              <strong className={`text-lg font-display block mt-1 ${growthRate >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                                {growthRate >= 0 ? "+" : ""}{growthRate.toFixed(1)}%
+                              </strong>
+                              <span className="text-[9px] font-mono text-gray-500 block leading-tight mt-1">
+                                {t("Arah kemiringan garis regresi linier.", "Linear regression line slope direction.")}
+                              </span>
+                            </div>
+                            <div className="mt-3">
+                              {growthRate >= 5 ? (
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  📈 {t("Ekspansi Cepat", "Fast Expansion")}
+                                </span>
+                              ) : growthRate >= 0 ? (
+                                <span className="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  📈 {t("Tumbuh Positif", "Positive Growth")}
+                                </span>
+                              ) : (
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  📉 {t("Kontraksi Usaha", "Business Contraction")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 3. Concentration */}
+                          <div className="border border-ink p-3 bg-slate-50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-[9px] font-mono text-gray-400 block uppercase font-bold">{t("3. Konsentrasi Transaksi", "3. Ticket Concentration")}</span>
+                              <strong className="text-lg font-display text-ink block mt-1">{concentrationRiskPct.toFixed(1)}%</strong>
+                              <span className="text-[9px] font-mono text-gray-500 block leading-tight mt-1">
+                                {t("Kontribusi nominal 10% transaksi terbesar.", "Revenue share of top 10% largest transactions.")}
+                              </span>
+                            </div>
+                            <div className="mt-3">
+                              {concentrationRiskPct > 50 ? (
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🚨 {t("Konsentrasi Tinggi", "High Dependency")}
+                                </span>
+                              ) : concentrationRiskPct > 30 ? (
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🟡 {t("Risiko Sedang", "Moderate Dependency")}
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🟢 {t("Terdistribusi Baik", "Well Distributed")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 4. Credit Default Prob */}
+                          <div className="border border-ink p-3 bg-slate-50 flex flex-col justify-between">
+                            <div>
+                              <span className="text-[9px] font-mono text-gray-400 block uppercase font-bold">{t("4. Peluang Default (Basel II)", "4. Default Probability (PD)")}</span>
+                              <strong className={`text-lg font-display block mt-1 ${defaultRiskPct > 10 ? "text-red-700" : (defaultRiskPct > 3 ? "text-amber-700" : "text-emerald-700")}`}>
+                                {defaultRiskPct.toFixed(1)}%
+                              </strong>
+                              <span className="text-[9px] font-mono text-gray-500 block leading-tight mt-1">
+                                {t("Simulasi probabilitas risiko gagal bayar.", "Simulated default probability risk rate.")}
+                              </span>
+                            </div>
+                            <div className="mt-3">
+                              {defaultRiskPct > 15 ? (
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🚨 {t("Risiko Tinggi", "High Risk")}
+                                </span>
+                              ) : defaultRiskPct > 5 ? (
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🟡 {t("Risiko Sedang", "Medium Risk")}
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                                  🛡️ {t("Risiko Rendah", "Low Risk")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Statistical Narrative Explainer */}
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-sm text-xs font-sans text-blue-900 leading-relaxed">
+                          <strong>💡 {t("Analisis Deskriptif & Inferensial Kuantitatif:", "Quantitative Descriptive & Inferential Analysis:")}</strong>{" "}
+                          {lang === "id" ? (
+                            <>
+                              Data kas usaha menunjukkan pola pertumbuhan rata-rata sebesar <strong>{growthRate.toFixed(1)}%</strong> per bulan dengan fluktuasi laba operasional sebesar <strong>{(labaCV * 100).toFixed(0)}%</strong>. 
+                              {avgTicketSize > 0 && <> Rata-rata nominal per transaksi (AOV) tercatat sebesar <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
+                              {anomalyCount > 0 ? (
+                                <> Terdeteksi sebanyak <strong>{anomalyCount} outlier transaksi</strong> yang berada di luar sebaran normal data (mencerminkan lonjakan musiman atau order tunggal berskala besar).</>
+                              ) : (
+                                <> Distribusi nominal transaksi terpantau homogen tanpa outlier ekstrem, mengindikasikan pendapatan yang teratur dan dapat diprediksi secara statistik.</>
+                              )}
+                              {" "}Rasio DSCR disesuaikan ({dscr.toFixed(2)}x) dan probabilitas default ({defaultRiskPct.toFixed(1)}%) secara formal mengklasifikasikan usaha ini sebagai portofolio kredit kategori berisiko{" "}
+                              <strong>{defaultRiskPct > 15 ? "tinggi" : (defaultRiskPct > 5 ? "sedang" : "rendah")}</strong>.
+                            </>
+                          ) : (
+                            <>
+                              The business cash ledger shows an average monthly growth trajectory of <strong>{growthRate.toFixed(1)}%</strong> with a profit coefficient of variation (CV) of <strong>{(labaCV * 100).toFixed(0)}%</strong>.
+                              {avgTicketSize > 0 && <> The Average Order Value (AOV) is recorded at <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
+                              {anomalyCount > 0 ? (
+                                <> We detected <strong>{anomalyCount} transaction outlier(s)</strong> outside the normal distribution range (indicating seasonal spikes or one-off large bulk orders).</>
+                              ) : (
+                                <> The transaction ticket distribution is homogeneous with no extreme outliers, indicating highly stable and statistically predictable revenue streams.</>
+                              )}
+                              {" "}The adjusted DSCR ratio ({dscr.toFixed(2)}x) and simulated probability of default ({defaultRiskPct.toFixed(1)}%) formally classify this credit profile under a{" "}
+                              <strong>{defaultRiskPct > 15 ? "high" : (defaultRiskPct > 5 ? "medium" : "low")}</strong> risk rating.
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
