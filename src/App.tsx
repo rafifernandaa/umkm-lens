@@ -3759,8 +3759,9 @@ export default function App() {
                         )}
 
                         <div className="bg-slate-50 border-2 border-ink p-4 space-y-3">
-                          <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5">
-                            {t("🔍 KELAYAKAN FINANSIAL KONSOLIDASI (AVERAGE PERFORMANCE)", "🔍 CONSOLIDATED FINANCIAL ELIGIBILITY (AVERAGE PERFORMANCE)")}
+                          <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5 flex items-center gap-1.5">
+                            <Search className="w-3.5 h-3.5" />
+                            {t("KELAYAKAN FINANSIAL KONSOLIDASI (AVERAGE PERFORMANCE)", "CONSOLIDATED FINANCIAL ELIGIBILITY (AVERAGE PERFORMANCE)")}
                           </h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
                             <div>
@@ -3786,17 +3787,21 @@ export default function App() {
                             </div>
                           </div>
 
-                          <div className="p-3 bg-blue-50 border border-blue-200 text-[11px] text-blue-800 rounded-sm font-sans">
-                            <strong>💡 {t("Evaluasi Underwriter AI:", "AI Underwriter Evaluation:")}</strong> {t("Usaha", "The business")} <strong>{userProfile.businessName || t("UMKM Binaan", "Partner MSME")}</strong> {t("menunjukkan konsistensi arus kas sehat selama", "shows a consistent and healthy cash flow over the last")} {historicalPeriods.length} {t("bulan terakhir. Sisa rata-rata laba bulanan menutup cicilan simulasi", "months. The average monthly net profit covers the simulated installment of")} Rp {estCicilan.toLocaleString("id-ID")}/{t("bulan", "month")} {t("dengan safety margin", "with a safety margin of")} {dscr.toFixed(1)}{t("x lipat. Kelayakan agunan non-fisik (UU P2SK) dinilai memadai.", "x. Eligibility based on alternative collateral (UU P2SK) is rated as adequate.")}
+                          <div className="p-3 bg-blue-50 border border-blue-200 text-[11px] text-blue-800 rounded-sm font-sans flex items-start gap-1.5">
+                            <Lightbulb className="w-3.5 h-3.5 text-blue-800 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <strong>{t("Evaluasi Underwriter AI:", "AI Underwriter Evaluation:")}</strong> {t("Usaha", "The business")} <strong>{userProfile.businessName || t("UMKM Binaan", "Partner MSME")}</strong> {t("menunjukkan konsistensi arus kas sehat selama", "shows a consistent and healthy cash flow over the last")} {historicalPeriods.length} {t("bulan terakhir. Sisa rata-rata laba bulanan menutup cicilan simulasi", "months. The average monthly net profit covers the simulated installment of")} Rp {estCicilan.toLocaleString("id-ID")}/{t("bulan", "month")} {t("dengan safety margin", "with a safety margin of")} {dscr.toFixed(1)}{t("x lipat. Kelayakan agunan non-fisik (UU P2SK) dinilai memadai.", "x. Eligibility based on alternative collateral (UU P2SK) is rated as adequate.")}
+                            </div>
                           </div>
 
                           <div className="flex justify-between items-center pt-2 border-t border-ink/10">
                             <span className="text-[9px] text-gray-400 font-mono">GEMINI AUTOMATED UNDERWRITING V1.2</span>
                             <button
                               onClick={handleExportPDF}
-                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer"
+                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2px_2px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer flex items-center gap-1.5"
                             >
-                              {t("✍️ Terbitkan Surat Rekomendasi & Cetak", "✍️ Issue Recommendation Letter & Print")}
+                              <FileText className="w-3.5 h-3.5" />
+                              {t("Terbitkan Surat Rekomendasi & Cetak", "Issue Recommendation Letter & Print")}
                             </button>
                           </div>
                         </div>
@@ -3804,7 +3809,10 @@ export default function App() {
                         {/* AI Loan Feasibility & Interview Cheat Sheet Card */}
                         <div className="border-2 border-ink bg-white p-4 space-y-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                           <h5 className="font-mono text-xs font-bold text-ink uppercase border-b border-ink/10 pb-1.5 flex items-center justify-between">
-                            <span>{t("💡 TARGET OPTIMALISASI PLAFON KREDIT", "💡 TARGET LOAN LIMIT OPTIMIZER")}</span>
+                            <span className="flex items-center gap-1.5">
+                              <Lightbulb className="w-3.5 h-3.5 text-ink" />
+                              {t("TARGET OPTIMALISASI PLAFON KREDIT", "TARGET LOAN LIMIT OPTIMIZER")}
+                            </span>
                             <span className="bg-blueprint text-white text-[9px] px-2 py-0.5 font-bold">{t("ASISTEN KELAYAKAN AI", "AI FEASIBILITY ASSISTANT")}</span>
                           </h5>
                           
@@ -3859,13 +3867,17 @@ export default function App() {
                             </div>
 
                             <div className="bg-[#F6FFF6] border border-emerald-300 p-3 rounded-sm space-y-2.5">
-                              <span className="text-[10px] font-mono text-emerald-800 uppercase tracking-widest font-bold block">
-                                {t("📝 Checklist Kesiapan & Rekomendasi AI", "📝 AI Feasibility Checklist & Advice")}
+                              <span className="text-[10px] font-mono text-emerald-800 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                <ClipboardList className="w-3.5 h-3.5 text-emerald-800" />
+                                {t("Checklist Kesiapan & Rekomendasi AI", "AI Feasibility Checklist & Advice")}
                               </span>
                               <ul className="text-[10.5px] text-gray-700 font-sans space-y-1.5 list-disc pl-4 leading-relaxed">
                                 {dscr < 1.25 && (
-                                  <li className="text-amber-800 font-medium">
-                                    {t("⚠️ Naikkan Tenor Pinjaman atau kurangi nominal plafon untuk menurunkan cicilan bulanan dan meningkatkan DSCR ke batas aman > 1.25x.", "⚠️ Consider increasing the loan tenor or reducing the principal amount to lower monthly payments and raise DSCR to the safe > 1.25x threshold.")}
+                                  <li className="text-amber-800 font-medium flex items-start gap-1">
+                                    <BadgeAlert className="w-3.5 h-3.5 text-amber-800 flex-shrink-0 mt-0.5" />
+                                    <span>
+                                      {t("Naikkan Tenor Pinjaman atau kurangi nominal plafon untuk menurunkan cicilan bulanan dan meningkatkan DSCR ke batas aman > 1.25x.", "Consider increasing the loan tenor or reducing the principal amount to lower monthly payments and raise DSCR to the safe > 1.25x threshold.")}
+                                    </span>
                                   </li>
                                 )}
                                 {!completedChecklist.rekeningTerpisah && (
@@ -3883,15 +3895,21 @@ export default function App() {
                                     {t("Aktifkan fitur 'Alternative Data' di dashboard sebelah untuk melampirkan bill PLN/Telco sebagai pendukung skor.", "Enable 'Alternative Data' in the side dashboard to attach utility bills as alternative credit scorers.")}
                                   </li>
                                 )}
-                                <li className="text-emerald-800 font-medium">
-                                  {t("💡 Cetak berkas pre-assessment ini dan bawa halaman kedua sebagai Cheat Sheet panduan interview wawancara analis kredit bank.", "💡 Export this pre-assessment report and use the second page as a Cheat Sheet guide for the banker interview.")}
+                                <li className="text-emerald-800 font-medium flex items-start gap-1">
+                                  <Lightbulb className="w-3.5 h-3.5 text-emerald-800 flex-shrink-0 mt-0.5" />
+                                  <span>
+                                    {t("Cetak berkas pre-assessment ini dan bawa halaman kedua sebagai Cheat Sheet panduan interview wawancara analis kredit bank.", "Export this pre-assessment report and use the second page as a Cheat Sheet guide for the banker interview.")}
+                                  </span>
                                 </li>
                               </ul>
                             </div>
                           </div>
 
                           <div className="p-3 bg-blue-50 border border-blue-200 text-[10.5px] text-blue-900 rounded-sm font-sans space-y-1.5">
-                            <span className="font-bold text-[11px] block">{t("💡 PANDUAN INTERVIEW BANKER (CHEAT SHEET WAWANCARA ANALIS):", "💡 BANKER INTERVIEW CHEAT SHEET (TIPS FOR MICRO MERCHANTS):")}</span>
+                            <span className="font-bold text-[11px] flex items-center gap-1.5 text-blue-900">
+                              <Lightbulb className="w-3.5 h-3.5 text-blue-900" />
+                              {t("PANDUAN INTERVIEW BANKER (CHEAT SHEET WAWANCARA ANALIS):", "BANKER INTERVIEW CHEAT SHEET (TIPS FOR MICRO MERCHANTS):")}
+                            </span>
                             <p className="leading-relaxed">
                               {t("Saat ditanya oleh analis kredit bank mengenai pembukuan, sampaikan hal berikut: ", "When asked by the bank's credit analyst about your bookkeeping, present the following points: ")}
                               <strong>{t(`"Usaha saya memiliki pencatatan digital teratur dengan rata-rata omset bulanan Rp ${avgMonthlyOmset.toLocaleString("id-ID")} dan laba bersih riil Rp ${avgMonthlyLaba.toLocaleString("id-ID")}. Berdasarkan kalkulasi DSCR, sisa keuntungan saya adalah ${dscr.toFixed(1)}x lipat dari cicilan bulanan, sehingga sangat aman. Saya juga melampirkan data alternatif tagihan utilitas tepat waktu sebagai bukti komitmen pembayaran."`
@@ -3903,9 +3921,10 @@ export default function App() {
                             <span className="text-[9px] text-gray-400 font-mono">GEMINI AUTOMATED ADVISOR V1.2</span>
                             <button
                               onClick={handleExportPDF}
-                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer active:translate-y-px transition-all"
+                              className="bg-blueprint text-white px-4 py-2 font-mono font-bold text-[10px] uppercase border-2 border-ink shadow-[2.5px_2.5px_0px_0px_#111827] hover:bg-blue-700 cursor-pointer active:translate-y-px transition-all flex items-center gap-1.5 justify-center"
                             >
-                              {t("📄 Unduh Laporan Kesiapan Kredit & Cheat Sheet", "📄 Download Credit Feasibility Report & Cheat Sheet")}
+                              <FileText className="w-3.5 h-3.5" />
+                              {t("Unduh Laporan Kesiapan Kredit & Cheat Sheet", "Download Credit Feasibility Report & Cheat Sheet")}
                             </button>
                           </div>
                         </div>
@@ -3915,8 +3934,9 @@ export default function App() {
                     {/* Historical Trend Chart (Visual Real Multi-Month Data) */}
                     {!isViewingScan && historicalPeriods.length > 0 && (
                       <div className="border border-ink bg-slate-50 p-4 space-y-3">
-                        <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold block">
-                          {t(`📈 TREN KINERJA KEUANGAN USAHA (${historicalPeriods.length} BULAN TERAKHIR)`, `📈 BUSINESS FINANCIAL PERFORMANCE TREND (LAST ${historicalPeriods.length} MONTHS)`)}
+                        <span className="text-[10px] font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1.5">
+                          <TrendingUp className="w-4 h-4 text-blueprint" />
+                          {t(`TREN KINERJA KEUANGAN USAHA (${historicalPeriods.length} BULAN TERAKHIR)`, `BUSINESS FINANCIAL PERFORMANCE TREND (LAST ${historicalPeriods.length} MONTHS)`)}
                         </span>
                         
                         <div className="h-48 pt-2">
@@ -3949,7 +3969,8 @@ export default function App() {
                       <div className="border-2 border-ink bg-white p-5 shadow-[4px_4px_0px_0px_#111827] space-y-4">
                         <div className="flex justify-between items-center border-b border-ink/10 pb-2">
                           <span className="text-xs font-mono text-blueprint uppercase tracking-widest font-bold flex items-center gap-1.5">
-                            📊 {t("ANALISIS STATISTIK & PREDIKSI RISIKO KREDIT (EXPERT ANALYTICS)", "STATISTICAL ANALYTICS & CREDIT RISK PREDICTION (EXPERT)")}
+                            <BarChart2 className="w-3.5 h-3.5" />
+                            {t("ANALISIS STATISTIK & PREDIKSI RISIKO KREDIT (EXPERT ANALYTICS)", "STATISTICAL ANALYTICS & CREDIT RISK PREDICTION (EXPERT)")}
                           </span>
                           <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 font-mono border border-amber-300 font-bold uppercase">
                             {t("Mode Auditor & Risiko", "Risk & Audit Mode")}
@@ -3973,16 +3994,19 @@ export default function App() {
                             </div>
                             <div className="mt-3">
                               {labaCV < 0.15 ? (
-                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🟢 {t("Sangat Stabil", "Highly Stable")}
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                                  {t("Sangat Stabil", "Highly Stable")}
                                 </span>
                               ) : labaCV <= 0.30 ? (
-                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🟡 {t("Volatilitas Sedang", "Moderate Volatility")}
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                                  {t("Volatilitas Sedang", "Moderate Volatility")}
                                 </span>
                               ) : (
-                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🔴 {t("Fluktuasi Tinggi", "High Volatility")}
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                                  {t("Fluktuasi Tinggi", "High Volatility")}
                                 </span>
                               )}
                             </div>
@@ -4001,16 +4025,19 @@ export default function App() {
                             </div>
                             <div className="mt-3">
                               {growthRate >= 5 ? (
-                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  📈 {t("Ekspansi Cepat", "Fast Expansion")}
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <TrendingUp className="w-3 h-3 text-emerald-800" />
+                                  {t("Ekspansi Cepat", "Fast Expansion")}
                                 </span>
                               ) : growthRate >= 0 ? (
-                                <span className="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  📈 {t("Tumbuh Positif", "Positive Growth")}
+                                <span className="bg-blue-100 text-blue-800 border border-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <TrendingUp className="w-3 h-3 text-blue-800" />
+                                  {t("Tumbuh Positif", "Positive Growth")}
                                 </span>
                               ) : (
-                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  📉 {t("Kontraksi Usaha", "Business Contraction")}
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <TrendingDown className="w-3 h-3 text-red-800" />
+                                  {t("Kontraksi Usaha", "Business Contraction")}
                                 </span>
                               )}
                             </div>
@@ -4027,16 +4054,19 @@ export default function App() {
                             </div>
                             <div className="mt-3">
                               {concentrationRiskPct > 50 ? (
-                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🚨 {t("Konsentrasi Tinggi", "High Dependency")}
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <ShieldAlert className="w-3 h-3 text-red-800" />
+                                  {t("Konsentrasi Tinggi", "High Dependency")}
                                 </span>
                               ) : concentrationRiskPct > 30 ? (
-                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🟡 {t("Risiko Sedang", "Moderate Dependency")}
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                                  {t("Risiko Sedang", "Moderate Dependency")}
                                 </span>
                               ) : (
-                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🟢 {t("Terdistribusi Baik", "Well Distributed")}
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                                  {t("Terdistribusi Baik", "Well Distributed")}
                                 </span>
                               )}
                             </div>
@@ -4055,16 +4085,19 @@ export default function App() {
                             </div>
                             <div className="mt-3">
                               {defaultRiskPct > 15 ? (
-                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🚨 {t("Risiko Tinggi", "High Risk")}
+                                <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <ShieldAlert className="w-3 h-3 text-red-800" />
+                                  {t("Risiko Tinggi", "High Risk")}
                                 </span>
                               ) : defaultRiskPct > 5 ? (
-                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🟡 {t("Risiko Sedang", "Medium Risk")}
+                                <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                                  {t("Risiko Sedang", "Medium Risk")}
                                 </span>
                               ) : (
-                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">
-                                  🛡️ {t("Risiko Rendah", "Low Risk")}
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider flex items-center justify-center gap-1">
+                                  <ShieldCheck className="w-3 h-3 text-emerald-800" />
+                                  {t("Risiko Rendah", "Low Risk")}
                                 </span>
                               )}
                             </div>
@@ -4072,33 +4105,36 @@ export default function App() {
                         </div>
 
                         {/* Statistical Narrative Explainer */}
-                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-sm text-xs font-sans text-blue-900 leading-relaxed">
-                          <strong>💡 {t("Analisis Deskriptif & Inferensial Kuantitatif:", "Quantitative Descriptive & Inferential Analysis:")}</strong>{" "}
-                          {lang === "id" ? (
-                            <>
-                              Data kas usaha menunjukkan pola pertumbuhan rata-rata sebesar <strong>{growthRate.toFixed(1)}%</strong> per bulan dengan fluktuasi laba operasional sebesar <strong>{(labaCV * 100).toFixed(0)}%</strong>. 
-                              {avgTicketSize > 0 && <> Rata-rata nominal per transaksi (AOV) tercatat sebesar <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
-                              {anomalyCount > 0 ? (
-                                <> Terdeteksi sebanyak <strong>{anomalyCount} outlier transaksi</strong> yang berada di luar sebaran normal data (mencerminkan lonjakan musiman atau order tunggal berskala besar).</>
-                              ) : (
-                                <> Distribusi nominal transaksi terpantau homogen tanpa outlier ekstrem, mengindikasikan pendapatan yang teratur dan dapat diprediksi secara statistik.</>
-                              )}
-                              {" "}Rasio DSCR disesuaikan ({dscr.toFixed(2)}x) dan probabilitas default ({defaultRiskPct.toFixed(1)}%) secara formal mengklasifikasikan usaha ini sebagai portofolio kredit kategori berisiko{" "}
-                              <strong>{defaultRiskPct > 15 ? "tinggi" : (defaultRiskPct > 5 ? "sedang" : "rendah")}</strong>.
-                            </>
-                          ) : (
-                            <>
-                              The business cash ledger shows an average monthly growth trajectory of <strong>{growthRate.toFixed(1)}%</strong> with a profit coefficient of variation (CV) of <strong>{(labaCV * 100).toFixed(0)}%</strong>.
-                              {avgTicketSize > 0 && <> The Average Order Value (AOV) is recorded at <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
-                              {anomalyCount > 0 ? (
-                                <> We detected <strong>{anomalyCount} transaction outlier(s)</strong> outside the normal distribution range (indicating seasonal spikes or one-off large bulk orders).</>
-                              ) : (
-                                <> The transaction ticket distribution is homogeneous with no extreme outliers, indicating highly stable and statistically predictable revenue streams.</>
-                              )}
-                              {" "}The adjusted DSCR ratio ({dscr.toFixed(2)}x) and simulated probability of default ({defaultRiskPct.toFixed(1)}%) formally classify this credit profile under a{" "}
-                              <strong>{defaultRiskPct > 15 ? "high" : (defaultRiskPct > 5 ? "medium" : "low")}</strong> risk rating.
-                            </>
-                          )}
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-sm text-xs font-sans text-blue-900 leading-relaxed flex items-start gap-1.5">
+                          <Lightbulb className="w-3.5 h-3.5 text-blue-800 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <strong>{t("Analisis Deskriptif & Inferensial Kuantitatif:", "Quantitative Descriptive & Inferential Analysis:")}</strong>{" "}
+                            {lang === "id" ? (
+                              <>
+                                Data kas usaha menunjukkan pola pertumbuhan rata-rata sebesar <strong>{growthRate.toFixed(1)}%</strong> per bulan dengan fluktuasi laba operasional sebesar <strong>{(labaCV * 100).toFixed(0)}%</strong>. 
+                                {avgTicketSize > 0 && <> Rata-rata nominal per transaksi (AOV) tercatat sebesar <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
+                                {anomalyCount > 0 ? (
+                                  <> Terdeteksi sebanyak <strong>{anomalyCount} outlier transaksi</strong> yang berada di luar sebaran normal data (mencerminkan lonjakan musiman atau order tunggal berskala besar).</>
+                                ) : (
+                                  <> Distribusi nominal transaksi terpantau homogen tanpa outlier ekstrem, mengindikasikan pendapatan yang teratur dan dapat diprediksi secara statistik.</>
+                                )}
+                                {" "}Rasio DSCR disesuaikan ({dscr.toFixed(2)}x) dan probabilitas default ({defaultRiskPct.toFixed(1)}%) secara formal mengklasifikasikan usaha ini sebagai portofolio kredit kategori berisiko{" "}
+                                <strong>{defaultRiskPct > 15 ? "tinggi" : (defaultRiskPct > 5 ? "sedang" : "rendah")}</strong>.
+                              </>
+                            ) : (
+                              <>
+                                The business cash ledger shows an average monthly growth trajectory of <strong>{growthRate.toFixed(1)}%</strong> with a profit coefficient of variation (CV) of <strong>{(labaCV * 100).toFixed(0)}%</strong>.
+                                {avgTicketSize > 0 && <> The Average Order Value (AOV) is recorded at <strong>Rp {avgTicketSize.toLocaleString("id-ID")}</strong>.</>}
+                                {anomalyCount > 0 ? (
+                                  <> We detected <strong>{anomalyCount} transaction outlier(s)</strong> outside the normal distribution range (indicating seasonal spikes or one-off large bulk orders).</>
+                                ) : (
+                                  <> The transaction ticket distribution is homogeneous with no extreme outliers, indicating highly stable and statistically predictable revenue streams.</>
+                                )}
+                                {" "}The adjusted DSCR ratio ({dscr.toFixed(2)}x) and simulated probability of default ({defaultRiskPct.toFixed(1)}%) formally classify this credit profile under a{" "}
+                                <strong>{defaultRiskPct > 15 ? "high" : (defaultRiskPct > 5 ? "medium" : "low")}</strong> risk rating.
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
